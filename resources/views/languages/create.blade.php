@@ -24,7 +24,7 @@
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg" style="background-color: #5b4ce6; border: none;">
-                            Salvar Registro ✨
+                            Salvar
                         </button>
                     </div>
                 </form>

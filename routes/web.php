@@ -1,28 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ArchitectureController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\FrameworkController;
-use App\Http\Controllers\TemplateController;
+// use App\Http\Controllers\TemplateController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// Página Inicial
+// Página Inicial 
 Route::get('/', function () {
     return view('welcome');
 });
 
-/**
- * Rotas de CRUD
- * O comando resource cria automaticamente as 7 rotas padrão do Laravel:
- * index, create, store, show, edit, update, destroy
- */
+// Rotas de CRUD
 Route::resource('languages', LanguageController::class);
 Route::resource('frameworks', FrameworkController::class);
-
-// Descomente esta linha quando o Controller de Templates estiver finalizado
+Route::resource('architectures', ArchitectureController::class);
 // Route::resource('templates', TemplateController::class);
