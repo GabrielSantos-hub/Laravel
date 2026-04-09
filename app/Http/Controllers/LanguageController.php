@@ -11,9 +11,7 @@ class LanguageController extends Controller
 {
     public function index()
     {
-        // Busca todas as linguagens no banco
-        $languages = Language::all();
-        // Retorna a view listando os dados
+        $languages = \App\Models\Language::all(); // Busca tudo do banco
         return view('languages.index', compact('languages'));
     }
 
@@ -33,8 +31,8 @@ class LanguageController extends Controller
             ]);
 
             Language::create($request->all());
-        } catch(Exception $e) {
-            Log::error('Erro ao inserir linguagem: '. $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
         }
         return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva!');
     }
@@ -50,8 +48,8 @@ class LanguageController extends Controller
         try {
             $language = Language::findOrFail($id);
             $language->update($request->all());
-        } catch(Exception $e) {
-            Log::error('Erro ao alterar linguagem: '. $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Erro ao alterar linguagem: ' . $e->getMessage());
         }
         return redirect()->route('languages.index');
     }
@@ -61,8 +59,8 @@ class LanguageController extends Controller
         try {
             $language = Language::findOrFail($id);
             $language->delete();
-        } catch(Exception $e) {
-            Log::error('Erro ao excluir linguagem: '. $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Erro ao excluir linguagem: ' . $e->getMessage());
         }
         return redirect()->route('languages.index');
     }
