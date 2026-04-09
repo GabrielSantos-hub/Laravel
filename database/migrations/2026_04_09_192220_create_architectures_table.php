@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('architectures', function (Blueprint $table) {
             $table->id();
             $table->string('nome', 100);
-            $table->text('descricao'); // Para guardar a definição do padrão
+            $table->text('descricao');
             $table->timestamps();
         });
     }

@@ -17,14 +17,14 @@ class LanguageController extends Controller
 
     public function create()
     {
-        // Retorna o formulário em branco
+        // Retorna o formulário em branco, mostrar o create pra professora 
         return view('languages.create');
     }
 
     public function store(Request $request)
     {
         try {
-            // Segurança nível Sênior: Validação antes de salvar!
+            //Validação antes de salvar
             $request->validate([
                 'nome' => 'required|max:100',
                 'slug' => 'required|max:100|unique:languages'
@@ -49,7 +49,7 @@ class LanguageController extends Controller
             $language = Language::findOrFail($id);
             $language->update($request->all());
         } catch (Exception $e) {
-            Log::error('Erro ao alterar linguagem: ' . $e->getMessage());
+            Log::error('Erro ao alterar linguagem: ' . $e->getMessage()); //tratamento de erro
         }
         return redirect()->route('languages.index');
     }

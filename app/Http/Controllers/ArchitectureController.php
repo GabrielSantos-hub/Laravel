@@ -11,13 +11,13 @@ class ArchitectureController extends Controller
 {
     public function index()
     {
-        $architectures = Architecture::all(); // Busca todas as arquiteturas do banco
+        $architectures = Architecture::all(); // Buscaas arquiteturas do banco
         return view('architectures.index', compact('architectures'));
     }
 
     public function create()
     {
-        // Retorna o formulário em branco para cadastro
+        // Retorna o formulário em branco
         return view('architectures.create');
     }
 
@@ -47,7 +47,7 @@ class ArchitectureController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            // Boa prática: Validar também na atualização
+            // Validar na atualização
             $request->validate([
                 'nome' => 'required|max:100',
                 'descricao' => 'required'

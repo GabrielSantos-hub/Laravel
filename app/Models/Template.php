@@ -15,7 +15,7 @@ class Template extends Model
         'is_active'
     ];
 
-    // Converte o campo booleano do banco para true/false no PHP
+    // Converte o campo booleano do banco no PHP
     protected $casts = [
         'is_active' => 'boolean'
     ];

@@ -19,7 +19,6 @@ class LanguageSeeder extends Seeder
         $php->frameworks()->create(['nome' => 'Laravel', 'slug' => 'laravel']);
         $php->frameworks()->create(['nome' => 'Symfony', 'slug' => 'symfony']);
 
-        // Outro exemplo
         $js = \App\Models\Language::create(['nome' => 'JavaScript', 'slug' => 'javascript']);
         $js->frameworks()->create(['nome' => 'React', 'slug' => 'react']);
     }

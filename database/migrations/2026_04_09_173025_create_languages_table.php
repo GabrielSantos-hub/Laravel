@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('languages', function (Blueprint $table) {
             $table->id();
             $table->string('nome', 100);
-            $table->string('slug', 100)->unique();
-            $table->timestamps();
+            $table->string('slug', 100)->unique(); //Evitar duplicidade
+            $table->timestamps();//
         });
     }
 
@@ -27,3 +27,5 @@ return new class extends Migration
         Schema::dropIfExists('languages');
     }
 };
+// Versionamento do BD pelo Laravel
+//rodar o comando: php artisan migrate

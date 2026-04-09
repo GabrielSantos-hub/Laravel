@@ -12,55 +12,62 @@ class FrameworkController extends Controller
 {
     public function index()
     {
-        //busca o framework com o nome da linguagem
+        //trazendo o nome da linguagem 
         $frameworks = Framework::with('language')->get();
         return view('frameworks.index', compact('frameworks'));
     }
 
     public function create()
     {
-        $languages = Language::all(); //select na tela
+        $languages = Language::all(); // Busca linguagens para o select 
         return view('frameworks.create', compact('languages'));
     }
 
     public function store(Request $request)
     {
-        try {
-            $request->validate([
-                'nome' => 'required',
-                'language_id' => 'required|exists:languages,id'
-            ]);
+        // 1. VALIDAÇÃO FORA DO TRY/CATCH
+        // Se falhar aqui, o Laravel interrompe e volta sozinho para o form com os erros
+        $request->validate([
+            'nome' => 'required',
+            'language_id' => 'required|exists:languages,id'
+        ]);
 
-            Framework::create($request->all());
+        try {
+            // 2. TENTA SALVAR NO BANCO
+            Framework::create($request->all());         
+            return redirect()->route('frameworks.index')->with('sucesso', 'Framework cadastrado com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao inserir framework: ' . $e->getMessage());
+            return back()->withErrors('Erro interno ao salvar o framework no banco de dados.');
         }
-        
-        return redirect()->route('frameworks.index');
     }
 
     public function edit($id)
     {
         $framework = Framework::findOrFail($id);
-        $languages = Language::all(); // Busca as linguagens para popular
+        $languages = Language::all(); // Busca as linguagens 
         return view('frameworks.edit', compact('framework', 'languages'));
     }
 
     public function update(Request $request, $id)
     {
-        try {
-            $request->validate([
-                'nome' => 'required',
-                'language_id' => 'required|exists:languages,id'
-            ]);
+        // VALIDAÇÃO 
+       $request->validate([
+            'nome' => 'required',
+            'slug' => 'required|unique:frameworks,slug', 
+            'language_id' => 'required|exists:languages,id'
+        ]);
 
+        try {
             $framework = Framework::findOrFail($id);
             $framework->update($request->all());
+            
+            return redirect()->route('frameworks.index')->with('sucesso', 'Framework atualizado com sucesso!');
+            
         } catch (Exception $e) {
             Log::error('Erro ao editar framework: ' . $e->getMessage());
+            return back()->withErrors('Erro interno ao atualizar o framework.');
         }
-        
-        return redirect()->route('frameworks.index');
     }
 
     public function destroy($id)
@@ -68,10 +75,12 @@ class FrameworkController extends Controller
         try {
             $framework = Framework::findOrFail($id);
             $framework->delete();
+            
+            return redirect()->route('frameworks.index')->with('sucesso', 'Framework excluído com sucesso!');
+            
         } catch (Exception $e) {
             Log::error('Erro ao excluir framework: ' . $e->getMessage());
+            return back()->withErrors('Erro interno ao tentar excluir o framework.');
         }
-        
-        return redirect()->route('frameworks.index');
     }
 }

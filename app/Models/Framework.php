@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Framework extends Model
 {
-    protected $table = 'frameworks';
+    use HasFactory;
 
-    protected $fillable = ['nome', 'language_id'];
+   protected $fillable = [
+        'nome',
+        'slug', 
+        'language_id'
+    ];
 
-    // Relacionamento Inverso: Um framework pertence a uma linguagem
     public function language()
     {
-        return $this->belongsTo(Language::class, 'language_id');
+        return $this->belongsTo(Language::class);
     }
 }
