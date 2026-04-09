@@ -1,24 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\TemplateController;
 
-Route::get('/paginainicial', function () {
+Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/exercicio', function() {
-    return view('exercicio');
-});
-
-Route::post('/resposta', function(Request $request) {
-    $valor1 = $request->input('valor1');
-    $valor2 = $request->input('valor2');
-    $soma = $valor1 + $valor2;
-    return("A soma é: $soma");
-});
-
-Route::resource('categorias', CategoriaController::class);
-
-Route::resource('produtos', ProdutoController::class);
+// Rotas do nosso CRUD
+Route::resource('languages', LanguageController::class);
+// Quando você criar o controller de templates, a rota já está pronta aqui:
+// Route::resource('templates', TemplateController::class);
