@@ -10,7 +10,7 @@
     <div class="card shadow-sm border-0" style="border-radius: 8px;">
         <div class="card-body p-4">
             
-            {{Tratamento de erro - caixa vermelha se faltar algo --}}
+            {{-- Tratamento de erro - caixa vermelha se faltar algo --}}
             @if ($errors->any())
                 <div class="alert alert-danger mb-4">
                     <ul class="mb-0">

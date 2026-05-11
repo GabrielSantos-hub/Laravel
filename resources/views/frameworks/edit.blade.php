@@ -11,9 +11,16 @@
         <div class="card-body p-4">
             <form action="{{ route('frameworks.update', $framework->id) }}" method="POST">
                 @csrf
-                @method('PUT') <div class="mb-3">
+                @method('PUT')
+
+                <div class="mb-3">
                     <label class="form-label text-muted" style="font-weight: 500;">Nome do Framework</label>
                     <input type="text" name="nome" class="form-control bg-light" required value="{{ $framework->nome }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted" style="font-weight: 500;">Slug</label>
+                    <input type="text" name="slug" class="form-control bg-light" required value="{{ $framework->slug }}">
                 </div>
 
                 <div class="mb-4">

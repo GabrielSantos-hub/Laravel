@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Language;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Exception;
+use Illuminate\View\View;
 
 class LanguageController extends Controller
 {
@@ -35,6 +36,11 @@ class LanguageController extends Controller
             Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
         }
         return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva!');
+    }
+
+    public function show(Language $language): View
+    {
+        return view('languages.show', compact('language'));
     }
 
     public function edit($id)

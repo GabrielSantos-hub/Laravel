@@ -18,7 +18,7 @@
                         <th class="px-4 py-3 border-0 text-muted" style="font-size: 0.9rem;">ID</th>
                         <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Nome</th>
                         <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Linguagem Base</th>
-                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem;">Ações</th>
+                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem; white-space: nowrap; width: 1%;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,14 +29,15 @@
                         <td class="py-3 align-middle">
                             <span class="badge bg-light text-dark border px-2 py-1">{{ $fw->language->nome }}</span>
                         </td>
-                        <td class="px-4 py-3 text-end">
-                            <a href="{{ route('frameworks.edit', $fw->id) }}" class="btn btn-dark btn-sm me-2 px-3">Editar</a>
-                            
-                            <form action="{{ route('frameworks.destroy', $fw->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-dark btn-sm px-3" onclick="return confirm('Deseja realmente excluir este framework?')">Excluir</button>
-                            </form>
+                        <td class="px-4 py-3 text-end align-middle">
+                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end align-items-sm-center">
+                                <a href="{{ route('frameworks.edit', $fw->id) }}" class="btn btn-dark btn-sm px-3">Editar</a>
+                                <form action="{{ route('frameworks.destroy', $fw->id) }}" method="POST" class="m-0">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-dark btn-sm px-3" onclick="return confirm('Deseja realmente excluir este framework?')">Excluir</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @endforeach

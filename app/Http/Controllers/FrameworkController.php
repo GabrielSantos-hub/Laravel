@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Framework;
 use App\Models\Language;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Exception;
+use Illuminate\Validation\Rule;
 
 class FrameworkController extends Controller
 {
@@ -27,14 +28,14 @@ class FrameworkController extends Controller
     {
         // 1. VALIDAÇÃO FORA DO TRY/CATCH
         // Se falhar aqui, o Laravel interrompe e volta sozinho para o form com os erros
-        $request->validate([
-            'nome' => 'required',
-            'language_id' => 'required|exists:languages,id'
+        $validated = $request->validate([
+            'nome' => 'required|string|max:100',
+            'slug' => 'required|string|max:100|unique:frameworks,slug',
+            'language_id' => 'required|exists:languages,id',
         ]);
 
         try {
-            // 2. TENTA SALVAR NO BANCO
-            Framework::create($request->all());         
+            Framework::create($validated);
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework cadastrado com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao inserir framework: ' . $e->getMessage());
@@ -51,16 +52,16 @@ class FrameworkController extends Controller
 
     public function update(Request $request, $id)
     {
-        // VALIDAÇÃO 
-       $request->validate([
-            'nome' => 'required',
-            'slug' => 'required|unique:frameworks,slug', 
-            'language_id' => 'required|exists:languages,id'
+        $framework = Framework::findOrFail($id);
+
+        $validated = $request->validate([
+            'nome' => 'required|string|max:100',
+            'slug' => ['required', 'string', 'max:100', Rule::unique('frameworks', 'slug')->ignore($framework->id)],
+            'language_id' => 'required|exists:languages,id',
         ]);
 
         try {
-            $framework = Framework::findOrFail($id);
-            $framework->update($request->all());
+            $framework->update($validated);
             
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework atualizado com sucesso!');
             

@@ -112,10 +112,10 @@
         <div class="d-flex">
 
             <nav class="sidebar" style="width: 250px;">
-                <div class="p-4 d-flex align-items-center justify-content-center">
+                <a href="{{ route('home') }}" class="p-4 d-flex align-items-center justify-content-center text-decoration-none">
                     <img src="{{ asset('icone tcc.png') }}" alt="Logo SPE BLOB" width="40" class="me-2">
                     <span class="brand-text">SPE BLOB</span>
-                </div>
+                </a>
 
                 <div class="mt-2">
                     <div class="nav-menu-item">
@@ -133,20 +133,22 @@
                             Architecture
                         </a>
                     </div>
-                    {{--<div class="nav-menu-item">
-                        <a href="#">
-                            Project Type
+                    <div class="nav-menu-item">
+                        <a href="{{ route('templates.index') }}">
+                            Templates
                         </a>
-                    </div>--}}
+                    </div>
                 </div>
 
-                <div class="chats-section mt-3">
-                    <div class="chats-title">Chats</div>
-                    <a href="#" class="chat-link">Chat exemple ...</a>
-                    <a href="#" class="chat-link">Chat exemple ...</a>
-                    <a href="#" class="chat-link">Chat exemple ...</a>
-                    <a href="#" class="chat-link">Chat exemple ...</a>
-                    <a href="#" class="chat-link">Chat exemple ...</a>
+                <div class="chats-section mt-3 overflow-auto" style="max-height: 45vh;">
+                    <div class="chats-title">Histórico</div>
+                    @forelse ($recentPrompts ?? [] as $item)
+                        <a href="{{ route('prompts.show', $item) }}" class="chat-link text-truncate d-block" title="{{ $item->input_text }}">
+                            {{ \Illuminate\Support\Str::limit($item->input_text, 42) }}
+                        </a>
+                    @empty
+                        <p class="text-muted small px-2 mb-0">Nenhum prompt salvo ainda.</p>
+                    @endforelse
                 </div>
 
                 <div class="social-icons">
