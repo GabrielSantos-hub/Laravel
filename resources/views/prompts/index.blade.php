@@ -18,12 +18,17 @@
     @endif
 
     <div class="text-center mb-4">
-        <img src="{{ asset('icone tcc.png') }}" alt="Logo" width="48" class="mb-2">
-        <h2 class="mb-0" style="color: #5b4ce6; font-weight: 600;">SPE BLOB</h2>
+        <img
+            src="{{ asset('logo.png') }}"
+            alt="Gueass"
+            class="mb-2 d-block mx-auto"
+            style="height: 56px; width: auto; max-width: 140px; object-fit: contain;"
+        >
+        <h2 class="mb-0" style="color: #5b4ce6; font-weight: 600;">Gueass</h2>
         <p class="text-muted small mb-0">Gere prompts estruturados a partir de um template e do seu contexto.</p>
     </div>
 
-    <form action="{{ route('prompts.generate') }}" method="POST" class="mb-4">
+    <form action="{{ route('prompts.generate') }}" method="POST" class="mb-0">
         @csrf
 
         <div class="row g-3 mb-3">
@@ -95,15 +100,6 @@
             </button>
         </div>
     </form>
-
-    <p class="text-center text-muted small mb-0">
-        Crie templates em <a href="{{ route('templates.index') }}">Templates</a>.
-        Placeholders no corpo:
-        @verbatim
-            <code>{{intencao}}</code>, <code>{{linguagem}}</code>, <code>{{linguagem_slug}}</code>,
-            <code>{{framework}}</code>, <code>{{arquitetura}}</code>, <code>{{descricao_arquitetura}}</code>
-        @endverbatim
-    </p>
 </div>
 
 <script>
