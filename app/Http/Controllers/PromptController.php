@@ -80,12 +80,10 @@ class PromptController extends Controller
             ->with('last_output', $output);
     }
 
-    public function destroy(Prompt $prompt): RedirectResponse
+    public function destroy($id)
     {
+        $prompt = Prompt::findOrFail($id);
         $prompt->delete();
-
-        return redirect()
-            ->back()
-            ->with('sucesso', 'Registro removido do histórico.');
+        return redirect()->route('home')->with('sucesso', 'Prompt removido do histórico com sucesso!');
     }
 }

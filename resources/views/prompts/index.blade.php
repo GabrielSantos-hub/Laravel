@@ -42,7 +42,7 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label text-muted small">Template (por arquitetura)</label>
+                <label class="form-label text-muted small">Template</label>
                 <select name="template_id" id="template_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($templates as $tpl)
