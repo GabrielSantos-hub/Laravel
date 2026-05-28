@@ -14,7 +14,6 @@ class UpdateTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'architecture_id' => ['required', 'integer', 'exists:architectures,id'],
             'nome' => ['required', 'string', 'max:150'],
             'corpo_template' => ['required', 'string', 'max:500000'],
             'versao' => ['nullable', 'string', 'max:20'],

@@ -15,7 +15,6 @@
 
     <div class="mb-4">
         <h3 style="color: #333; font-weight: 600;">Novo template</h3>
-        <p class="text-muted small mb-0">Vinculado a uma arquitetura. No texto use: @verbatim{{intencao}}, {{linguagem}}, {{linguagem_slug}}, {{framework}}, {{arquitetura}}, {{descricao_arquitetura}}@endverbatim</p>
     </div>
 
     <div class="card shadow-sm border-0" style="border-radius: 8px;">
@@ -23,15 +22,7 @@
             <form action="{{ route('templates.store') }}" method="POST">
                 @csrf
 
-                <div class="mb-3">
-                    <label class="form-label text-muted">Arquitetura</label>
-                    <select name="architecture_id" class="form-select bg-light" required>
-                        <option value="">Selecione…</option>
-                        @foreach ($architectures as $arch)
-                            <option value="{{ $arch->id }}" @selected(old('architecture_id') == $arch->id)>{{ $arch->nome }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <!-- Arquitetura removida: templates agora são universais -->
 
                 <div class="mb-3">
                     <label class="form-label text-muted">Nome do template</label>

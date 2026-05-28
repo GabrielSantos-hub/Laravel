@@ -11,7 +11,6 @@ class Template extends Model
     protected $table = 'templates';
 
     protected $fillable = [
-        'architecture_id',
         'nome',
         'corpo_template',
         'versao',
@@ -22,10 +21,7 @@ class Template extends Model
         'is_active' => 'boolean',
     ];
 
-    public function architecture(): BelongsTo
-    {
-        return $this->belongsTo(Architecture::class);
-    }
+    // Template is now architecture-agnostic; relationship removed.
 
     public function prompts(): HasMany
     {

@@ -46,11 +46,7 @@
                 <select name="template_id" id="template_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($templates as $tpl)
-                        <option
-                            value="{{ $tpl->id }}"
-                            data-architecture="{{ $tpl->architecture_id }}"
-                            @selected(old('template_id') == $tpl->id)
-                        >{{ $tpl->architecture->nome }} — {{ $tpl->nome }}</option>
+                        <option value="{{ $tpl->id }}" @selected(old('template_id') == $tpl->id)>{{ $tpl->nome }}</option>
                     @endforeach
                 </select>
             </div>
@@ -108,22 +104,7 @@
     const tpl = document.getElementById('template_id');
     if (!arch || !tpl) return;
 
-    function syncTemplates() {
-        const aid = arch.value;
-        const opts = tpl.querySelectorAll('option[data-architecture]');
-        opts.forEach(function (opt) {
-            const match = !aid || opt.getAttribute('data-architecture') === aid;
-            opt.hidden = !match;
-            opt.disabled = !match;
-        });
-        const selected = tpl.selectedOptions[0];
-        if (selected && selected.disabled && selected.value) {
-            tpl.value = '';
-        }
-    }
-
-    arch.addEventListener('change', syncTemplates);
-    syncTemplates();
+    // Templates são universais; não há filtro por arquitetura.
 
     const out = document.getElementById('output_text');
     const btn = document.getElementById('btn-copy-output');

@@ -27,7 +27,6 @@ class PromptController extends Controller
             'frameworks' => Framework::query()->with('language')->orderBy('nome')->get(),
             'templates' => Template::query()
                 ->where('is_active', true)
-                ->with('architecture')
                 ->orderBy('nome')
                 ->get(),
         ]);
@@ -46,7 +45,6 @@ class PromptController extends Controller
 
         $template = Template::query()
             ->whereKey($validated['template_id'])
-            ->where('architecture_id', $validated['architecture_id'])
             ->where('is_active', true)
             ->firstOrFail();
 

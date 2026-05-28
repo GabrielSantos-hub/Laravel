@@ -23,14 +23,7 @@
                 @csrf
                 @method('PUT')
 
-                <div class="mb-3">
-                    <label class="form-label text-muted">Arquitetura</label>
-                    <select name="architecture_id" class="form-select bg-light" required>
-                        @foreach ($architectures as $arch)
-                            <option value="{{ $arch->id }}" @selected(old('architecture_id', $template->architecture_id) == $arch->id)>{{ $arch->nome }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <!-- Arquitetura removida: templates agora são universais -->
 
                 <div class="mb-3">
                     <label class="form-label text-muted">Nome do template</label>

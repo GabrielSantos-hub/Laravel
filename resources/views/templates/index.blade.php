@@ -20,17 +20,15 @@
                 <thead style="background-color: #f8f9fa;">
                     <tr>
                         <th class="px-4 py-3 border-0 text-muted" style="font-size: 0.9rem;">Nome</th>
-                        <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Arquitetura</th>
                         <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Versão</th>
                         <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Ativo</th>
-                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem; white-space: nowrap; width: 1%;">Ações</th>
+                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem; white-space: nowrap; width: 1%">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($templates as $t)
                         <tr>
                             <td class="px-4 py-3 align-middle" style="font-weight: 500;">{{ $t->nome }}</td>
-                            <td class="py-3 align-middle"><span class="badge bg-light text-dark border">{{ $t->architecture->nome }}</span></td>
                             <td class="py-3 align-middle text-muted small">{{ $t->versao }}</td>
                             <td class="py-3 align-middle">{{ $t->is_active ? 'Sim' : 'Não' }}</td>
                             <td class="px-4 py-3 text-end align-middle">

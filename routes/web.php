@@ -22,12 +22,16 @@ Route::resource('templates', TemplateController::class);
 if (app()->environment('local')) {
 	Route::get('/debug/generate-sample', function (App\Services\PromptGenerator $promptGenerator) {
 		// Escolhe um template ativo qualquer e uma linguagem/arquitetura associadas
-		$template = App\Models\Template::query()->where('is_active', true)->with('architecture')->first();
+		$template = App\Models\Template::query()->where('is_active', true)->first();
 		if (! $template) {
 			return response('Nenhum template ativo encontrado.', 404);
 		}
 
-		$architecture = $template->architecture;
+		$architecture = App\Models\Architecture::query()->first();
+		if (! $architecture) {
+			return response('Nenhuma arquitetura encontrada.', 404);
+		}
+
 		$language = App\Models\Language::query()->first();
 		if (! $language) {
 			return response('Nenhuma linguagem encontrada.', 404);

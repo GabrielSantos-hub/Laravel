@@ -31,18 +31,15 @@ class GeneratePromptRequest extends FormRequest
             }
 
             $templateId = $this->input('template_id');
-            $architectureId = $this->input('architecture_id');
-
             $exists = \App\Models\Template::query()
-                ->whereKey($templateId)
-                ->where('architecture_id', $architectureId)
+                ->whereKey($this->input('template_id'))
                 ->where('is_active', true)
                 ->exists();
 
             if (! $exists) {
                 $validator->errors()->add(
                     'template_id',
-                    'O template não pertence à arquitetura escolhida ou está inativo.'
+                    'O template selecionado está inativo ou não existe.'
                 );
             }
         });

@@ -14,7 +14,6 @@ class TemplateController extends Controller
     public function index(): View
     {
         $templates = Template::query()
-            ->with('architecture')
             ->orderBy('nome')
             ->get();
 
@@ -23,9 +22,7 @@ class TemplateController extends Controller
 
     public function create(): View
     {
-        $architectures = Architecture::query()->orderBy('nome')->get();
-
-        return view('templates.create', compact('architectures'));
+        return view('templates.create');
     }
 
     public function store(StoreTemplateRequest $request): RedirectResponse
@@ -45,9 +42,7 @@ class TemplateController extends Controller
 
     public function edit(Template $template): View
     {
-        $architectures = Architecture::query()->orderBy('nome')->get();
-
-        return view('templates.edit', compact('template', 'architectures'));
+        return view('templates.edit', compact('template'));
     }
 
     public function update(UpdateTemplateRequest $request, Template $template): RedirectResponse
