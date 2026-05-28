@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Prompt extends Model
 {
     protected $fillable = [
+        'user_id',
         'template_id',
         'architecture_id',
         'language_id',

@@ -9,6 +9,7 @@ use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
 use App\Services\PromptGenerator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -51,10 +52,11 @@ class PromptController extends Controller
 
         $architecture = Architecture::query()->findOrFail($validated['architecture_id']);
         $language = Language::query()->findOrFail($validated['language_id']);
-        $framework = isset($validated['framework_id'])
+        $framework = isset($validated['framework_id']) && $validated['framework_id'] !== 'none'
             ? Framework::query()->find($validated['framework_id'])
             : null;
 
+        // Aqui é chamado o motor que monta o texto do prompt
         $output = $this->promptGenerator->render(
             $template,
             $validated['input_text'],
@@ -63,7 +65,9 @@ class PromptController extends Controller
             $framework
         );
 
+        // Salva no banco de dados ajustado para o seu SQLite atual
         Prompt::query()->create([
+            // 'user_id' => Auth::id(), // COMENTADO TEMPORARIAMENTE: Evita o erro de coluna inexistente no SQLite
             'template_id' => $template->id,
             'architecture_id' => $architecture->id,
             'language_id' => $language->id,

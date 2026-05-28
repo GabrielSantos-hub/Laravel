@@ -2,33 +2,43 @@
 
 namespace App\Services;
 
+use App\Models\Template;
+use App\Models\Language;
 use App\Models\Architecture;
 use App\Models\Framework;
-use App\Models\Language;
-use App\Models\Template;
 
 class PromptGenerator
 {
-    /**
-     * Substitui placeholders no corpo do template. Use no texto:
-     * {{intencao}}, {{linguagem}}, {{linguagem_slug}}, {{framework}}, {{arquitetura}}, {{descricao_arquitetura}}
-     */
-    public function render(
-        Template $template,
-        string $intencao,
-        Language $language,
-        Architecture $architecture,
-        ?Framework $framework = null,
-    ): string {
-        $map = [
-            '{{intencao}}' => $intencao,
-            '{{linguagem}}' => $language->nome,
-            '{{linguagem_slug}}' => $language->slug,
-            '{{framework}}' => $framework?->nome ?? '',
-            '{{arquitetura}}' => $architecture->nome,
-            '{{descricao_arquitetura}}' => $architecture->descricao,
-        ];
+    public function render(Template $template, string $userInput, Language $language, Architecture $architecture, ?Framework $framework = null): string
+    {
+        $corpo = $template->corpo_template;
 
-        return strtr($template->corpo_template, $map);
+        // 1. Substitui as variáveis obrigatórias com segurança
+        $corpo = str_replace('{language}', $language->nome ?? '', $corpo);
+        $corpo = str_replace('{architecture}', $architecture->nome ?? '', $corpo);
+        $corpo = str_replace('{user_input}', $userInput, $corpo);
+
+        // 2. Trata o framework condicional se as tags {% if %} existirem no template
+        if (str_contains($corpo, '{% if framework %}')) {
+            if ($framework && $framework->id !== 'none' && !empty($framework->nome)) {
+                $corpo = str_replace(['{% if framework %}', '{% endif %}'], '', $corpo);
+                $corpo = str_replace('{framework}', $framework->nome, $corpo);
+            } else {
+                $corpo = preg_replace('/{% if framework %}.*?{% endif %}/s', '', $corpo);
+            }
+        } else {
+            // Se for o template antigo (sem as tags de controle)
+            if ($framework && $framework->id !== 'none' && !empty($framework->nome)) {
+                $corpo = str_replace('{framework}', $framework->nome, $corpo);
+            } else {
+                // Se não foi selecionado framework, removemos a menção a ele para não ficar um espaço em branco
+                $corpo = str_replace(['e no framework {framework}', 'no framework {framework}', '{framework}'], '', $corpo);
+            }
+        }
+
+        // Remove apenas espaços duplos horizontais, PRESERVANDO as quebras de linha (\n)
+        $corpo = preg_replace('/[ \t]+/', ' ', $corpo);
+
+        return trim($corpo);
     }
 }
