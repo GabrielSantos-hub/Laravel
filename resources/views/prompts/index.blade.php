@@ -36,58 +36,62 @@
                 <select name="architecture_id" id="architecture_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($architectures as $arch)
-                    <option value="{{ $arch->id }}" @selected(old('architecture_id')==$arch->id)>{{ $arch->nome }}</option>
+                    <option value="{{ $arch->id }}" @selected(old('architecture_id') == $arch->id)>{{ $arch->nome }}</option>
                     @endforeach
                 </select>
             </div>
+            
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Template</label>
+                <select name="template_id" id="template_id" class="form-select bg-light" required>
+                    <option value="">Selecione…</option>
+                    @foreach ($templates as $tpl)
+                    <option value="{{ $tpl->id }}" @selected(old('template_id') == $tpl->id)>{{ $tpl->nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
             <div class="col-md-6">
                 <label class="form-label text-muted small">Linguagem / tecnologia</label>
                 <select name="language_id" id="language_select" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
-                    @foreach ($templates as $tpl)
-                    <option value="{{ $tpl->id }}" @selected(old('template_id')==$tpl->id)>{{ $tpl->nome }}</option>
+                    @foreach ($languages as $lang)
+                    <option value="{{ $lang->id }}" @selected(old('language_id') == $lang->id)>{{ $lang->nome }}</option>
                     @endforeach
                 </select>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Framework (opcional)</label>
+                <select name="framework_id" id="framework_select" class="form-select bg-light" disabled>
+                    <option value="">Selecione a linguagem primeiro…</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Sua intenção / contexto</label>
+                <textarea name="input_text" class="form-control bg-light" rows="12" required
+                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('input_text') }}</textarea>
             </div>
             <div class="col-md-6">
-                <label class="form-label text-muted small">Linguagem / tecnologia</label>
-                <select name="language_id" class="form-select bg-light" required>
-                    <option value="">Selecione…</option>
-                    @foreach ($languages as $lang)
-                    <option value="{{ $lang->id }}" @selected(old('language_id')==$lang->id)>{{ $lang->nome }}</option>
-                    @endforeach
-                </select>
-                <div class="col-md-6">
-                    <label class="form-label text-muted small">Framework (opcional)</label>
-                    <select name="framework_id" id="framework_select" class="form-select bg-light" disabled>
-                        <option value="">Selecione a linguagem primeiro…</option>
-                    </select>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label text-muted small mb-0">Prompt gerado</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-copy-output" title="Copiar">
+                        <i class="far fa-copy"></i> Copiar
+                    </button>
                 </div>
+                <textarea id="output_text" class="form-control bg-white" rows="12" readonly
+                    placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
             </div>
+        </div>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label text-muted small">Sua intenção / contexto</label>
-                    <textarea name="input_text" class="form-control bg-light" rows="12" required
-                        placeholder="Descreva o que você precisa gerar ou construir…">{{ old('input_text') }}</textarea>
-                </div>
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label text-muted small mb-0">Prompt gerado</label>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-copy-output" title="Copiar">
-                            <i class="far fa-copy"></i> Copiar
-                        </button>
-                    </div>
-                    <textarea id="output_text" class="form-control bg-white" rows="12" readonly
-                        placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
-                </div>
-            </div>
-
-            <div class="text-center mt-4">
-                <button type="submit" class="btn text-white px-5 py-2" style="background-color: #5b4ce6; border-radius: 8px;">
-                    <i class="fas fa-wand-magic-sparkles me-2"></i>Gerar prompt
-                </button>
-            </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn text-white px-5 py-2" style="background-color: #5b4ce6; border-radius: 8px;">
+                <i class="fas fa-wand-magic-sparkles me-2"></i>Gerar prompt
+            </button>
+        </div>
     </form>
 </div>
 
@@ -96,6 +100,7 @@
         const arch = document.getElementById('architecture_id');
         const tpl = document.getElementById('template_id');
         if (!arch || !tpl) return;
+        
         const out = document.getElementById('output_text');
         const btn = document.getElementById('btn-copy-output');
         if (btn && out) {
