@@ -18,10 +18,13 @@ Route::resource('frameworks', FrameworkController::class);
 Route::resource('architectures', ArchitectureController::class);
 Route::resource('templates', TemplateController::class);
 
-// Rota de debug local para gerar um prompt de exemplo e visualizar o resultado no navegador
+// Rota da API para buscar os frameworks vinculados a uma linguagem
+Route::get('/api/languages/{language}/frameworks', function (\App\Models\Language $language) {
+	return response()->json($language->frameworks);
+})->name('api.languages.frameworks');
+
 if (app()->environment('local')) {
 	Route::get('/debug/generate-sample', function (App\Services\PromptGenerator $promptGenerator) {
-		// Escolhe um template ativo qualquer e uma linguagem/arquitetura associadas
 		$template = App\Models\Template::query()->where('is_active', true)->first();
 		if (! $template) {
 			return response('Nenhum template ativo encontrado.', 404);
