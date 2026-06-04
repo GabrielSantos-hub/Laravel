@@ -11,6 +11,12 @@ use Illuminate\View\View;
 
 class TemplateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role.adm')->except(['index']);
+    }
+
     public function index(): View
     {
         $templates = Template::query()

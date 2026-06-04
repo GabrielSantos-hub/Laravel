@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-class RoleCliMiddleware
+class RoleUsuMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,7 +16,7 @@ class RoleCliMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || Auth::user()->role != 'CLI'){
+        if (!Auth::check() || Auth::user()->role != 'USU'){
             return redirect('/login');
         }
         return $next($request);
