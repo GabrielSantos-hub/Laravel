@@ -13,6 +13,7 @@ class AuthController extends Controller
     {
         return view('auth.login');
     }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -30,9 +31,10 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'As credenciais fornecidas não coincidem com os nossos registos.',
+            'email' => 'As credenciais fornecidas não coincidem com os nossos registros.', // Corrigido PT-BR
         ])->onlyInput('email');
     }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -49,9 +51,9 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-
         return redirect('/');
     }
+
     public function logout(Request $request)
     {
         Auth::logout();

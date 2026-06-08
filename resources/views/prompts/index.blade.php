@@ -36,7 +36,7 @@
                 <select name="architecture_id" id="architecture_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($architectures as $arch)
-                    <option value="{{ $arch->id }}" @selected(old('architecture_id') == $arch->id)>{{ $arch->nome }}</option>
+                    <option value="{{ $arch->id }}" @selected(old('architecture_id', request('architecture_id')) == $arch->id)>{{ $arch->nome }}</option>
                     @endforeach
                 </select>
             </div>
@@ -46,7 +46,7 @@
                 <select name="template_id" id="template_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($templates as $tpl)
-                    <option value="{{ $tpl->id }}" @selected(old('template_id') == $tpl->id)>{{ $tpl->nome }}</option>
+                    <option value="{{ $tpl->id }}" @selected(old('template_id', request('template_id')) == $tpl->id)>{{ $tpl->nome }}</option>
                     @endforeach
                 </select>
             </div>
@@ -56,7 +56,7 @@
                 <select name="language_id" id="language_select" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($languages as $lang)
-                    <option value="{{ $lang->id }}" @selected(old('language_id') == $lang->id)>{{ $lang->nome }}</option>
+                    <option value="{{ $lang->id }}" @selected(old('language_id', request('language_id')) == $lang->id)>{{ $lang->nome }}</option>
                     @endforeach
                 </select>
             </div>
@@ -114,9 +114,10 @@
         const frameworkSelect = document.getElementById('framework_select');
 
         if (languageSelect && frameworkSelect) {
-            languageSelect.addEventListener('change', function() {
-                const languageId = this.value;
+            // ID do framework pré-selecionado via URL ou Old do Laravel
+            let targetFrameworkId = "{{ old('framework_id', request('framework_id')) }}";
 
+            function carregarFrameworks(languageId, selectedFrameworkId = null) {
                 if (!languageId) {
                     frameworkSelect.innerHTML = '<option value="">Selecione a linguagem primeiro…</option>';
                     frameworkSelect.disabled = true;
@@ -131,6 +132,10 @@
                             const option = document.createElement('option');
                             option.value = framework.id;
                             option.text = framework.nome; 
+                            
+                            if (selectedFrameworkId && selectedFrameworkId == framework.id) {
+                                option.selected = true;
+                            }
                             frameworkSelect.appendChild(option);
                         });
                         frameworkSelect.disabled = false;
@@ -138,7 +143,17 @@
                     .catch(error => {
                         console.error('Erro ao carregar frameworks:', error);
                     });
+            }
+
+            // Ouvinte para trocas manuais de linguagem
+            languageSelect.addEventListener('change', function() {
+                carregarFrameworks(this.value);
             });
+
+            // Executa na carga da página: Se já veio uma linguagem "pescada", busca os frameworks
+            if (languageSelect.value) {
+                carregarFrameworks(languageSelect.value, targetFrameworkId);
+            }
         }
     })();
 </script>

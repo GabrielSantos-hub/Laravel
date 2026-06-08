@@ -17,8 +17,16 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        h1, h2, h3, h4, h5, h6,
-        .display-1, .display-2, .display-3, .display-4 {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .display-1,
+        .display-2,
+        .display-3,
+        .display-4 {
             font-family: 'Orbitron', sans-serif !important;
             font-weight: 700;
             letter-spacing: 1px;
@@ -111,9 +119,17 @@
             transform: scale(1.15);
         }
 
-        .social-icons .fa-github:hover { color: #24292e; }
-        .social-icons .fa-linkedin:hover { color: #0a66c2; }
-        .social-icons .fa-envelope:hover { color: #ea4335; }
+        .social-icons .fa-github:hover {
+            color: #24292e;
+        }
+
+        .social-icons .fa-linkedin:hover {
+            color: #0a66c2;
+        }
+
+        .social-icons .fa-envelope:hover {
+            color: #ea4335;
+        }
 
         .top-bar {
             display: flex;
@@ -135,16 +151,16 @@
 
                 <div class="mt-2">
                     <div class="nav-menu-item">
-                        <a href="{{ route('languages.index') }}">Language</a>
+                        <a href="{{ route('languages.index', request()->query()) }}" class="nav-link">Linguagens</a>
                     </div>
                     <div class="nav-menu-item">
-                        <a href="{{ route('frameworks.index') }}">FrameWork</a>
+                        <a href="{{ route('frameworks.index', request()->query()) }}" class="nav-link">Frameworks</a>
                     </div>
                     <div class="nav-menu-item">
-                        <a href="{{ route('architectures.index') }}">Architecture</a>
+                        <a href="{{ route('architectures.index', request()->query()) }}" class="nav-link">Arquiteturas</a>
                     </div>
                     <div class="nav-menu-item">
-                        <a href="{{ route('templates.index') }}">Templates</a>
+                        <a href="{{ route('templates.index', request()->query()) }}" class="nav-link">Templates</a>
                     </div>
                 </div>
 
@@ -158,7 +174,7 @@
                     <p class="text-muted small px-2 mb-0 text-center">Nenhum prompt salvo ainda.</p>
                     @endforelse
                 </div>
-                
+
                 <div class="social-icons">
                     <a href="https://github.com" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
                     <a href="https://linkedin.com" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
@@ -167,7 +183,7 @@
             </nav>
 
             <main class="flex-grow-1 d-flex flex-column" style="min-height: 100vh;">
-                
+
                 <div class="top-bar">
                     @auth
                     <div class="dropdown">

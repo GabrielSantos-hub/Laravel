@@ -9,9 +9,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 style="color: #333; font-weight: 600;">Templates de prompt</h3>
-        <a href="{{ route('templates.create') }}" class="btn text-white" style="background-color: #5b4ce6; border-radius: 6px;">
-            Novo template
-        </a>
+        @if(auth()->user()->role === 'ADM')
+            <a href="{{ route('templates.create') }}" class="btn text-white" style="background-color: #5b4ce6; border-radius: 6px;">
+                Novo template
+            </a>
+        @endif
     </div>
 
     <div class="card shadow-sm border-0" style="border-radius: 8px;">
@@ -33,19 +35,23 @@
                             <td class="py-3 align-middle">{{ $t->is_active ? 'Sim' : 'Não' }}</td>
                             <td class="px-4 py-3 text-end align-middle">
                                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end align-items-sm-center">
-                                    <a href="{{ route('templates.edit', $t) }}" class="btn btn-dark btn-sm px-3">Editar</a>
-                                    <form action="{{ route('templates.destroy', $t) }}" method="POST" class="m-0"
-                                        onsubmit="return confirm('Excluir este template?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-dark btn-sm px-3">Excluir</button>
-                                    </form>
+                                    @if(auth()->user()->role === 'ADM')
+                                        <a href="{{ route('templates.edit', $t) }}" class="btn btn-dark btn-sm px-3">Editar</a>
+                                        <form action="{{ route('templates.destroy', $t) }}" method="POST" class="m-0"
+                                            onsubmit="return confirm('Excluir este template?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-dark btn-sm px-3">Excluir</button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('home', array_merge(request()->query(), ['template_id' => $t->id])) }}" class="btn text-white btn-sm px-3" style="background-color: #5b4ce6;">Selecionar</a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-4 text-center text-muted">Nenhum template cadastrado.</td>
+                            <td colspan="4" class="px-4 py-4 text-center text-muted">Nenhum template cadastrado.</td>
                         </tr>
                     @endforelse
                 </tbody>

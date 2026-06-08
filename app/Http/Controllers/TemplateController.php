@@ -4,19 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTemplateRequest;
 use App\Http\Requests\UpdateTemplateRequest;
-use App\Models\Architecture;
 use App\Models\Template;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class TemplateController extends Controller
+class TemplateController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role.adm', except: ['index']),
+        ];
+    }
+
     public function index(): View
     {
-        $templates = Template::query()
-            ->orderBy('nome')
-            ->get();
-
+        $templates = Template::query()->orderBy('nome')->get();
         return view('templates.index', compact('templates'));
     }
 
@@ -35,11 +40,8 @@ class TemplateController extends Controller
 
         Template::query()->create($data);
 
-        return redirect()
-            ->route('templates.index')
-            ->with('sucesso', 'Template salvo.');
+        return redirect()->route('templates.index')->with('sucesso', 'Template salvo.');
     }
-
 
     public function edit(Template $template): View
     {
@@ -56,17 +58,12 @@ class TemplateController extends Controller
 
         $template->update($data);
 
-        return redirect()
-            ->route('templates.index')
-            ->with('sucesso', 'Template atualizado.');
+        return redirect()->route('templates.index')->with('sucesso', 'Template atualizado.');
     }
 
     public function destroy(Template $template): RedirectResponse
     {
         $template->delete();
-
-        return redirect()
-            ->route('templates.index')
-            ->with('sucesso', 'Template removido.');
+        return redirect()->route('templates.index')->with('sucesso', 'Template removido.');
     }
-}
+}   

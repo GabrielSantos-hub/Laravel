@@ -6,36 +6,43 @@ use App\Models\Architecture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ArchitectureController extends Controller
+class ArchitectureController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role.adm', except: ['index']),
+        ];
+    }
+
     public function index()
     {
-        $architectures = Architecture::all(); // Buscaas arquiteturas do banco
+        $architectures = Architecture::all(); 
         return view('architectures.index', compact('architectures'));
     }
 
     public function create()
     {
-        // Retorna o formulário em branco
         return view('architectures.create');
     }
 
     public function store(Request $request)
     {
-        try {
-            // Validação dos dados que chegam do formulário
-            $request->validate([
-                'nome' => 'required|max:100',
-                'descricao' => 'required'
-            ]);
+        $validated = $request->validate([
+            'nome' => 'required|max:100',
+            'descricao' => 'required'
+        ]);
 
-            Architecture::create($request->all());
+        try {
+            Architecture::create($validated);
+            return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura salva com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao inserir arquitetura: ' . $e->getMessage());
+            return back()->withErrors('Erro ao salvar arquitetura.');
         }
-        
-        return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura salva com sucesso!');
     }
 
     public function edit($id)
@@ -46,20 +53,19 @@ class ArchitectureController extends Controller
 
     public function update(Request $request, $id)
     {
-        try {
-            // Validar na atualização
-            $request->validate([
-                'nome' => 'required|max:100',
-                'descricao' => 'required'
-            ]);
+        $validated = $request->validate([
+            'nome' => 'required|max:100',
+            'descricao' => 'required'
+        ]);
 
+        try {
             $architecture = Architecture::findOrFail($id);
-            $architecture->update($request->all());
+            $architecture->update($validated);
+            return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura atualizada!');
         } catch (Exception $e) {
             Log::error('Erro ao alterar arquitetura: ' . $e->getMessage());
+            return back()->withErrors('Erro ao atualizar arquitetura.');
         }
-        
-        return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura atualizada!');
     }
 
     public function destroy($id)
@@ -67,10 +73,10 @@ class ArchitectureController extends Controller
         try {
             $architecture = Architecture::findOrFail($id);
             $architecture->delete();
+            return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura removida!');
         } catch (Exception $e) {
             Log::error('Erro ao excluir arquitetura: ' . $e->getMessage());
+            return back()->withErrors('Erro ao remover arquitetura.');
         }
-        
-        return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura removida!');
     }
 }

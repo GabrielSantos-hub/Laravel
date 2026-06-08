@@ -8,26 +8,34 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+// Importações necessárias para a proteção no Laravel 11:
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class FrameworkController extends Controller
+class FrameworkController extends Controller implements HasMiddleware
 {
+    // Proteção nativa do Laravel 11: Bloqueia tudo com role.adm, EXCETO o index
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role.adm', except: ['index']),
+        ];
+    }
+
     public function index()
     {
-        //trazendo o nome da linguagem 
         $frameworks = Framework::with('language')->get();
         return view('frameworks.index', compact('frameworks'));
     }
 
     public function create()
     {
-        $languages = Language::all(); // Busca linguagens para o select 
+        $languages = Language::all(); 
         return view('frameworks.create', compact('languages'));
     }
 
     public function store(Request $request)
     {
-        // 1. VALIDAÇÃO FORA DO TRY/CATCH
-        // Se falhar aqui, o Laravel interrompe e volta sozinho para o form com os erros
         $validated = $request->validate([
             'nome' => 'required|string|max:100',
             'slug' => 'required|string|max:100|unique:frameworks,slug',
@@ -46,7 +54,7 @@ class FrameworkController extends Controller
     public function edit($id)
     {
         $framework = Framework::findOrFail($id);
-        $languages = Language::all(); // Busca as linguagens 
+        $languages = Language::all(); 
         return view('frameworks.edit', compact('framework', 'languages'));
     }
 
@@ -62,9 +70,7 @@ class FrameworkController extends Controller
 
         try {
             $framework->update($validated);
-            
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework atualizado com sucesso!');
-            
         } catch (Exception $e) {
             Log::error('Erro ao editar framework: ' . $e->getMessage());
             return back()->withErrors('Erro interno ao atualizar o framework.');
@@ -76,9 +82,7 @@ class FrameworkController extends Controller
         try {
             $framework = Framework::findOrFail($id);
             $framework->delete();
-            
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework excluído com sucesso!');
-            
         } catch (Exception $e) {
             Log::error('Erro ao excluir framework: ' . $e->getMessage());
             return back()->withErrors('Erro interno ao tentar excluir o framework.');

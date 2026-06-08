@@ -10,7 +10,9 @@ return new class extends Migration
     {
         Schema::create('prompts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
+            
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            
             $table->foreignId('template_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('architecture_id')->constrained()->cascadeOnDelete();
             $table->foreignId('language_id')->constrained()->cascadeOnDelete();

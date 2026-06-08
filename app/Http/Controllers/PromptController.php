@@ -35,7 +35,6 @@ class PromptController extends Controller
     public function show(Prompt $prompt): View
     {
         $prompt->load(['template', 'architecture', 'language', 'framework']);
-
         return view('prompts.show', compact('prompt'));
     }
 
@@ -54,7 +53,6 @@ class PromptController extends Controller
             ? Framework::query()->find($validated['framework_id'])
             : null;
 
-        // Aqui é chamado o motor que monta o texto do prompt
         $output = $this->promptGenerator->render(
             $template,
             $validated['input_text'],
@@ -63,9 +61,9 @@ class PromptController extends Controller
             $framework
         );
 
-        // Salva no banco de dados ajustado para o seu SQLite atual
+        // REATIVADO: Agora vincula corretamente com o usuário logado no banco de dados!
         Prompt::query()->create([
-            // 'user_id' => Auth::id(), // COMENTADO TEMPORARIAMENTE: Evita o erro de coluna inexistente no SQLite
+            'user_id' => Auth::id(), 
             'template_id' => $template->id,
             'architecture_id' => $architecture->id,
             'language_id' => $language->id,
