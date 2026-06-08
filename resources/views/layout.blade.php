@@ -33,7 +33,7 @@
             font-weight: 700;
             letter-spacing: 1px;
         }
-
+    
         .sidebar {
             min-height: 100vh;
             background-color: #f4f5f7;
