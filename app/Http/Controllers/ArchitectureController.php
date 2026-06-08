@@ -30,20 +30,20 @@ class ArchitectureController extends Controller implements HasMiddleware
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nome' => 'required|max:100',
-            'descricao' => 'required'
-        ]);
+{
+    $validated = $request->validate([
+        'nome' => 'required|max:100|unique:architectures,nome',
+        'descricao' => 'required'
+    ]);
 
-        try {
-            Architecture::create($validated);
-            return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura salva com sucesso!');
-        } catch (Exception $e) {
-            Log::error('Erro ao inserir arquitetura: ' . $e->getMessage());
-            return back()->withErrors('Erro ao salvar arquitetura.');
-        }
+    try {
+        Architecture::create($validated);
+        return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura salva com sucesso!');
+    } catch (Exception $e) {
+        Log::error('Erro ao inserir arquitetura: ' . $e->getMessage());
+        return back()->withErrors('Erro ao salvar arquitetura.');
     }
+}
 
     public function edit($id)
     {

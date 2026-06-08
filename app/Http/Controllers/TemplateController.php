@@ -31,17 +31,17 @@ class TemplateController extends Controller implements HasMiddleware
     }
 
     public function store(StoreTemplateRequest $request): RedirectResponse
-    {
-        $data = $request->validated();
-        $data['is_active'] = $request->boolean('is_active');
-        if (! isset($data['versao']) || $data['versao'] === '') {
-            $data['versao'] = '1';
-        }
-
-        Template::query()->create($data);
-
-        return redirect()->route('templates.index')->with('sucesso', 'Template salvo.');
+{
+    $data = $request->validated();
+    $data['is_active'] = $request->boolean('is_active');
+    if (! isset($data['versao']) || $data['versao'] === '') {
+        $data['versao'] = '1';
     }
+
+    Template::query()->create($data);
+
+    return redirect()->route('templates.index')->with('sucesso', 'Template salvo.');
+}
 
     public function edit(Template $template): View
     {

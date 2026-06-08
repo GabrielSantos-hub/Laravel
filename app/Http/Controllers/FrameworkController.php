@@ -8,13 +8,11 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-// Importações necessárias para a proteção no Laravel 11:
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
 class FrameworkController extends Controller implements HasMiddleware
 {
-    // Proteção nativa do Laravel 11: Bloqueia tudo com role.adm, EXCETO o index
     public static function middleware(): array
     {
         return [
@@ -30,14 +28,14 @@ class FrameworkController extends Controller implements HasMiddleware
 
     public function create()
     {
-        $languages = Language::all(); 
+        $languages = Language::all();
         return view('frameworks.create', compact('languages'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:100',
+            'nome' => 'required|string|max:100|unique:frameworks,nome',
             'slug' => 'required|string|max:100|unique:frameworks,slug',
             'language_id' => 'required|exists:languages,id',
         ]);
@@ -54,7 +52,7 @@ class FrameworkController extends Controller implements HasMiddleware
     public function edit($id)
     {
         $framework = Framework::findOrFail($id);
-        $languages = Language::all(); 
+        $languages = Language::all();
         return view('frameworks.edit', compact('framework', 'languages'));
     }
 

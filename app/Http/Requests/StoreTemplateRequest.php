@@ -14,7 +14,7 @@ class StoreTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => ['required', 'string', 'max:150'],
+            'nome' => 'required|string|max:255|unique:templates,nome',
             'corpo_template' => ['required', 'string', 'max:500000'],
             'versao' => ['nullable', 'string', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],

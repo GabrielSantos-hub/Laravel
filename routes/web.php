@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
 // ==========================================
 Route::middleware(['role.adm'])->group(function () {
     Route::get('/admin', function () {
-        return view('admin.dashboard');
+        return redirect()->route('languages.index');
     });
 
     // Recursos administrativos protegidos (usando 'except' para não duplicar o index declarado acima)

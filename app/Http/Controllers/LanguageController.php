@@ -31,21 +31,20 @@ class LanguageController extends Controller implements HasMiddleware
     }
 
     public function store(Request $request)
-    {
-        // Validação movida para FORA do try/catch
-        $validated = $request->validate([
-            'nome' => 'required|max:100',
-            'slug' => 'required|max:100|unique:languages,slug'
-        ]);
+{
+    $validated = $request->validate([
+        'nome' => 'required|max:100|unique:languages,nome',
+        'slug' => 'required|max:100|unique:languages,slug'
+    ]);
 
-        try {
-            Language::create($validated); // Salvando apenas dados validados por segurança
-            return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva com sucesso!');
-        } catch (Exception $e) {
-            Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
-            return back()->withErrors('Erro interno ao salvar a linguagem.');
-        }
+    try {
+        Language::create($validated); 
+        return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva com sucesso!');
+    } catch (Exception $e) {
+        Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
+        return back()->withErrors('Erro interno ao salvar a linguagem.');
     }
+}
 
     public function show(Language $language): View
     {
