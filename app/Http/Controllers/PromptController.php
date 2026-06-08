@@ -61,7 +61,6 @@ class PromptController extends Controller
             $framework
         );
 
-        // REATIVADO: Agora vincula corretamente com o usuário logado no banco de dados!
         Prompt::query()->create([
             'user_id' => Auth::id(), 
             'template_id' => $template->id,

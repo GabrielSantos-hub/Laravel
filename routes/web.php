@@ -8,27 +8,17 @@ use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// Rotas de Autenticação (Abertas)
+// Rotas de Autenticação 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
-// ==========================================
-// Rotas de Visualização (Acessíveis por Ambos)
-// ==========================================
-// Liberamos o método 'index' para que tanto ADM quanto USU consigam listar os registros nas telas
 Route::get('/languages', [LanguageController::class, 'index'])->name('languages.index');
 Route::get('/frameworks', [FrameworkController::class, 'index'])->name('frameworks.index');
 Route::get('/architectures', [ArchitectureController::class, 'index'])->name('architectures.index');
 Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
 
-
-// ==========================================
-// NOTA: Rotas Compartilhadas (Acessíveis por ADM e USU)
-// ==========================================
-// Usamos o middleware 'auth' padrão do Laravel para garantir que qualquer usuário logado acesse a Home e gere prompts
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [PromptController::class, 'index'])->name('home');
     Route::post('/prompts/generate', [PromptController::class, 'generate'])->name('prompts.generate');
@@ -40,26 +30,18 @@ Route::middleware(['auth'])->group(function () {
     })->name('api.languages.frameworks');
 });
 
-
-// ==========================================
-// Rotas do Administrador Exclusivas (role.adm)
-// ==========================================
+// Rotas do Administrador
 Route::middleware(['role.adm'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('languages.index');
     });
 
-    // Recursos administrativos protegidos (usando 'except' para não duplicar o index declarado acima)
     Route::resource('languages', LanguageController::class)->except(['index']);
     Route::resource('frameworks', FrameworkController::class)->except(['index']);
     Route::resource('architectures', ArchitectureController::class)->except(['index']);
     Route::resource('templates', TemplateController::class)->except(['index']);
 });
 
-
-// ==========================================
-// Rotas de Debug Local
-// ==========================================
 if (app()->environment('local')) {
     Route::get('/debug/generate-sample', function (App\Services\PromptGenerator $promptGenerator) {
         $template = App\Models\Template::query()->where('is_active', true)->first();
@@ -77,7 +59,7 @@ if (app()->environment('local')) {
             return response('Nenhuma linguagem encontrada.', 404);
         }
 
-        $framework = null; // testa sem framework
+        $framework = null;
         $output = $promptGenerator->render($template, 'Exemplo de intenção para teste', $language, $architecture, $framework);
 
         return response(nl2br(e($output)));

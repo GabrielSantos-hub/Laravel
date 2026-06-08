@@ -114,7 +114,6 @@
         const frameworkSelect = document.getElementById('framework_select');
 
         if (languageSelect && frameworkSelect) {
-            // ID do framework pré-selecionado via URL ou Old do Laravel
             let targetFrameworkId = "{{ old('framework_id', request('framework_id')) }}";
 
             function carregarFrameworks(languageId, selectedFrameworkId = null) {
@@ -145,12 +144,10 @@
                     });
             }
 
-            // Ouvinte para trocas manuais de linguagem
             languageSelect.addEventListener('change', function() {
                 carregarFrameworks(this.value);
             });
 
-            // Executa na carga da página: Se já veio uma linguagem "pescada", busca os frameworks
             if (languageSelect.value) {
                 carregarFrameworks(languageSelect.value, targetFrameworkId);
             }

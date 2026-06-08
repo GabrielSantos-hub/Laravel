@@ -12,10 +12,7 @@ class LanguageSeeder extends Seeder
      */
     public function run(): void
     {
-        // Cria a Linguagem
         $php = \App\Models\Language::create(['nome' => 'PHP', 'slug' => 'php']);
-
-        // Cria os Frameworks vinculados a ela
         $php->frameworks()->create(['nome' => 'Laravel', 'slug' => 'laravel']);
         $php->frameworks()->create(['nome' => 'Symfony', 'slug' => 'symfony']);
 

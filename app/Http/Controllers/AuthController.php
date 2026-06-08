@@ -31,7 +31,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'As credenciais fornecidas não coincidem com os nossos registros.', // Corrigido PT-BR
+            'email' => 'As credenciais fornecidas não coincidem com os nossos registros.', 
         ])->onlyInput('email');
     }
 

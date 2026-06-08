@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('nome', 100);
             $table->string('slug', 100)->unique();
-            // fk com a tabela de languages
             $table->foreignId('language_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

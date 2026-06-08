@@ -10,14 +10,13 @@ class DropArchitectureIdFromTemplatesTable extends Migration
     {
         if (Schema::hasTable('templates') && Schema::hasColumn('templates', 'architecture_id')) {
             Schema::table('templates', function (Blueprint $table) {
-                // drop foreign key if exists
+       
                 try {
                     $table->dropForeign(['architecture_id']);
                 } catch (\Throwable $e) {
-                    // ignore if foreign key does not exist
+                
                 }
 
-                // drop the column
                 $table->dropColumn('architecture_id');
             });
         }

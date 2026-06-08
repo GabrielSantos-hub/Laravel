@@ -21,8 +21,6 @@ class Template extends Model
         'is_active' => 'boolean',
     ];
 
-    // Template is now architecture-agnostic; relationship removed.
-
     public function prompts(): HasMany
     {
         return $this->hasMany(Prompt::class);
