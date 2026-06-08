@@ -6,6 +6,7 @@ use App\Models\Prompt;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\URL; 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
         View::composer('layout', function ($view) {
+       
             $prompts = Auth::check()
                 ? Prompt::query()->where('user_id', Auth::id())->latest()->limit(30)->get()
                 : collect();
