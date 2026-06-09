@@ -36,31 +36,31 @@
                 <select name="architecture_id" id="architecture_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($architectures as $arch)
-                    <option value="{{ $arch->id }}" @selected(old('architecture_id', request('architecture_id')) == $arch->id)>{{ $arch->nome }}</option>
+                    <option value="{{ $arch->id }}" @selected(old('architecture_id', request('architecture_id'))==$arch->id)>{{ $arch->nome }}</option>
                     @endforeach
                 </select>
             </div>
-            
+
             <div class="col-md-6">
                 <label class="form-label text-muted small">Template</label>
                 <select name="template_id" id="template_id" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($templates as $tpl)
-                    <option value="{{ $tpl->id }}" @selected(old('template_id', request('template_id')) == $tpl->id)>{{ $tpl->nome }}</option>
+                    <option value="{{ $tpl->id }}" @selected(old('template_id', request('template_id'))==$tpl->id)>{{ $tpl->nome }}</option>
                     @endforeach
                 </select>
             </div>
-            
+
             <div class="col-md-6">
                 <label class="form-label text-muted small">Linguagem / tecnologia</label>
                 <select name="language_id" id="language_select" class="form-select bg-light" required>
                     <option value="">Selecione…</option>
                     @foreach ($languages as $lang)
-                    <option value="{{ $lang->id }}" @selected(old('language_id', request('language_id')) == $lang->id)>{{ $lang->nome }}</option>
+                    <option value="{{ $lang->id }}" @selected(old('language_id', request('language_id'))==$lang->id)>{{ $lang->nome }}</option>
                     @endforeach
                 </select>
             </div>
-            
+
             <div class="col-md-6">
                 <label class="form-label text-muted small">Framework (opcional)</label>
                 <select name="framework_id" id="framework_select" class="form-select bg-light" disabled>
@@ -88,9 +88,7 @@
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn text-white px-5 py-2" style="background-color: #5b4ce6; border-radius: 8px;">
-                <i class="fas fa-wand-magic-sparkles me-2"></i>Gerar prompt
-            </button>
+            <button type="submit" class="btn text-white px-5 py-2" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
         </div>
     </form>
 </div>
@@ -100,7 +98,7 @@
         const arch = document.getElementById('architecture_id');
         const tpl = document.getElementById('template_id');
         if (!arch || !tpl) return;
-        
+
         const out = document.getElementById('output_text');
         const btn = document.getElementById('btn-copy-output');
         if (btn && out) {
@@ -130,8 +128,8 @@
                         frameworks.forEach(framework => {
                             const option = document.createElement('option');
                             option.value = framework.id;
-                            option.text = framework.nome; 
-                            
+                            option.text = framework.nome;
+
                             if (selectedFrameworkId && selectedFrameworkId == framework.id) {
                                 option.selected = true;
                             }
