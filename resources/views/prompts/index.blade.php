@@ -30,8 +30,8 @@
         <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label text-muted small">Arquitetura</label>
-                <select name="architecture_id" id="architecture_id" class="form-select bg-light @error('architecture_id') is-invalid @enderror" required>
-                    <option value="">Selecione…</option>
+                <select name="architecture_id" id="architecture_id" class="form-select bg-light @error('architecture_id') is-invalid @enderror">
+                    <option value="">Deixar a IA deduzir do texto…</option>
                     @foreach ($architectures as $arch)
                     <option value="{{ $arch->id }}" @selected(old('architecture_id', request('architecture_id'))==$arch->id)>{{ $arch->nome }}</option>
                     @endforeach
@@ -56,8 +56,8 @@
 
             <div class="col-md-6">
                 <label class="form-label text-muted small">Linguagem / tecnologia</label>
-                <select name="language_id" id="language_select" class="form-select bg-light @error('language_id') is-invalid @enderror" required>
-                    <option value="">Selecione…</option>
+                <select name="language_id" id="language_select" class="form-select bg-light @error('language_id') is-invalid @enderror">
+                    <option value="">Deixar a IA deduzir do texto…</option>
                     @foreach ($languages as $lang)
                     <option value="{{ $lang->id }}" @selected(old('language_id', request('language_id'))==$lang->id)>{{ $lang->nome }}</option>
                     @endforeach
@@ -72,6 +72,8 @@
                 <select name="framework_id" id="framework_select" class="form-select bg-light @error('framework_id') is-invalid @enderror" disabled>
                     <option value="">Selecione a linguagem primeiro…</option>
                 </select>
+                {{-- Sem required em nenhum select do catálogo: no modo automático o
+                     IntentAnalyzer deduz linguagem, framework e arquitetura do texto. --}}
                 @error('framework_id')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

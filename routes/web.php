@@ -21,7 +21,11 @@ Route::get('/templates', [TemplateController::class, 'index'])->name('templates.
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [PromptController::class, 'index'])->name('home');
-    Route::post('/prompts/generate', [PromptController::class, 'generate'])->name('prompts.generate');
+    // A cota gratuita do Gemini é por minuto: 6 gerações por usuário protegem
+    // o limite da API e, de tabela, o custo de cada requisição.
+    Route::post('/prompts/generate', [PromptController::class, 'generate'])
+        ->middleware('throttle:6,1')
+        ->name('prompts.generate');
     Route::get('/prompts/{prompt}', [PromptController::class, 'show'])->name('prompts.show');
     Route::delete('/prompts/{prompt}', [PromptController::class, 'destroy'])->name('prompts.destroy');
 

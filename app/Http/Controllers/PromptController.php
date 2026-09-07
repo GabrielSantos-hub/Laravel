@@ -38,6 +38,8 @@ class PromptController extends Controller
 
     public function show(Prompt $prompt): View
     {
+        $this->autorizarDono($prompt, 'visualizar');
+
         $prompt->load(['template', 'architecture', 'language', 'framework']);
 
         return view('prompts.show', compact('prompt'));
@@ -90,25 +92,31 @@ class PromptController extends Controller
             ->with('last_output', $resultado->prompt);
     }
 
-    /**
-     * O histórico é pessoal: o id do prompt vem na URL, então sem esta
-     * verificação qualquer usuário autenticado apagaria o prompt de outro.
-     *
-     * O cast protege drivers que devolvem a chave estrangeira como string, e
-     * cobre `user_id` nulo (prompt órfão), que nunca casa com um id de sessão.
-     */
     public function destroy($id): RedirectResponse
     {
         $prompt = Prompt::findOrFail($id);
 
-        abort_unless(
-            (int) $prompt->user_id === Auth::id(),
-            403,
-            'Você só pode excluir prompts do seu próprio histórico.'
-        );
+        $this->autorizarDono($prompt, 'excluir');
 
         $prompt->delete();
 
         return redirect()->route('home')->with('sucesso', 'Prompt removido do histórico com sucesso!');
+    }
+
+    /**
+     * O histórico é pessoal e o id do prompt vem na URL, então sem esta
+     * verificação qualquer usuário autenticado leria ou apagaria o prompt de
+     * outro só trocando o número.
+     *
+     * O cast protege drivers que devolvem a chave estrangeira como string e
+     * cobre `user_id` nulo (prompt órfão), que nunca casa com um id de sessão.
+     */
+    private function autorizarDono(Prompt $prompt, string $acao): void
+    {
+        abort_unless(
+            (int) $prompt->user_id === Auth::id(),
+            403,
+            "Você só pode {$acao} prompts do seu próprio histórico."
+        );
     }
 }

@@ -15,4 +15,19 @@ class AIProviderException extends RuntimeException
             $previous
         );
     }
+
+    /**
+     * Falha em uma operação específica do provedor (análise ou composição).
+     *
+     * O IntentAnalyzer reembrulha qualquer exceção do provedor com `failed()`,
+     * então esta variante existe para a composição, que não passa por lá.
+     */
+    public static function during(string $provider, string $operation, ?Throwable $previous = null): self
+    {
+        return new self(
+            sprintf('O provedor de IA "%s" falhou na operação "%s".', $provider, $operation),
+            0,
+            $previous
+        );
+    }
 }

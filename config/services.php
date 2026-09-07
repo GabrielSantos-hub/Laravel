@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    /*
+    | Google Gemini, usado pelo pipeline de geração de prompts quando
+    | AI_PROVIDER=gemini. Sem chave configurada o provedor falha de propósito e
+    | o PromptPipelineService degrada para o provedor offline.
+    |
+    | O timeout é curto por escolha: o usuário está esperando na tela, e o
+    | fallback local produz um prompt utilizável em milissegundos.
+    */
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+        'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+        'timeout' => env('GEMINI_TIMEOUT', 15),
+        // Tentativas totais, não tentativas extras: 1 desliga o retry.
+        'tries' => env('GEMINI_TRIES', 2),
+    ],
+
 ];

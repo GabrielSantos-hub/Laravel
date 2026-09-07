@@ -21,12 +21,15 @@ readonly class PromptPipelineResult
      *     constraints: array<int, string>,
      *     type: string
      * }  $intent
+     * @param  bool  $degraded  Se o resultado veio do provedor offline porque
+     *                          o provedor de IA remoto estava indisponível.
      */
     public function __construct(
         public string $prompt,
         public Template $template,
         public array $intent,
         public bool $manualSelection,
+        public bool $degraded = false,
     ) {}
 
     /**
@@ -43,6 +46,7 @@ readonly class PromptPipelineResult
             ],
             'intent' => $this->intent,
             'manual_selection' => $this->manualSelection,
+            'degraded' => $this->degraded,
         ];
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Prompt;
 use App\Models\Template;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class PromptControllerTest extends TestCase
@@ -20,6 +21,10 @@ class PromptControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // O throttle:6,1 usa o cache. Sem limpar, testes do mesmo usuário
+        // herdariam tentativas uns dos outros e o 7º generate da suíte viraria 429.
+        Cache::flush();
 
         $this->usuario = User::factory()->create();
     }
@@ -244,7 +249,50 @@ class PromptControllerTest extends TestCase
         $this->assertDatabaseHas('prompts', ['id' => $prompt->id]);
     }
 
-    // (e) A tela de geração
+    public function test_usuario_nao_proprietario_nao_consegue_ver_prompt(): void
+    {
+        $outro = User::factory()->create();
+        $prompt = $this->prompt($outro);
+
+        $this->actingAs($this->usuario)
+            ->get(route('prompts.show', $prompt))
+            ->assertForbidden();
+    }
+
+    public function test_proprietario_consegue_ver_o_proprio_prompt(): void
+    {
+        $prompt = $this->prompt($this->usuario);
+
+        $this->actingAs($this->usuario)
+            ->get(route('prompts.show', $prompt))
+            ->assertOk()
+            ->assertSee($prompt->input_text);
+    }
+
+    // (e) Rate limiting
+
+    public function test_a_geracao_e_limitada_a_seis_requisicoes_por_minuto(): void
+    {
+        $this->templateClassificado();
+
+        $intencao = ['user_input' => 'Criar uma API REST em Laravel com PHP.'];
+
+        for ($tentativa = 1; $tentativa <= 6; $tentativa++) {
+            $this->actingAs($this->usuario)
+                ->postJson(route('prompts.generate'), $intencao)
+                ->assertCreated();
+        }
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), $intencao);
+
+        $resposta->assertStatus(429);
+        $resposta->assertHeader('Retry-After');
+
+        // A sétima não passa nem grava.
+        $this->assertDatabaseCount('prompts', 6);
+    }
+
+    // (f) A tela de geração
 
     public function test_a_tela_oferece_o_modo_automatico_e_o_select_de_template_e_opcional(): void
     {
@@ -256,10 +304,12 @@ class PromptControllerTest extends TestCase
         $resposta->assertSee('🤖 Automático (A IA escolhe o melhor template para mim)', false);
         $resposta->assertSee($template->nome);
 
-        preg_match('/<select name="template_id"([^>]*)>/', $resposta->getContent(), $atributos);
+        foreach (['template_id', 'architecture_id', 'language_id', 'framework_id'] as $campo) {
+            preg_match('/<select name="'.$campo.'"([^>]*)>/', $resposta->getContent(), $atributos);
 
-        $this->assertNotEmpty($atributos, 'O select de template não foi renderizado.');
-        $this->assertStringNotContainsString('required', $atributos[1]);
+            $this->assertNotEmpty($atributos, "O select de {$campo} não foi renderizado.");
+            $this->assertStringNotContainsString('required', $atributos[1], "O select de {$campo} ainda está obrigatório.");
+        }
     }
 
     public function test_erros_de_validacao_sao_exibidos_no_campo_correspondente(): void

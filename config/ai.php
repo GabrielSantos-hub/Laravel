@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\AI\NullAIProvider;
+use App\Services\AI\Providers\GeminiAIProvider;
 
 return [
 
@@ -25,10 +26,14 @@ return [
     | Mapa de driver => classe. Novos provedores (OpenAI, Anthropic, Ollama...)
     | só precisam implementar AIProviderInterface e ser listados aqui.
     |
+    | O driver "gemini" exige GEMINI_API_KEY. Sem ela o provedor falha de
+    | propósito e o pipeline degrada para o "null", registrando um warning.
+    |
     */
 
     'providers' => [
         'null' => NullAIProvider::class,
+        'gemini' => GeminiAIProvider::class,
     ],
 
 ];

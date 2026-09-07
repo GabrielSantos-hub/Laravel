@@ -25,8 +25,12 @@
         @if ($prompt->template)
             · Template: <strong>{{ $prompt->template->nome }}</strong>
         @endif
-        · <strong>{{ $prompt->architecture->nome }}</strong>
-        · {{ $prompt->language->nome }}
+        @if ($prompt->architecture)
+            · <strong>{{ $prompt->architecture->nome }}</strong>
+        @endif
+        @if ($prompt->language)
+            · {{ $prompt->language->nome }}
+        @endif
         @if ($prompt->framework)
             · {{ $prompt->framework->nome }}
         @endif
