@@ -4,12 +4,9 @@
 <div class="container-fluid" style="max-width: 1100px; margin: 0 auto;">
 
     @if ($errors->any())
-    <div class="alert alert-danger mb-4">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+    <div class="alert alert-danger mb-4 d-flex align-items-center gap-2">
+        <i class="fas fa-circle-exclamation"></i>
+        <span>Não foi possível gerar o prompt. Revise os campos destacados abaixo.</span>
     </div>
     @endif
 
@@ -33,47 +30,64 @@
         <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label text-muted small">Arquitetura</label>
-                <select name="architecture_id" id="architecture_id" class="form-select bg-light" required>
+                <select name="architecture_id" id="architecture_id" class="form-select bg-light @error('architecture_id') is-invalid @enderror" required>
                     <option value="">Selecione…</option>
                     @foreach ($architectures as $arch)
                     <option value="{{ $arch->id }}" @selected(old('architecture_id', request('architecture_id'))==$arch->id)>{{ $arch->nome }}</option>
                     @endforeach
                 </select>
+                @error('architecture_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="col-md-6">
                 <label class="form-label text-muted small">Template</label>
-                <select name="template_id" id="template_id" class="form-select bg-light" required>
-                    <option value="">Selecione…</option>
+                <select name="template_id" id="template_id" class="form-select bg-light @error('template_id') is-invalid @enderror">
+                    <option value="" @selected(! old('template_id', request('template_id')))>🤖 Automático (A IA escolhe o melhor template para mim)</option>
                     @foreach ($templates as $tpl)
                     <option value="{{ $tpl->id }}" @selected(old('template_id', request('template_id'))==$tpl->id)>{{ $tpl->nome }}</option>
                     @endforeach
                 </select>
+                @error('template_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="col-md-6">
                 <label class="form-label text-muted small">Linguagem / tecnologia</label>
-                <select name="language_id" id="language_select" class="form-select bg-light" required>
+                <select name="language_id" id="language_select" class="form-select bg-light @error('language_id') is-invalid @enderror" required>
                     <option value="">Selecione…</option>
                     @foreach ($languages as $lang)
                     <option value="{{ $lang->id }}" @selected(old('language_id', request('language_id'))==$lang->id)>{{ $lang->nome }}</option>
                     @endforeach
                 </select>
+                @error('language_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="col-md-6">
                 <label class="form-label text-muted small">Framework (opcional)</label>
-                <select name="framework_id" id="framework_select" class="form-select bg-light" disabled>
+                <select name="framework_id" id="framework_select" class="form-select bg-light @error('framework_id') is-invalid @enderror" disabled>
                     <option value="">Selecione a linguagem primeiro…</option>
                 </select>
+                @error('framework_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
         </div>
 
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label text-muted small">Sua intenção / contexto</label>
-                <textarea name="input_text" class="form-control bg-light" rows="12" required
-                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('input_text') }}</textarea>
+                <textarea name="user_input" class="form-control bg-light @error('user_input') is-invalid @enderror" rows="12" required
+                    minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
+                    maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
+                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('user_input') }}</textarea>
+                @error('user_input')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <div class="d-flex justify-content-between align-items-center mb-2">
