@@ -269,6 +269,11 @@ class IntentAnalyzerTest extends TestCase
                 return $this->payload;
             }
 
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                return $templateBody;
+            }
+
             public function name(): string
             {
                 return 'fake-llm';
@@ -283,6 +288,11 @@ class IntentAnalyzerTest extends TestCase
             public function __construct(private \Throwable $error) {}
 
             public function analyzeIntent(string $userInput): array
+            {
+                throw $this->error;
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
             {
                 throw $this->error;
             }
@@ -308,6 +318,11 @@ class IntentAnalyzerTest extends TestCase
                 $this->lastInput = $userInput;
 
                 return [];
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                return $templateBody;
             }
 
             public function name(): string

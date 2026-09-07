@@ -13,6 +13,10 @@ use App\Contracts\AIProviderInterface;
  */
 class NullAIProvider implements AIProviderInterface
 {
+    public function __construct(
+        private readonly TemplateInterpolator $interpolator = new TemplateInterpolator
+    ) {}
+
     /** @var array<string, array<int, string>> */
     private const TECHNOLOGIES = [
         'PHP' => ['php'],
@@ -87,6 +91,15 @@ class NullAIProvider implements AIProviderInterface
             'constraints' => $this->extractConstraints($userInput),
             'type' => $this->detectType($userInput),
         ];
+    }
+
+    /**
+     * Sem LLM não há refino de redação: a composição offline é a própria
+     * interpolação determinística do template.
+     */
+    public function composePrompt(string $instruction, string $templateBody, array $variables): string
+    {
+        return $this->interpolator->render($templateBody, $variables);
     }
 
     public function name(): string
