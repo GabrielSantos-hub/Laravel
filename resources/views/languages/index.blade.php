@@ -1,53 +1,44 @@
 @extends('layout')
 
 @section('conteudo')
-<div class="container-fluid pt-3" style="max-width: 950px; margin: 0 auto;">
+<div class="container-fluid pt-3" style="max-width: 1100px; margin: 0 auto;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 style="color: #333; font-weight: 600;">Linguagens</h3>
-        @if(auth()->user()->role === 'ADM')
-        <a href="{{ route('languages.create') }}" class="btn text-white" style="background-color: #5b4ce6; border-radius: 6px;">
-            Nova Linguagem
-        </a>
-        @endif
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <h3 class="mb-0">Linguagens</h3>
+        @auth
+            @if(auth()->user()->role === 'ADM')
+            <a href="{{ route('languages.create') }}" class="btn text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 6px;">
+                Nova Linguagem
+            </a>
+            @endif
+        @endauth
     </div>
 
-    <div class="card shadow-sm border-0" style="border-radius: 8px;">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead style="background-color: #f8f9fa;">
-                    <tr>
-                        <th class="px-4 py-3 border-0 text-muted" style="font-size: 0.9rem;">ID</th>
-                        <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Nome</th>
-                        <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Slug</th>
-                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem; white-space: nowrap; width: 1%;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($languages as $lang)
-                    <tr>
-                        <td class="px-4 py-3 align-middle">{{ $lang->id }}</td>
-                        <td class="py-3 align-middle" style="font-weight: 500;">{{ $lang->nome }}</td>
-                        <td class="py-3 align-middle"><span class="badge bg-light text-dark border px-2 py-1">{{ $lang->slug }}</span></td>
-                        <td class="px-4 py-3 text-end align-middle">
-                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end align-items-sm-center">
-                                @if(auth()->user()->role === 'ADM')
-                                <a href="{{ route('languages.edit', $lang->id) }}" class="btn btn-dark btn-sm px-3">Editar</a>
-                                <form action="{{ route('languages.destroy', $lang->id) }}" method="POST" class="m-0">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-dark btn-sm px-3" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
-                                </form>
-                                @else
-                                <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $lang->id])) }}" class="btn text-white btn-sm px-3" style="background-color: #5b4ce6;">Selecionar</a>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    <div class="catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        @forelse($languages as $lang)
+        <article class="catalog-card">
+            <h4 class="h5 mb-1">{{ $lang->nome }}</h4>
+            <p class="mb-2">
+                <span class="badge bg-light text-dark border px-2 py-1">{{ $lang->slug }}</span>
+            </p>
+            @auth
+            <div class="d-flex flex-wrap gap-2 mt-auto">
+                @if(auth()->user()->role === 'ADM')
+                <a href="{{ route('languages.edit', $lang->id) }}" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">Editar</a>
+                <form action="{{ route('languages.destroy', $lang->id) }}" method="POST" class="m-0">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
+                </form>
+                @else
+                <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $lang->id])) }}" class="btn text-white btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6;">Selecionar</a>
+                @endif
+            </div>
+            @endauth
+        </article>
+        @empty
+        <p class="text-muted mb-0">Nenhuma linguagem cadastrada.</p>
+        @endforelse
     </div>
 </div>
 @endsection

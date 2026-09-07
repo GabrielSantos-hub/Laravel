@@ -1,62 +1,48 @@
 @extends('layout')
 
 @section('conteudo')
-<div class="container-fluid pt-3" style="max-width: 1000px; margin: 0 auto;">
+<div class="container-fluid pt-3" style="max-width: 1100px; margin: 0 auto;">
 
     @if (session('sucesso'))
-        <div class="alert alert-success mb-4">{{ session('sucesso') }}</div>
+        <div class="alert alert-success mb-4" role="alert">{{ session('sucesso') }}</div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 style="color: #333; font-weight: 600;">Templates de prompt</h3>
-        @if(auth()->user()->role === 'ADM')
-            <a href="{{ route('templates.create') }}" class="btn text-white" style="background-color: #5b4ce6; border-radius: 6px;">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <h3 class="mb-0">Templates de prompt</h3>
+        @auth
+            @if(auth()->user()->role === 'ADM')
+            <a href="{{ route('templates.create') }}" class="btn text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 6px;">
                 Novo template
             </a>
-        @endif
+            @endif
+        @endauth
     </div>
 
-    <div class="card shadow-sm border-0" style="border-radius: 8px;">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead style="background-color: #f8f9fa;">
-                    <tr>
-                        <th class="px-4 py-3 border-0 text-muted" style="font-size: 0.9rem;">Nome</th>
-                        <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Versão</th>
-                        <th class="py-3 border-0 text-muted" style="font-size: 0.9rem;">Ativo</th>
-                        <th class="px-4 py-3 border-0 text-muted text-end" style="font-size: 0.9rem; white-space: nowrap; width: 1%">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($templates as $t)
-                        <tr>
-                            <td class="px-4 py-3 align-middle" style="font-weight: 500;">{{ $t->nome }}</td>
-                            <td class="py-3 align-middle text-muted small">{{ $t->versao }}</td>
-                            <td class="py-3 align-middle">{{ $t->is_active ? 'Sim' : 'Não' }}</td>
-                            <td class="px-4 py-3 text-end align-middle">
-                                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end align-items-sm-center">
-                                    @if(auth()->user()->role === 'ADM')
-                                        <a href="{{ route('templates.edit', $t) }}" class="btn btn-dark btn-sm px-3">Editar</a>
-                                        <form action="{{ route('templates.destroy', $t) }}" method="POST" class="m-0"
-                                            onsubmit="return confirm('Excluir este template?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-dark btn-sm px-3">Excluir</button>
-                                        </form>
-                                    @else
-                                        <a href="{{ route('home', array_merge(request()->query(), ['template_id' => $t->id])) }}" class="btn text-white btn-sm px-3" style="background-color: #5b4ce6;">Selecionar</a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-4 py-4 text-center text-muted">Nenhum template cadastrado.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <div class="catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        @forelse ($templates as $t)
+        <article class="catalog-card">
+            <h4 class="h5 mb-1">{{ $t->nome }}</h4>
+            <p class="small text-muted mb-1">Versão {{ $t->versao }}</p>
+            <p class="small mb-2">{{ $t->is_active ? 'Ativo' : 'Inativo' }}</p>
+            @auth
+            <div class="d-flex flex-wrap gap-2 mt-auto">
+                @if(auth()->user()->role === 'ADM')
+                    <a href="{{ route('templates.edit', $t) }}" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">Editar</a>
+                    <form action="{{ route('templates.destroy', $t) }}" method="POST" class="m-0"
+                        onsubmit="return confirm('Excluir este template?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">Excluir</button>
+                    </form>
+                @else
+                    <a href="{{ route('home', array_merge(request()->query(), ['template_id' => $t->id])) }}" class="btn text-white btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6;">Selecionar</a>
+                @endif
+            </div>
+            @endauth
+        </article>
+        @empty
+        <p class="text-muted mb-0">Nenhum template cadastrado.</p>
+        @endforelse
     </div>
 </div>
 @endsection

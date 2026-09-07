@@ -7,15 +7,15 @@
         <div class="alert alert-success mb-4">{{ session('sucesso') }}</div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 style="color: #333; font-weight: 600;">Prompt salvo</h3>
-        <div class="d-flex gap-2">
-            <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-sm">Nova geração</a>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <h3 class="mb-0">Prompt salvo</h3>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">Nova geração</a>
             <form action="{{ route('prompts.destroy', $prompt) }}" method="POST" class="d-inline"
                 onsubmit="return confirm('Excluir este item do histórico?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
+                <button type="submit" class="btn btn-outline-danger btn-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">Excluir</button>
             </form>
         </div>
     </div>
@@ -46,14 +46,14 @@
     <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="text-muted mb-0">Saída</h6>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-all">Copiar saída</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" id="copy-all" aria-label="Copiar saída do prompt">Copiar saída</button>
         </div>
         @if ($prompt->template)
         <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"
-            style="background: #f4f5f7; border: 1px solid #dcdcdc; font-size: 0.8rem;">
-            <span class="fw-semibold text-uppercase" style="color: #5b4ce6; letter-spacing: 0.06em;">Template Ativado:</span>
+            style="background: var(--gueass-bg-muted); border: 1px solid var(--gueass-border); font-size: 0.8rem;">
+            <span class="fw-semibold text-uppercase" style="color: var(--gueass-accent); letter-spacing: 0.06em;">Template Ativado:</span>
             <span class="rounded px-2 py-1 fw-medium"
-                style="background: rgba(91, 76, 230, 0.12); color: #5b4ce6; border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
+                style="background: rgba(91, 76, 230, 0.12); color: var(--gueass-accent); border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
                 {{ $prompt->template->nome }}
             </span>
             @if ($prompt->template->descricao)

@@ -12,17 +12,17 @@
                     
                     <div class="mb-3">
                         <label for="nome" class="form-label text-muted">Nome da Linguagem</label>
-                        <input type="text" id="nome" name="nome" class="form-control" placeholder="Ex: JavaScript" required>
+                        <input type="text" id="nome" name="nome" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex: JavaScript" required>
                     </div>
 
                     <div class="mb-4">
                         <label for="slug" class="form-label text-muted">Slug (Identificador sem espaços)</label>
-                        <input type="text" id="slug" name="slug" class="form-control" placeholder="Ex: javascript" required>
+                        <input type="text" id="slug" name="slug" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex: javascript" required>
                         <div class="form-text">Usado pelo sistema para identificar a linguagem no backend.</div>
                     </div>
 
                     <div class="d-flex justify-content-center mt-4">
-                        <button type="submit" class="btn text-white px-5" style="background-color: #5b4ce6; border-radius: 8px; font-weight: 500;">
+                        <button type="submit" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white px-5" style="background-color: #5b4ce6; border-radius: 8px; font-weight: 500;">
                             Salvar
                         </button>
                     </div>

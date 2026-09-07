@@ -14,17 +14,17 @@
                 
                 <div class="mb-3">
                     <label class="form-label text-muted" style="font-weight: 500;">Nome do Padrão</label>
-                    <input type="text" name="nome" class="form-control bg-light" required placeholder="Ex: Hexagonal, Monólito, MVC">
+                    <input type="text" name="nome" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required placeholder="Ex: Hexagonal, Monólito, MVC">
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label text-muted" style="font-weight: 500;">Descrição / Definição</label>
-                    <textarea name="descricao" class="form-control bg-light" rows="3" required placeholder="Explique a função desta arquitetura..."></textarea>
+                    <textarea name="descricao" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" rows="3" required placeholder="Explique a função desta arquitetura..."></textarea>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn text-white px-4" style="background-color: #5b4ce6; border-radius: 6px;">Salvar Arquitetura</button>
-                    <a href="{{ route('architectures.index') }}" class="btn btn-light border px-4" style="border-radius: 6px;">Cancelar</a>
+                    <button type="submit" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white px-4" style="background-color: #5b4ce6; border-radius: 6px;">Salvar Arquitetura</button>
+                    <a href="{{ route('architectures.index') }}" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none btn-light border px-4" style="border-radius: 6px;">Cancelar</a>
                 </div>
             </form>
         </div>

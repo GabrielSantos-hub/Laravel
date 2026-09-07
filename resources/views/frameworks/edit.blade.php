@@ -15,17 +15,17 @@
 
                 <div class="mb-3">
                     <label class="form-label text-muted" style="font-weight: 500;">Nome do Framework</label>
-                    <input type="text" name="nome" class="form-control bg-light" required value="{{ $framework->nome }}">
+                    <input type="text" name="nome" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required value="{{ $framework->nome }}">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label text-muted" style="font-weight: 500;">Slug</label>
-                    <input type="text" name="slug" class="form-control bg-light" required value="{{ $framework->slug }}">
+                    <input type="text" name="slug" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required value="{{ $framework->slug }}">
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label text-muted" style="font-weight: 500;">Linguagem Relacionada</label>
-                    <select name="language_id" class="form-select bg-light" required>
+                    <select name="language_id" class="form-select focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required>
                         <option value="">Selecione a Linguagem...</option>
                         @foreach($languages as $lang)
                             <option value="{{ $lang->id }}" {{ $framework->language_id == $lang->id ? 'selected' : '' }}>
@@ -36,8 +36,8 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn text-white px-4" style="background-color: #5b4ce6; border-radius: 6px;">Atualizar Framework</button>
-                    <a href="{{ route('frameworks.index') }}" class="btn btn-light border px-4" style="border-radius: 6px;">Cancelar</a>
+                    <button type="submit" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white px-4" style="background-color: #5b4ce6; border-radius: 6px;">Atualizar Framework</button>
+                    <a href="{{ route('frameworks.index') }}" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none btn-light border px-4" style="border-radius: 6px;">Cancelar</a>
                 </div>
             </form>
         </div>
