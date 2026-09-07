@@ -41,6 +41,7 @@ class PromptControllerTest extends TestCase
 
         $resposta->assertRedirect(route('home'));
         $resposta->assertSessionHas('sucesso');
+        $resposta->assertSessionHas('selected_template_id', $template->id);
         $resposta->assertSessionHas(
             'last_output',
             'Especialista em PHP, Laravel, seguindo Clean Architecture. '
@@ -69,7 +70,7 @@ class PromptControllerTest extends TestCase
         $resposta->assertJsonPath('manual_selection', false);
         $resposta->assertJsonPath('intent.type', 'feature');
         $resposta->assertJsonPath('intent.technologies', ['PHP', 'Laravel']);
-        $resposta->assertJsonStructure(['prompt_id', 'prompt', 'template' => ['id', 'nome', 'versao'], 'intent']);
+        $resposta->assertJsonStructure(['prompt_id', 'prompt', 'template' => ['id', 'nome', 'descricao', 'versao'], 'intent']);
     }
 
     public function test_o_formulario_atual_continua_funcionando_com_o_campo_antigo(): void
@@ -330,6 +331,23 @@ class PromptControllerTest extends TestCase
         }
     }
 
+    public function test_a_tela_destaca_o_template_ativado_apos_gerar(): void
+    {
+        $template = $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)
+            ->followingRedirects()
+            ->post(route('prompts.generate'), [
+                'user_input' => 'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
+            ]);
+
+        $resposta->assertOk();
+        $resposta->assertViewHas('selectedTemplate', fn ($selecionado) => $template->is($selecionado));
+        $resposta->assertSee('Template Ativado:', false);
+        $resposta->assertSee($template->nome);
+        $resposta->assertSee($template->descricao);
+    }
+
     public function test_erros_de_validacao_sao_exibidos_no_campo_correspondente(): void
     {
         $this->templateClassificado();
@@ -370,6 +388,7 @@ class PromptControllerTest extends TestCase
 
         $template = Template::query()->create([
             'nome' => 'Template Laravel',
+            'descricao' => 'Geração de API REST com persona sênior.',
             'corpo_template' => 'Especialista em {technologies}, seguindo {architecture}. Tarefa: {user_input}',
             'versao' => '1',
             'is_active' => true,

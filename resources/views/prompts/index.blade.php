@@ -85,6 +85,20 @@
                         <i class="far fa-copy"></i> Copiar
                     </button>
                 </div>
+                @if ($selectedTemplate)
+                <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"
+                    style="background: #f4f5f7; border: 1px solid #dcdcdc; font-size: 0.8rem;">
+                    <span class="fw-semibold text-uppercase" style="color: #5b4ce6; letter-spacing: 0.06em;">Template Ativado:</span>
+                    <span class="rounded px-2 py-1 fw-medium"
+                        style="background: rgba(91, 76, 230, 0.12); color: #5b4ce6; border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
+                        {{ $selectedTemplate->nome }}
+                    </span>
+                    @if ($selectedTemplate->descricao)
+                    <span class="d-none d-sm-inline text-muted">|</span>
+                    <span class="fst-italic text-muted">{{ $selectedTemplate->descricao }}</span>
+                    @endif
+                </div>
+                @endif
                 <textarea id="output_text" class="form-control bg-white" rows="12" readonly
                     placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
             </div>

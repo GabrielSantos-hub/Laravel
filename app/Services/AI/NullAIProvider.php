@@ -62,7 +62,9 @@ class NullAIProvider implements AIProviderInterface
     private const TYPES = [
         'bugfix' => ['bug', 'corrig', 'conserta', 'erro', 'falha', 'defeito', 'fix'],
         'test' => ['test', 'phpunit', 'pest', 'cobertura'],
-        'documentation' => ['document', 'readme', 'docblock'],
+        'documentation' => ['document', 'readme', 'docblock', 'openapi', 'swagger'],
+        'analysis' => ['analisa', 'análise', 'auditor', 'diagnost', 'code review', 'inspecion', 'revisar o código'],
+        'architecture' => ['arquitet', 'c4 model', 'system design', 'modelagem de sistema'],
         'refactor' => ['refator', 'refactor', 'reescrev', 'otimiz', 'melhorar o código'],
         'feature' => ['cria', 'implement', 'adicion', 'desenvolv', 'constru', 'gera', 'nova', 'novo', 'feature', 'faça', 'faca', 'crud', 'cadastro', 'login', 'modulo'],
     ];

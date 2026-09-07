@@ -22,8 +22,9 @@ class HomeRouteTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('prompts.index');
-        $response->assertViewHas(['architectures', 'languages', 'frameworks']);
+        $response->assertViewHas(['architectures', 'languages', 'frameworks', 'selectedTemplate']);
         $response->assertViewMissing('templates');
+        $this->assertNull($response->viewData('selectedTemplate'));
     }
 
     public function test_a_tela_de_geracao_nao_oferece_escolha_de_template(): void

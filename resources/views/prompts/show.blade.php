@@ -48,6 +48,20 @@
             <h6 class="text-muted mb-0">Saída</h6>
             <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-all">Copiar saída</button>
         </div>
+        @if ($prompt->template)
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"
+            style="background: #f4f5f7; border: 1px solid #dcdcdc; font-size: 0.8rem;">
+            <span class="fw-semibold text-uppercase" style="color: #5b4ce6; letter-spacing: 0.06em;">Template Ativado:</span>
+            <span class="rounded px-2 py-1 fw-medium"
+                style="background: rgba(91, 76, 230, 0.12); color: #5b4ce6; border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
+                {{ $prompt->template->nome }}
+            </span>
+            @if ($prompt->template->descricao)
+            <span class="d-none d-sm-inline text-muted">|</span>
+            <span class="fst-italic text-muted">{{ $prompt->template->descricao }}</span>
+            @endif
+        </div>
+        @endif
         <div class="card border-0 shadow-sm">
             <div class="card-body bg-white" id="output-block" style="white-space: pre-wrap;">{{ $prompt->output_text }}</div>
         </div>

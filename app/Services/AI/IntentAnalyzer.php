@@ -32,7 +32,7 @@ class IntentAnalyzer
     public const MAX_OBJECTIVE_LENGTH = 300;
 
     /** Tipos aceitos pelo pipeline; qualquer outro valor vira `general`. */
-    public const TYPES = ['feature', 'bugfix', 'refactor', 'test', 'documentation', 'general'];
+    public const TYPES = ['feature', 'bugfix', 'refactor', 'test', 'documentation', 'analysis', 'architecture', 'generic', 'general'];
 
     public const DEFAULT_TYPE = 'general';
 

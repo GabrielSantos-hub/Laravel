@@ -9,6 +9,7 @@ use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
+use App\Models\Template;
 use App\Services\PromptPipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,10 +25,15 @@ class PromptController extends Controller
 
     public function index(): View
     {
+        $selectedId = session('selected_template_id');
+
         return view('prompts.index', [
             'architectures' => Architecture::query()->orderBy('nome')->get(),
             'languages' => Language::query()->orderBy('nome')->get(),
             'frameworks' => Framework::query()->with('language')->orderBy('nome')->get(),
+            'selectedTemplate' => $selectedId
+                ? Template::query()->find($selectedId)
+                : null,
         ]);
     }
 
@@ -86,7 +92,8 @@ class PromptController extends Controller
         return redirect()
             ->route('home')
             ->with('sucesso', 'Prompt gerado e salvo no histórico.')
-            ->with('last_output', $resultado->prompt);
+            ->with('last_output', $resultado->prompt)
+            ->with('selected_template_id', $resultado->template->getKey());
     }
 
     public function destroy($id): RedirectResponse

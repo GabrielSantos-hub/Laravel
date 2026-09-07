@@ -63,7 +63,10 @@ class TemplateSelector
         'bugfix' => ['bug', 'correcao', 'fix', 'debug'],
         'refactor' => ['refactor', 'refatoracao', 'refatorar'],
         'test' => ['test', 'teste', 'unit'],
-        'documentation' => ['doc', 'readme'],
+        'documentation' => ['doc', 'readme', 'openapi', 'swagger'],
+        'analysis' => ['analise', 'diagnostico', 'review', 'auditor'],
+        'architecture' => ['arquitetura', 'ddd', 'c4', 'systemdesign'],
+        'generic' => ['generico', 'geral', 'fallback', 'coringa'],
         'general' => [],
     ];
 
@@ -128,6 +131,16 @@ class TemplateSelector
      */
     private function fallbackTemplate(): ?Template
     {
+        $marcado = Template::query()
+            ->where('is_active', true)
+            ->where('is_generic', true)
+            ->orderBy('id')
+            ->first();
+
+        if ($marcado !== null) {
+            return $marcado;
+        }
+
         $candidatos = Template::query()
             ->where('is_active', true)
             ->whereDoesntHave('languages')
@@ -261,7 +274,14 @@ class TemplateSelector
 
     private function typeScore(Template $template, ?string $type): int
     {
-        $hints = self::TYPE_HINTS[mb_strtolower((string) $type)] ?? [];
+        $intentType = mb_strtolower((string) $type);
+        $catalogType = mb_strtolower((string) ($template->intent_type ?? ''));
+
+        if ($catalogType !== '' && $this->typesCompatible($catalogType, $intentType)) {
+            return self::WEIGHT_TYPE;
+        }
+
+        $hints = self::TYPE_HINTS[$intentType] ?? [];
 
         if ($hints === []) {
             return 0;
@@ -276,6 +296,18 @@ class TemplateSelector
         }
 
         return 0;
+    }
+
+    private function typesCompatible(string $catalogType, string $intentType): bool
+    {
+        if ($catalogType === $intentType) {
+            return true;
+        }
+
+        $genericos = ['generic', 'general'];
+
+        return in_array($catalogType, $genericos, true)
+            && in_array($intentType, $genericos, true);
     }
 
     /**

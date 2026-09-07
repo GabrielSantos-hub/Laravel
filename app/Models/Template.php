@@ -12,13 +12,18 @@ class Template extends Model
 
     protected $fillable = [
         'nome',
+        'slug',
+        'descricao',
+        'intent_type',
         'corpo_template',
         'versao',
         'is_active',
+        'is_generic',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_generic' => 'boolean',
     ];
 
     public function prompts(): HasMany

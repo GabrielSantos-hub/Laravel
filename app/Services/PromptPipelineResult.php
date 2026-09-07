@@ -42,6 +42,7 @@ readonly class PromptPipelineResult
             'template' => [
                 'id' => $this->template->getKey(),
                 'nome' => $this->template->nome,
+                'descricao' => $this->template->descricao,
                 'versao' => $this->template->versao,
             ],
             'intent' => $this->intent,
