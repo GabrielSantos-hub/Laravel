@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Template extends Model
@@ -24,5 +24,24 @@ class Template extends Model
     public function prompts(): HasMany
     {
         return $this->hasMany(Prompt::class);
+    }
+
+    /**
+     * Linguagens para as quais este template foi classificado. Um template sem
+     * nenhuma linguagem associada é considerado genérico pelo TemplateSelector.
+     */
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(Language::class);
+    }
+
+    public function frameworks(): BelongsToMany
+    {
+        return $this->belongsToMany(Framework::class);
+    }
+
+    public function architectures(): BelongsToMany
+    {
+        return $this->belongsToMany(Architecture::class);
     }
 }

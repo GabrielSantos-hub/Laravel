@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Language extends Model
 {
@@ -11,11 +12,16 @@ class Language extends Model
 
     protected $fillable = [
         'nome',
-        'slug'
+        'slug',
     ];
 
     public function frameworks()
     {
-        return $this->hasMany(Framework::class, 'language_id');  //Uma linguagem tem vários frameworks
+        return $this->hasMany(Framework::class, 'language_id');  // Uma linguagem tem vários frameworks
+    }
+
+    public function templates(): BelongsToMany
+    {
+        return $this->belongsToMany(Template::class);
     }
 }

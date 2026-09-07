@@ -1,0 +1,316 @@
+<?php
+
+namespace App\Services\AI;
+
+use App\Models\Architecture;
+use App\Models\Framework;
+use App\Models\Language;
+use App\Models\Template;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * Segunda etapa do pipeline: escolhe qual Template atende melhor a intenção já
+ * estruturada pelo IntentAnalyzer.
+ *
+ * A decisão é 100% local (Eloquent/SQL), sem nenhuma chamada a API de IA.
+ *
+ * Modo manual: quando o usuário escolhe o template na tela, o id vem em
+ * $forcedTemplateId e a pontuação é ignorada.
+ *
+ * Modo automático: cada template ativo recebe uma pontuação de compatibilidade.
+ * Templates classificados (com linguagens, frameworks ou arquiteturas
+ * associados) são pontuados pelas relações; templates ainda não classificados
+ * caem num fallback textual, deliberadamente limitado a MAX_TEXT_SCORE para
+ * nunca superar uma associação explícita.
+ */
+class TemplateSelector
+{
+    public const WEIGHT_LANGUAGE = 4;
+
+    public const WEIGHT_FRAMEWORK = 6;
+
+    public const WEIGHT_ARCHITECTURE = 5;
+
+    public const WEIGHT_TYPE = 2;
+
+    public const WEIGHT_TEXT_HINT = 1;
+
+    public const MAX_TEXT_SCORE = 3;
+
+    /**
+     * Radicais procurados no nome do template para casar com o tipo da
+     * intenção. Já estão normalizados (minúsculos e sem acento).
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const TYPE_HINTS = [
+        'feature' => ['feature', 'funcionalidade', 'implementacao'],
+        'bugfix' => ['bug', 'correcao', 'fix', 'debug'],
+        'refactor' => ['refactor', 'refatoracao', 'refatorar'],
+        'test' => ['test', 'teste', 'unit'],
+        'documentation' => ['doc', 'readme'],
+        'general' => [],
+    ];
+
+    private const ACCENTS = [
+        'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
+        'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+        'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+        'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+        'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+        'ç' => 'c', 'ñ' => 'n',
+    ];
+
+    /**
+     * @param  array<string, mixed>  $structuredIntent  Saída do IntentAnalyzer.
+     */
+    public function select(array $structuredIntent, ?int $forcedTemplateId = null): ?Template
+    {
+        if ($forcedTemplateId !== null) {
+            return Template::query()
+                ->whereKey($forcedTemplateId)
+                ->where('is_active', true)
+                ->first();
+        }
+
+        return $this->selectAutomatically($structuredIntent);
+    }
+
+    /**
+     * @param  array<string, mixed>  $structuredIntent
+     */
+    private function selectAutomatically(array $structuredIntent): ?Template
+    {
+        $context = $this->buildContext($structuredIntent);
+
+        $best = null;
+        $bestScore = 0;
+
+        $templates = Template::query()
+            ->where('is_active', true)
+            ->with(['languages', 'frameworks', 'architectures'])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($templates as $template) {
+            $score = $this->score($template, $context);
+
+            // Comparação estrita: em caso de empate vence o menor id, o que
+            // mantém a escolha determinística entre execuções.
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $template;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * Traduz os nomes soltos vindos da intenção para os ids reais do catálogo.
+     *
+     * @param  array<string, mixed>  $structuredIntent
+     * @return array{
+     *     technologies: array<int, string>,
+     *     architecture: string|null,
+     *     type: string|null,
+     *     language_ids: array<int, int>,
+     *     framework_ids: array<int, int>,
+     *     architecture_ids: array<int, int>
+     * }
+     */
+    private function buildContext(array $structuredIntent): array
+    {
+        $technologies = $this->stringList($structuredIntent['technologies'] ?? []);
+        $architecture = $this->nullableString($structuredIntent['architecture'] ?? null);
+
+        return [
+            'technologies' => $technologies,
+            'architecture' => $architecture,
+            'type' => $this->nullableString($structuredIntent['type'] ?? null),
+            'language_ids' => $this->resolveIds(Language::query()->get(), $technologies),
+            'framework_ids' => $this->resolveIds(Framework::query()->get(), $technologies),
+            'architecture_ids' => $this->resolveIds(
+                Architecture::query()->get(),
+                $architecture === null ? [] : [$architecture]
+            ),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function score(Template $template, array $context): int
+    {
+        $languageIds = $template->languages->modelKeys();
+        $frameworkIds = $template->frameworks->modelKeys();
+        $architectureIds = $template->architectures->modelKeys();
+
+        $isClassified = $languageIds !== [] || $frameworkIds !== [] || $architectureIds !== [];
+
+        $score = $isClassified
+            ? $this->dimensionScore($languageIds, $context['language_ids'], self::WEIGHT_LANGUAGE)
+                + $this->dimensionScore($frameworkIds, $context['framework_ids'], self::WEIGHT_FRAMEWORK)
+                + $this->dimensionScore($architectureIds, $context['architecture_ids'], self::WEIGHT_ARCHITECTURE)
+            : $this->textScore($template, $context);
+
+        return $score + $this->typeScore($template, $context['type']);
+    }
+
+    /**
+     * Pontua uma dimensão (linguagem, framework ou arquitetura).
+     *
+     * Sem interseção há penalidade: um template marcado como Python não deve
+     * ser escolhido para uma intenção que pede PHP. A penalidade só vale quando
+     * a intenção realmente citou algo daquela dimensão e o template está
+     * classificado nela — nos demais casos a dimensão é neutra.
+     *
+     * @param  array<int, int|string>  $templateIds
+     * @param  array<int, int>  $intentIds
+     */
+    private function dimensionScore(array $templateIds, array $intentIds, int $weight): int
+    {
+        if ($templateIds === [] || $intentIds === []) {
+            return 0;
+        }
+
+        $overlap = array_intersect(array_map('intval', $templateIds), $intentIds);
+
+        return $overlap === [] ? -$weight : $weight * count($overlap);
+    }
+
+    /**
+     * Fallback para templates que ainda não foram classificados: procura os
+     * termos da intenção no nome e no corpo do template.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function textScore(Template $template, array $context): int
+    {
+        $haystack = $template->nome.' '.$template->corpo_template;
+
+        $terms = $context['technologies'];
+        if ($context['architecture'] !== null) {
+            $terms[] = $context['architecture'];
+        }
+
+        $score = 0;
+        foreach (array_unique($terms) as $term) {
+            if ($this->mentions($haystack, $term)) {
+                $score += self::WEIGHT_TEXT_HINT;
+            }
+        }
+
+        return min($score, self::MAX_TEXT_SCORE);
+    }
+
+    private function typeScore(Template $template, ?string $type): int
+    {
+        $hints = self::TYPE_HINTS[mb_strtolower((string) $type)] ?? [];
+
+        if ($hints === []) {
+            return 0;
+        }
+
+        $nome = $this->normalize((string) $template->nome);
+
+        foreach ($hints as $hint) {
+            if ($nome !== '' && str_contains($nome, $hint)) {
+                return self::WEIGHT_TYPE;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * @param  iterable<int, Model>  $records
+     * @param  array<int, string>  $terms
+     * @return array<int, int>
+     */
+    private function resolveIds(iterable $records, array $terms): array
+    {
+        $needles = array_filter(array_map(fn (string $term): string => $this->normalize($term), $terms));
+
+        if ($needles === []) {
+            return [];
+        }
+
+        $ids = [];
+
+        foreach ($records as $record) {
+            foreach ($this->aliases($record) as $alias) {
+                if (in_array($alias, $needles, true)) {
+                    $ids[] = (int) $record->getKey();
+                    break;
+                }
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function aliases(Model $record): array
+    {
+        $aliases = [
+            $this->normalize((string) ($record->getAttribute('nome') ?? '')),
+            $this->normalize((string) ($record->getAttribute('slug') ?? '')),
+        ];
+
+        return array_values(array_unique(array_filter($aliases)));
+    }
+
+    private function mentions(string $haystack, string $term): bool
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return false;
+        }
+
+        return preg_match('/(?<![\w#.])'.preg_quote($term, '/').'(?!\w)/iu', $haystack) === 1;
+    }
+
+    private function normalize(string $value): string
+    {
+        $value = strtr(mb_strtolower(trim($value)), self::ACCENTS);
+
+        return preg_replace('/[^a-z0-9#+]+/u', '', $value) ?? '';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function stringList(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $items = [];
+
+        foreach ($value as $item) {
+            $item = $this->nullableString($item);
+
+            if ($item !== null) {
+                $items[] = $item;
+            }
+        }
+
+        return array_values(array_unique($items));
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if (is_bool($value) || ! is_scalar($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+}

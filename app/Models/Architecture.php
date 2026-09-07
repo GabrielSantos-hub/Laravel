@@ -3,21 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Architecture extends Model
 {
     // Informa qual tabela este model gerencia
     protected $table = 'architectures';
 
-    //Quais campos podem ser preenchidos pelos formulários 
+    // Quais campos podem ser preenchidos pelos formulários
     protected $fillable = [
         'nome',
-        'descricao'
+        'descricao',
     ];
 
-    public function templates(): HasMany
+    public function templates(): BelongsToMany
     {
-        return $this->hasMany(Template::class);
+        return $this->belongsToMany(Template::class);
     }
 }
