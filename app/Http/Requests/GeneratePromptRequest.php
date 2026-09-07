@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Template;
 use App\Services\AI\IntentAnalyzer;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 class GeneratePromptRequest extends FormRequest
 {
@@ -29,7 +27,6 @@ class GeneratePromptRequest extends FormRequest
                 'min:'.IntentAnalyzer::MIN_INPUT_LENGTH,
                 'max:'.IntentAnalyzer::MAX_INPUT_LENGTH,
             ],
-            'template_id' => ['nullable', 'integer', 'exists:templates,id'],
             'architecture_id' => ['nullable', 'integer', 'exists:architectures,id'],
             'language_id' => ['nullable', 'integer', 'exists:languages,id'],
             'framework_id' => ['nullable', 'integer', 'exists:frameworks,id'],
@@ -47,27 +44,6 @@ class GeneratePromptRequest extends FormRequest
         }
     }
 
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            if ($validator->errors()->isNotEmpty() || ! $this->filled('template_id')) {
-                return;
-            }
-
-            $ativo = Template::query()
-                ->whereKey($this->input('template_id'))
-                ->where('is_active', true)
-                ->exists();
-
-            if (! $ativo) {
-                $validator->errors()->add(
-                    'template_id',
-                    'O template selecionado está inativo ou não existe.'
-                );
-            }
-        });
-    }
-
     /**
      * @return array<string, string>
      */
@@ -77,7 +53,6 @@ class GeneratePromptRequest extends FormRequest
             'user_input.required' => 'Descreva o que você precisa gerar.',
             'user_input.min' => 'Descreva sua intenção com mais detalhes: são necessários ao menos :min caracteres.',
             'user_input.max' => 'Sua descrição é longa demais: o limite é de :max caracteres.',
-            'template_id.exists' => 'O template selecionado não existe.',
             'architecture_id.exists' => 'A arquitetura selecionada não existe.',
             'language_id.exists' => 'A linguagem selecionada não existe.',
             'framework_id.exists' => 'O framework selecionado não existe.',
@@ -91,7 +66,6 @@ class GeneratePromptRequest extends FormRequest
     {
         return [
             'user_input' => 'descrição da intenção',
-            'template_id' => 'template',
             'architecture_id' => 'arquitetura',
             'language_id' => 'linguagem',
             'framework_id' => 'framework',

@@ -39,6 +39,8 @@ class NullAIProviderTest extends TestCase
     {
         return [
             'feature' => ['Implementar o cadastro de clientes.', 'feature'],
+            'crud' => ['Faça um crud de cadastro de clientes.', 'feature'],
+            'login' => ['Faça um sistema de login com recuperação de senha.', 'feature'],
             'bugfix' => ['Corrigir o erro ao salvar o pedido.', 'bugfix'],
             'refactor' => ['Refatorar o serviço de faturamento.', 'refactor'],
             'test' => ['Escrever testes unitários para o repositório.', 'test'],

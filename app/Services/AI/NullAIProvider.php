@@ -64,7 +64,7 @@ class NullAIProvider implements AIProviderInterface
         'test' => ['test', 'phpunit', 'pest', 'cobertura'],
         'documentation' => ['document', 'readme', 'docblock'],
         'refactor' => ['refator', 'refactor', 'reescrev', 'otimiz', 'melhorar o código'],
-        'feature' => ['cria', 'implement', 'adicion', 'desenvolv', 'constru', 'gera', 'nova', 'novo', 'feature'],
+        'feature' => ['cria', 'implement', 'adicion', 'desenvolv', 'constru', 'gera', 'nova', 'novo', 'feature', 'faça', 'faca', 'crud', 'cadastro', 'login', 'modulo'],
     ];
 
     /** @var array<int, string> */

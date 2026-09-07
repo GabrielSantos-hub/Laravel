@@ -9,7 +9,6 @@ use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
-use App\Models\Template;
 use App\Services\PromptPipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,10 +28,6 @@ class PromptController extends Controller
             'architectures' => Architecture::query()->orderBy('nome')->get(),
             'languages' => Language::query()->orderBy('nome')->get(),
             'frameworks' => Framework::query()->with('language')->orderBy('nome')->get(),
-            'templates' => Template::query()
-                ->where('is_active', true)
-                ->orderBy('nome')
-                ->get(),
         ]);
     }
 
@@ -59,14 +54,16 @@ class PromptController extends Controller
         try {
             $resultado = $this->pipeline->generate(
                 $validated['user_input'],
-                $validated['template_id'] ?? null
+                catalogHints: [
+                    'language_id' => $validated['language_id'] ?? null,
+                    'framework_id' => $validated['framework_id'] ?? null,
+                    'architecture_id' => $validated['architecture_id'] ?? null,
+                ],
             );
         } catch (InvalidIntentException $e) {
             throw ValidationException::withMessages(['user_input' => $e->getMessage()]);
         } catch (NoCompatibleTemplateException $e) {
-            throw ValidationException::withMessages([
-                ($e->wasManualSelection() ? 'template_id' : 'user_input') => $e->getMessage(),
-            ]);
+            throw ValidationException::withMessages(['user_input' => $e->getMessage()]);
         }
 
         $prompt = Prompt::query()->create([

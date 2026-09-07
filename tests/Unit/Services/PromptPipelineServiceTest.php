@@ -178,6 +178,59 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertSame([], $logger->registros);
     }
 
+    public function test_pedido_generico_usa_o_template_de_fallback(): void
+    {
+        $this->templateClassificado();
+
+        $fallback = Template::query()->create([
+            'nome' => 'Desenvolvimento de Módulo / Feature',
+            'corpo_template' => 'Módulo: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resultado = $this->pipeline->generate('Faça um crud de cadastro de clientes.');
+
+        $this->assertTrue($fallback->is($resultado->template));
+        $this->assertFalse($resultado->manualSelection);
+        $this->assertStringStartsWith('Módulo:', $resultado->prompt);
+    }
+
+    public function test_dicas_do_catalogo_completam_a_intencao_sem_sobrescrever_o_texto(): void
+    {
+        $template = $this->templateClassificado();
+        $php = Language::query()->firstOrFail();
+        $laravel = Framework::query()->firstOrFail();
+        $clean = Architecture::query()->where('nome', 'Clean Architecture')->firstOrFail();
+
+        $resultado = $this->pipeline->generate(
+            'Faça um sistema de login com recuperação de senha.',
+            catalogHints: [
+                'language_id' => $php->id,
+                'framework_id' => $laravel->id,
+                'architecture_id' => $clean->id,
+            ],
+        );
+
+        $this->assertTrue($template->is($resultado->template));
+        $this->assertSame(['PHP', 'Laravel'], $resultado->intent['technologies']);
+        $this->assertSame('Clean Architecture', $resultado->intent['architecture']);
+    }
+
+    public function test_dicas_do_catalogo_nao_sobrescrevem_arquitetura_extraida_do_texto(): void
+    {
+        $this->templateClassificado();
+
+        $mvc = Architecture::query()->create(['nome' => 'MVC', 'descricao' => 'Camadas.']);
+
+        $resultado = $this->pipeline->generate(
+            'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
+            catalogHints: ['architecture_id' => $mvc->id],
+        );
+
+        $this->assertSame('Clean Architecture', $resultado->intent['architecture']);
+    }
+
     public function test_entrada_invalida_nao_e_degradada_e_continua_subindo(): void
     {
         $this->templateClassificado();

@@ -42,19 +42,6 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label text-muted small">Template</label>
-                <select name="template_id" id="template_id" class="form-select bg-light @error('template_id') is-invalid @enderror">
-                    <option value="" @selected(! old('template_id', request('template_id')))>🤖 Automático (A IA escolhe o melhor template para mim)</option>
-                    @foreach ($templates as $tpl)
-                    <option value="{{ $tpl->id }}" @selected(old('template_id', request('template_id'))==$tpl->id)>{{ $tpl->nome }}</option>
-                    @endforeach
-                </select>
-                @error('template_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="col-md-6">
                 <label class="form-label text-muted small">Linguagem / tecnologia</label>
                 <select name="language_id" id="language_select" class="form-select bg-light @error('language_id') is-invalid @enderror">
                     <option value="">Deixar a IA deduzir do texto…</option>
@@ -111,10 +98,6 @@
 
 <script>
     (function() {
-        const arch = document.getElementById('architecture_id');
-        const tpl = document.getElementById('template_id');
-        if (!arch || !tpl) return;
-
         const out = document.getElementById('output_text');
         const btn = document.getElementById('btn-copy-output');
         if (btn && out) {

@@ -22,10 +22,11 @@ class HomeRouteTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('prompts.index');
-        $response->assertViewHas(['architectures', 'languages', 'frameworks', 'templates']);
+        $response->assertViewHas(['architectures', 'languages', 'frameworks']);
+        $response->assertViewMissing('templates');
     }
 
-    public function test_a_tela_de_geracao_oferece_apenas_templates_ativos(): void
+    public function test_a_tela_de_geracao_nao_oferece_escolha_de_template(): void
     {
         Template::query()->create([
             'nome' => 'Template ativo',
@@ -34,19 +35,10 @@ class HomeRouteTest extends TestCase
             'is_active' => true,
         ]);
 
-        Template::query()->create([
-            'nome' => 'Template arquivado',
-            'corpo_template' => 'Corpo.',
-            'versao' => '1',
-            'is_active' => false,
-        ]);
-
         $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
-        $this->assertSame(
-            ['Template ativo'],
-            $response->viewData('templates')->pluck('nome')->all()
-        );
+        $response->assertDontSee('name="template_id"', false);
+        $response->assertDontSee('Template ativo');
     }
 }

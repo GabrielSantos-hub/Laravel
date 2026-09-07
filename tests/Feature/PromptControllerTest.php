@@ -79,7 +79,6 @@ class PromptControllerTest extends TestCase
 
         $resposta = $this->actingAs($this->usuario)->post(route('prompts.generate'), [
             'input_text' => 'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
-            'template_id' => $template->id,
             'architecture_id' => $arquitetura->id,
             'language_id' => Language::query()->firstOrFail()->id,
             'framework_id' => '',
@@ -147,25 +146,6 @@ class PromptControllerTest extends TestCase
         $this->assertDatabaseCount('prompts', 0);
     }
 
-    public function test_template_inativo_e_recusado_na_validacao(): void
-    {
-        $inativo = Template::query()->create([
-            'nome' => 'Template arquivado',
-            'corpo_template' => 'Corpo.',
-            'versao' => '1',
-            'is_active' => false,
-        ]);
-
-        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
-            'user_input' => 'Criar uma API REST em Laravel com PHP.',
-            'template_id' => $inativo->id,
-        ]);
-
-        $resposta->assertUnprocessable();
-        $resposta->assertJsonValidationErrorFor('template_id');
-        $this->assertDatabaseCount('prompts', 0);
-    }
-
     public function test_visitante_nao_consegue_gerar_prompt(): void
     {
         $this->templateClassificado();
@@ -176,11 +156,11 @@ class PromptControllerTest extends TestCase
         $this->assertDatabaseCount('prompts', 0);
     }
 
-    // (c) Seleção manual de template
+    // (c) Seleção automática e dicas do catálogo
 
-    public function test_selecao_forcada_de_template_via_id(): void
+    public function test_template_id_enviado_no_payload_e_ignorado(): void
     {
-        $this->templateClassificado();
+        $compativel = $this->templateClassificado();
 
         $manual = Template::query()->create([
             'nome' => 'Template manual',
@@ -195,14 +175,51 @@ class PromptControllerTest extends TestCase
         ]);
 
         $resposta->assertCreated();
-        $resposta->assertJsonPath('template.id', $manual->id);
-        $resposta->assertJsonPath('manual_selection', true);
-        $resposta->assertJsonPath(
-            'prompt',
-            'Manual: Criar uma API REST em Laravel com PHP seguindo Clean Architecture'
-        );
+        $resposta->assertJsonPath('template.id', $compativel->id);
+        $resposta->assertJsonPath('manual_selection', false);
+        $this->assertSame($compativel->id, Prompt::query()->sole()->template_id);
+    }
 
-        $this->assertSame($manual->id, Prompt::query()->sole()->template_id);
+    public function test_pedido_generico_usa_o_template_de_fallback(): void
+    {
+        $this->templateClassificado();
+
+        $fallback = Template::query()->create([
+            'nome' => 'Desenvolvimento de Módulo / Feature',
+            'corpo_template' => 'Módulo: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'user_input' => 'Faça um crud de cadastro de clientes.',
+        ]);
+
+        $resposta->assertCreated();
+        $resposta->assertJsonPath('template.id', $fallback->id);
+        $resposta->assertJsonPath('manual_selection', false);
+        $this->assertDatabaseCount('prompts', 1);
+    }
+
+    public function test_os_selects_do_catalogo_enriquecem_a_intencao(): void
+    {
+        $this->templateClassificado();
+
+        $php = Language::query()->firstOrFail();
+        $laravel = Framework::query()->firstOrFail();
+        $clean = Architecture::query()->where('nome', 'Clean Architecture')->firstOrFail();
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'user_input' => 'Faça um sistema de login com recuperação de senha.',
+            'language_id' => $php->id,
+            'framework_id' => $laravel->id,
+            'architecture_id' => $clean->id,
+        ]);
+
+        $resposta->assertCreated();
+        $resposta->assertJsonPath('intent.technologies', ['PHP', 'Laravel']);
+        $resposta->assertJsonPath('intent.architecture', 'Clean Architecture');
+        $resposta->assertJsonPath('template.id', Template::query()->where('nome', 'Template Laravel')->value('id'));
     }
 
     // (d) Autorização na exclusão
@@ -294,17 +311,18 @@ class PromptControllerTest extends TestCase
 
     // (f) A tela de geração
 
-    public function test_a_tela_oferece_o_modo_automatico_e_o_select_de_template_e_opcional(): void
+    public function test_a_tela_nao_oferece_escolha_de_template(): void
     {
         $template = $this->templateClassificado();
 
         $resposta = $this->actingAs($this->usuario)->get(route('home'));
 
         $resposta->assertOk();
-        $resposta->assertSee('🤖 Automático (A IA escolhe o melhor template para mim)', false);
-        $resposta->assertSee($template->nome);
+        $resposta->assertDontSee('name="template_id"', false);
+        $resposta->assertDontSee($template->nome);
+        $resposta->assertDontSee('🤖 Automático', false);
 
-        foreach (['template_id', 'architecture_id', 'language_id', 'framework_id'] as $campo) {
+        foreach (['architecture_id', 'language_id', 'framework_id'] as $campo) {
             preg_match('/<select name="'.$campo.'"([^>]*)>/', $resposta->getContent(), $atributos);
 
             $this->assertNotEmpty($atributos, "O select de {$campo} não foi renderizado.");

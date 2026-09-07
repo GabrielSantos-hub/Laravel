@@ -15,8 +15,9 @@ use Illuminate\Database\Seeder;
  * A classificação é o que liga o catálogo ao TemplateSelector: template com
  * linguagem, framework ou arquitetura associados é pontuado pelas relações
  * (framework 6, arquitetura 5, linguagem 4); template sem nenhuma associação
- * cai no fallback textual, limitado a 3 pontos. Por isso o seeder classifica a
- * maioria dos templates e deixa poucos genéricos de propósito.
+ * cai no fallback textual, limitado a 3 pontos. Templates sem classificação e
+ * com nome genérico (módulo, feature, padrão) são a rede do TemplateSelector
+ * quando o pedido não cita stack — o sistema não devolve "nenhum compatível".
  *
  * Depende de LanguageSeeder e ArchitectureSeeder: as chaves usadas aqui são os
  * slugs das linguagens/frameworks e os nomes das arquiteturas de lá.
@@ -184,6 +185,24 @@ class TemplateSeeder extends Seeder
                     {% if architecture %}Direção arquitetural: {architecture}{% endif %}
 
                     Preserve o comportamento observável. Apresente os passos em incrementos pequenos, cada um com o teste que garante a equivalência antes e depois.
+
+                    {% if constraints %}Restrições obrigatórias:
+                    {constraints}{% endif %}
+                    TXT,
+            ],
+            [
+                'nome' => 'Desenvolvimento de Módulo / Feature',
+                'languages' => [],
+                'frameworks' => [],
+                'architectures' => [],
+                'corpo' => <<<'TXT'
+                    Você é um desenvolvedor sênior.
+
+                    Objetivo: {objective}
+                    {% if technologies %}Tecnologias envolvidas: {technologies}{% endif %}
+                    {% if architecture %}Arquitetura: {architecture}{% endif %}
+
+                    Entregue um módulo completo e utilizável: modelo de dados, fluxos principais (criação, leitura, atualização e exclusão quando couber), validações e os pontos de atenção que restaram. Explique a abordagem antes do código.
 
                     {% if constraints %}Restrições obrigatórias:
                     {constraints}{% endif %}

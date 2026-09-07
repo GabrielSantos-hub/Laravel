@@ -22,6 +22,10 @@ use Illuminate\Database\Eloquent\Model;
  * associados) são pontuados pelas relações; templates ainda não classificados
  * caem num fallback textual, deliberadamente limitado a MAX_TEXT_SCORE para
  * nunca superar uma associação explícita.
+ *
+ * Se ninguém pontuar acima de zero (pedido genérico, sem stack no texto), o
+ * seletor não devolve null: escolhe um template genérico do catálogo, para o
+ * usuário nunca ficar sem resposta numa intenção válida.
  */
 class TemplateSelector
 {
@@ -38,13 +42,24 @@ class TemplateSelector
     public const MAX_TEXT_SCORE = 3;
 
     /**
+     * Radicais no nome que identificam o template genérico de fallback.
+     * Já estão normalizados (minúsculos e sem acento).
+     *
+     * @var array<int, string>
+     */
+    private const FALLBACK_HINTS = [
+        'generico', 'generica', 'geral', 'padrao', 'fallback',
+        'modulo', 'feature', 'desenvolvimento',
+    ];
+
+    /**
      * Radicais procurados no nome do template para casar com o tipo da
      * intenção. Já estão normalizados (minúsculos e sem acento).
      *
      * @var array<string, array<int, string>>
      */
     private const TYPE_HINTS = [
-        'feature' => ['feature', 'funcionalidade', 'implementacao'],
+        'feature' => ['feature', 'funcionalidade', 'implementacao', 'modulo', 'crud', 'cadastro'],
         'bugfix' => ['bug', 'correcao', 'fix', 'debug'],
         'refactor' => ['refactor', 'refatoracao', 'refatorar'],
         'test' => ['test', 'teste', 'unit'],
@@ -103,7 +118,47 @@ class TemplateSelector
             }
         }
 
-        return $best;
+        return $best ?? $this->fallbackTemplate();
+    }
+
+    /**
+     * Última rede: template sem classificação, de preferência um marcado como
+     * genérico no nome. Só devolve null quando o catálogo está vazio ou só
+     * tem templates classificados incompatíveis — aí não há fallback honesto.
+     */
+    private function fallbackTemplate(): ?Template
+    {
+        $candidatos = Template::query()
+            ->where('is_active', true)
+            ->whereDoesntHave('languages')
+            ->whereDoesntHave('frameworks')
+            ->whereDoesntHave('architectures')
+            ->orderBy('id')
+            ->get();
+
+        if ($candidatos->isEmpty()) {
+            return null;
+        }
+
+        return $candidatos->first(fn (Template $template): bool => $this->isFallbackName($template))
+            ?? $candidatos->first();
+    }
+
+    private function isFallbackName(Template $template): bool
+    {
+        $nome = $this->normalize((string) $template->nome);
+
+        if ($nome === '') {
+            return false;
+        }
+
+        foreach (self::FALLBACK_HINTS as $hint) {
+            if (str_contains($nome, $hint)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

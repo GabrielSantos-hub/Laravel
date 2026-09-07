@@ -236,14 +236,45 @@ class TemplateSelectorTest extends TestCase
 
     public function test_intencao_malformada_nao_quebra_a_selecao(): void
     {
-        $this->template('Template PHP', 'Especialista em PHP.');
+        $generico = $this->template('Desenvolvimento de Módulo / Feature', 'Corpo genérico.');
 
-        $this->assertNull($this->selector->select([]));
-        $this->assertNull($this->selector->select([
+        $this->assertTrue($generico->is($this->selector->select([])));
+        $this->assertTrue($generico->is($this->selector->select([
             'technologies' => 'PHP',
             'architecture' => ['inválido'],
             'type' => null,
-        ]));
+        ])));
+    }
+
+    public function test_pedido_generico_cai_no_template_de_fallback(): void
+    {
+        $php = $this->language('PHP', 'php');
+
+        $classificado = $this->template('Template Laravel');
+        $classificado->languages()->attach($php);
+
+        $documentacao = $this->template('Documentação Técnica');
+        $fallback = $this->template('Desenvolvimento de Módulo / Feature');
+
+        $selecionado = $this->selector->select($this->intent(type: 'feature'));
+
+        $this->assertTrue($fallback->is($selecionado));
+        $this->assertFalse($classificado->is($selecionado));
+        $this->assertFalse($documentacao->is($selecionado));
+    }
+
+    public function test_fallback_nao_escolhe_template_classificado_incompativel(): void
+    {
+        $python = $this->language('Python', 'python');
+        $somentePython = $this->template('Template Django');
+        $somentePython->languages()->attach($python);
+
+        $fallback = $this->template('Prompt Genérico');
+
+        $selecionado = $this->selector->select($this->intent(technologies: ['PHP']));
+
+        $this->assertTrue($fallback->is($selecionado));
+        $this->assertFalse($somentePython->is($selecionado));
     }
 
     // Helpers
