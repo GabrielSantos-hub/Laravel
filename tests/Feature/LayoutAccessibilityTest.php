@@ -65,10 +65,13 @@ class LayoutAccessibilityTest extends TestCase
             ->get(route('languages.index'));
 
         $resposta->assertOk();
-        $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3', false);
+        $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4', false);
         $resposta->assertSee('PHP');
         $resposta->assertSee('<article class="catalog-card">', false);
+        $resposta->assertSee('catalog-tag', false);
         $resposta->assertSee('Menu do usuário', false);
+        $resposta->assertSee('Meu perfil', false);
+        $resposta->assertSee('user-avatar-fallback', false);
     }
 
     public function test_gerador_usa_grids_responsivos(): void
@@ -80,6 +83,9 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('prompt-io-grid grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch', false);
         $resposta->assertSee('id="theme-toggle"', false);
         $resposta->assertSee('for="user_input"', false);
+        $resposta->assertSee('dark:placeholder-slate-400', false);
+        $resposta->assertSee('Descreva o que você precisa gerar ou construir', false);
+        $resposta->assertSee('O resultado aparece aqui após gerar.', false);
     }
 
     public function test_arquiteturas_escondem_a_descricao_em_accordion(): void
@@ -98,5 +104,28 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('MVC:');
         $resposta->assertSee('Texto longo de descrição que não deve poluir a listagem principal até expandir.');
         $resposta->assertDontSee('<p class="text-muted small mb-2">Texto longo', false);
+        $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4', false);
+        $resposta->assertSee('<article class="catalog-card">', false);
+    }
+
+    public function test_admin_usa_os_mesmos_cards_e_acoes_suaves(): void
+    {
+        Language::query()->create([
+            'nome' => 'PHP',
+            'slug' => 'php',
+        ]);
+
+        $resposta = $this->actingAs(User::factory()->create(['role' => 'ADM']))
+            ->get(route('languages.index'));
+
+        $resposta->assertOk();
+        $resposta->assertSee('id="app-sidebar"', false);
+        $resposta->assertSee('id="user-menu-toggle"', false);
+        $resposta->assertSee('+ Nova Linguagem', false);
+        $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4', false);
+        $resposta->assertSee('btn-catalog-edit', false);
+        $resposta->assertSee('btn-catalog-delete', false);
+        $resposta->assertSee('catalog-tag', false);
+        $resposta->assertDontSee('btn-dark', false);
     }
 }

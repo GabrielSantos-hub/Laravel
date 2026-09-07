@@ -424,6 +424,7 @@ EOT,
                     'descricao' => $data['description'],
                     'corpo_template' => $data['body'],
                     'intent_type' => $data['intent_type'],
+                    'bloco' => $this->resolverBloco($data['name']),
                     'is_active' => $data['is_active'],
                     'is_generic' => $data['is_generic'],
                     'versao' => '3.0',
@@ -441,6 +442,15 @@ EOT,
             ->update(['is_active' => false]);
 
         $this->vincularPivots();
+    }
+
+    private function resolverBloco(string $name): string
+    {
+        if (preg_match('/\(([ABC])\d+\)/u', $name, $matches)) {
+            return $matches[1];
+        }
+
+        return Template::BLOCO_A;
     }
 
     private function vincularPivots(): void

@@ -22,7 +22,15 @@ class TemplateController extends Controller implements HasMiddleware
     public function index(): View
     {
         $templates = Template::query()->orderBy('nome')->get();
-        return view('templates.index', compact('templates'));
+
+        $blocos = [
+            'todos' => $templates,
+            Template::BLOCO_A => $templates->filter(fn (Template $template) => $template->resolveBloco() === Template::BLOCO_A)->values(),
+            Template::BLOCO_B => $templates->filter(fn (Template $template) => $template->resolveBloco() === Template::BLOCO_B)->values(),
+            Template::BLOCO_C => $templates->filter(fn (Template $template) => $template->resolveBloco() === Template::BLOCO_C)->values(),
+        ];
+
+        return view('templates.index', compact('templates', 'blocos'));
     }
 
     public function create(): View

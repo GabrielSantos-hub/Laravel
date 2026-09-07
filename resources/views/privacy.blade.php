@@ -22,9 +22,10 @@
     <article class="arch-row mb-3">
         <h2 class="h5">Dados Coletados</h2>
         <p class="text-muted mb-0">
-            O sistema armazena apenas as credenciais de acesso do usuário (nome, e-mail
-            e senha criptografada) e o histórico de prompts gerados, necessários para o
-            funcionamento da aplicação e da navegação na barra lateral.
+            O sistema armazena as credenciais de acesso do usuário (nome, e-mail
+            e senha criptografada), a foto de perfil opcional e o histórico de prompts
+            gerados, necessários para o funcionamento da aplicação e da navegação
+            na barra lateral.
         </p>
     </article>
 

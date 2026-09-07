@@ -87,7 +87,7 @@
                 <div class="prompt-io-toolbar">
                     <label for="user_input" class="form-label text-muted small mb-0">Sua intenção / contexto</label>
                 </div>
-                <textarea name="user_input" id="user_input" class="form-control bg-light h-full min-h-[280px] focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('user_input') is-invalid @enderror" rows="12" required
+                <textarea name="user_input" id="user_input" class="form-control bg-light h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('user_input') is-invalid @enderror" rows="12" required
                     minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
                     maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
                     placeholder="Descreva o que você precisa gerar ou construir…">{{ old('user_input') }}</textarea>
@@ -102,7 +102,7 @@
                         <i class="far fa-copy" aria-hidden="true"></i> Copiar
                     </button>
                 </div>
-                <textarea id="output_text" class="form-control bg-white h-full min-h-[280px] focus:ring-2 focus:ring-indigo-500 focus:outline-none" rows="12" readonly
+                <textarea id="output_text" class="form-control bg-white h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none" rows="12" readonly
                     placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
             </div>
         </div>

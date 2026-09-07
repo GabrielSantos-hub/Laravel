@@ -17,6 +17,7 @@ class UpdateTemplateRequest extends FormRequest
             'nome' => ['required', 'string', 'max:150'],
             'corpo_template' => ['required', 'string', 'max:500000'],
             'versao' => ['nullable', 'string', 'max:20'],
+            'bloco' => ['required', 'in:A,B,C'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

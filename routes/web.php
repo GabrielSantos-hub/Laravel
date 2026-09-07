@@ -6,6 +6,7 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PromptController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas de Autenticação 
@@ -21,6 +22,9 @@ Route::get('/templates', [TemplateController::class, 'index'])->name('templates.
 Route::view('/privacidade', 'privacy')->name('privacidade');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
+
     Route::get('/', [PromptController::class, 'index'])->name('home');
     // A cota gratuita do Gemini é por minuto: 6 gerações por usuário protegem
     // o limite da API e, de tabela, o custo de cada requisição.

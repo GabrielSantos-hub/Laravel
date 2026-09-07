@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('content')
+@section('conteudo')
 <div class="container-fluid p-4">
     <div class="card shadow-sm p-4">
         <h2>Bem-vindo à Área Administrativa!</h2>

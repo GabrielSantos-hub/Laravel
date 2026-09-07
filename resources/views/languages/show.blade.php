@@ -7,8 +7,8 @@
             <h4 class="mb-3" style="color: #5b4ce6; font-weight: 600;">{{ $language->nome }}</h4>
             <p class="text-muted mb-1"><strong>Slug:</strong> <code>{{ $language->slug }}</code></p>
             <div class="mt-4 d-flex gap-2">
-                <a href="{{ route('languages.edit', $language) }}" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none btn-dark btn-sm">Editar</a>
-                <a href="{{ route('languages.index') }}" class="btn focus:ring-2 focus:ring-indigo-500 focus:outline-none btn-outline-secondary btn-sm">Voltar</a>
+                <a href="{{ route('languages.edit', $language) }}" class="btn-catalog btn-catalog-edit focus:ring-2 focus:ring-indigo-500 focus:outline-none">Editar</a>
+                <a href="{{ route('languages.index') }}" class="btn-catalog btn-catalog-edit focus:ring-2 focus:ring-indigo-500 focus:outline-none">Voltar</a>
             </div>
         </div>
     </div>

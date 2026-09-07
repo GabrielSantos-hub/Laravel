@@ -1,39 +1,32 @@
 @extends('layout')
 
 @section('conteudo')
-<div class="container-fluid pt-3" style="max-width: 1100px; margin: 0 auto;">
+<div class="container-fluid pt-3 catalog-page">
 
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
-        <h3 class="mb-0">Linguagens</h3>
-        @auth
-            @if(auth()->user()->role === 'ADM')
-            <a href="{{ route('languages.create') }}" class="btn text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 6px;">
-                Nova Linguagem
-            </a>
-            @endif
-        @endauth
-    </div>
+    @include('partials.catalog-header', [
+        'title' => 'Linguagens',
+        'actionUrl' => route('languages.create'),
+        'actionLabel' => '+ Nova Linguagem',
+    ])
 
-    <div class="catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div class="catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4">
         @forelse($languages as $lang)
         <article class="catalog-card">
             <h4 class="h5 mb-1">{{ $lang->nome }}</h4>
             <p class="mb-2">
-                <span class="badge bg-light text-dark border px-2 py-1">{{ $lang->slug }}</span>
+                <span class="catalog-tag">{{ $lang->slug }}</span>
             </p>
             @auth
-            <div class="d-flex flex-wrap gap-2 mt-auto">
                 @if(auth()->user()->role === 'ADM')
-                <a href="{{ route('languages.edit', $lang->id) }}" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">Editar</a>
-                <form action="{{ route('languages.destroy', $lang->id) }}" method="POST" class="m-0">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-dark btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
-                </form>
+                    @include('partials.catalog-admin-actions', [
+                        'editUrl' => route('languages.edit', $lang->id),
+                        'destroyUrl' => route('languages.destroy', $lang->id),
+                    ])
                 @else
-                <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $lang->id])) }}" class="btn text-white btn-sm px-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6;">Selecionar</a>
+                    <div class="d-flex flex-wrap gap-2 mt-auto">
+                        <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $lang->id])) }}" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none">Selecionar</a>
+                    </div>
                 @endif
-            </div>
             @endauth
         </article>
         @empty

@@ -36,6 +36,15 @@
                     <input type="text" name="versao" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" value="{{ old('versao', $template->versao) }}" maxlength="20">
                 </div>
 
+                <div class="mb-3">
+                    <label for="bloco" class="form-label text-muted">Categoria</label>
+                    <select name="bloco" id="bloco" class="form-select focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required>
+                        @foreach (\App\Models\Template::BLOCOS as $codigo => $rotulo)
+                            <option value="{{ $codigo }}" @selected(old('bloco', $template->resolveBloco()) === $codigo)>{{ $rotulo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="mb-3 form-check">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" id="is_active" value="1" class="form-check-input"
