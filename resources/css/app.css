@@ -131,7 +131,8 @@ html.high-contrast .skip-link {
     background-color: var(--gueass-sidebar);
     border-right: 2px solid var(--gueass-border);
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transition: transform 0.3s ease, width 0.3s ease;
+    overflow: hidden;
 }
 
 .app-sidebar.is-open {
@@ -168,7 +169,7 @@ html.high-contrast .skip-link {
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     background: var(--gueass-header);
-    border-bottom: 1px solid var(--gueass-border);
+    border-bottom: 0;
     position: sticky;
     top: 0;
     z-index: 1100;
@@ -184,7 +185,17 @@ html.high-contrast .skip-link {
     text-align: center;
     font-size: 0.85rem;
     color: var(--gueass-text-muted);
-    border-top: 1px solid var(--gueass-border);
+    border-top: 0;
+}
+
+.app-footer a {
+    color: var(--gueass-text-muted);
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    color: var(--gueass-accent);
+    text-decoration: underline;
 }
 
 .brand-text {
@@ -192,6 +203,59 @@ html.high-contrast .skip-link {
     font-weight: 900;
     font-size: 1.3rem;
     letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.85rem 0.75rem;
+}
+
+.sidebar-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.sidebar-section {
+    padding: 0.35rem 0 0.75rem;
+}
+
+.sidebar-section-title,
+.chats-title {
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--gueass-text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 1.15rem 0.5rem;
+    margin: 0;
+}
+
+.sidebar-guide-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: calc(100% - 1rem);
+    margin: 0.25rem 0.5rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--gueass-border);
+    border-radius: 0.6rem;
+    background: var(--gueass-surface);
+    color: var(--gueass-text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidebar-guide-btn:hover {
+    border-color: var(--gueass-accent);
+    color: var(--gueass-accent);
 }
 
 .nav-menu-item {
@@ -207,9 +271,11 @@ html.high-contrast .skip-link {
     color: var(--gueass-text);
     display: flex;
     align-items: center;
+    gap: 0.7rem;
     padding: 12px 20px;
     text-decoration: none;
     font-size: 0.95rem;
+    white-space: nowrap;
 }
 
 .nav-menu-item a:hover,
@@ -219,18 +285,20 @@ html.high-contrast .skip-link {
 }
 
 .chats-section {
-    padding: 20px;
+    padding: 0.25rem 0 0.5rem;
     flex-grow: 1;
     overflow: auto;
-    max-height: 45vh;
+    min-height: 0;
+}
+
+.chats-list {
+    padding: 0 0.85rem 0.5rem;
 }
 
 .chats-title {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--gueass-text-muted);
-    text-align: center;
-    margin-bottom: 15px;
+    text-align: left;
+    margin-bottom: 0.35rem;
+    padding-left: 0.35rem;
 }
 
 .chat-link {
@@ -311,6 +379,36 @@ html.high-contrast .skip-link {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
+    align-items: stretch;
+}
+
+.prompt-io-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 280px;
+    height: 100%;
+}
+
+.prompt-io-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.prompt-io-toolbar .form-label {
+    margin-bottom: 0;
+    line-height: 1.25;
+}
+
+.prompt-io-col textarea {
+    flex: 1 1 auto;
+    min-height: 280px;
+    height: 100%;
+    resize: vertical;
 }
 
 .catalog-card {
@@ -330,17 +428,145 @@ html.high-contrast .skip-link {
     right: 0;
     top: calc(100% + 0.5rem);
     z-index: 50;
-    min-width: 14rem;
+    min-width: 18rem;
     background: var(--gueass-surface);
     color: var(--gueass-text);
     border: 1px solid var(--gueass-border);
     border-radius: 0.75rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    padding: 0.35rem 0;
+    padding: 0.4rem 0;
 }
 
 .user-menu[hidden] {
     display: none !important;
+}
+
+.user-chip {
+    width: auto;
+    padding: 0 0.7rem;
+    gap: 0.4rem;
+}
+
+.user-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--gueass-border);
+}
+
+.user-menu-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.user-menu-action:hover {
+    background: color-mix(in srgb, var(--gueass-accent) 10%, transparent);
+}
+
+.user-menu-state {
+    font-size: 0.75rem;
+    color: var(--gueass-text-muted);
+}
+
+.user-menu-a11y {
+    padding: 0.75rem 1rem 0.85rem;
+}
+
+.user-menu-divider {
+    height: 1px;
+    background: var(--gueass-border);
+    margin: 0.25rem 0;
+}
+
+.app-modal[hidden] {
+    display: none !important;
+}
+
+.app-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+}
+
+.app-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--gueass-overlay);
+}
+
+.app-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(36rem, calc(100% - 2rem));
+    max-height: min(80vh, 40rem);
+    overflow: auto;
+    margin: 10vh auto 0;
+    background: var(--gueass-surface);
+    color: var(--gueass-text);
+    border: 1px solid var(--gueass-border);
+    border-radius: 1rem;
+    padding: 1.1rem 1.2rem 1.25rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.app-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.guide-item,
+.arch-accordion {
+    border: 1px solid var(--gueass-border);
+    border-radius: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--gueass-bg-muted);
+}
+
+.guide-item + .guide-item,
+.arch-row + .arch-row {
+    margin-top: 0.65rem;
+}
+
+.guide-item summary,
+.arch-accordion summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.guide-item summary::-webkit-details-marker,
+.arch-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.guide-item p,
+.arch-accordion p {
+    margin-top: 0.5rem;
+}
+
+.arch-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.arch-row {
+    background: var(--gueass-surface);
+    border: 1px solid var(--gueass-border);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem;
 }
 
 /* Foco visível em todos os controles interativos */
@@ -484,7 +710,6 @@ html:not(.dark) [data-icon="sun"] {
         display: flex;
     }
 
-    #nav-open,
     #nav-close,
     .lg\:hidden {
         display: none !important;
@@ -495,6 +720,47 @@ html:not(.dark) [data-icon="sun"] {
         top: 0;
         height: 100vh;
         transform: none;
+        width: 16.5rem;
+        flex: 0 0 16.5rem;
+    }
+
+    html.sidebar-collapsed .app-sidebar {
+        width: 4.5rem;
+        flex-basis: 4.5rem;
+    }
+
+    html.sidebar-collapsed .brand-text,
+    html.sidebar-collapsed .nav-label,
+    html.sidebar-collapsed .sidebar-section-title,
+    html.sidebar-collapsed .chats-list,
+    html.sidebar-collapsed .sidebar-empty-history {
+        display: none;
+    }
+
+    html.sidebar-collapsed .sidebar-brand {
+        justify-content: center;
+        padding-left: 0.4rem;
+        padding-right: 0.4rem;
+    }
+
+    html.sidebar-collapsed .sidebar-brand-link {
+        justify-content: center;
+    }
+
+    html.sidebar-collapsed .nav-menu-item a,
+    html.sidebar-collapsed .sidebar-guide-btn {
+        justify-content: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        width: calc(100% - 0.5rem);
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+    }
+
+    html.sidebar-collapsed .social-icons {
+        flex-direction: column;
+        padding: 0.75rem 0;
+        gap: 0.85rem;
     }
 
     .app-overlay {

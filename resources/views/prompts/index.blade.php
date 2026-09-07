@@ -67,41 +67,44 @@
             </div>
         </div>
 
-        <div class="prompt-io-grid grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                    <label for="user_input" class="form-label text-muted small">Sua intenção / contexto</label>
-                    <textarea name="user_input" id="user_input" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('user_input') is-invalid @enderror" rows="12" required
-                        minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
-                        maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
-                        placeholder="Descreva o que você precisa gerar ou construir…">{{ old('user_input') }}</textarea>
-                    @error('user_input')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+        @if ($selectedTemplate)
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"
+            style="background: var(--gueass-bg-muted); border: 1px solid var(--gueass-border); font-size: 0.8rem;">
+            <span class="fw-semibold text-uppercase" style="color: var(--gueass-accent); letter-spacing: 0.06em;">Template Ativado:</span>
+            <span class="rounded px-2 py-1 fw-medium"
+                style="background: rgba(91, 76, 230, 0.12); color: var(--gueass-accent); border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
+                {{ $selectedTemplate->nome }}
+            </span>
+            @if ($selectedTemplate->descricao)
+            <span class="d-none d-sm-inline text-muted">|</span>
+            <span class="fst-italic text-muted">{{ $selectedTemplate->descricao }}</span>
+            @endif
+        </div>
+        @endif
+
+        <div class="prompt-io-grid grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+            <div class="prompt-io-col h-full">
+                <div class="prompt-io-toolbar">
+                    <label for="user_input" class="form-label text-muted small mb-0">Sua intenção / contexto</label>
                 </div>
-                <div>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label for="output_text" class="form-label text-muted small mb-0">Prompt gerado</label>
-                        <button type="button" class="btn btn-sm btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" id="btn-copy-output" aria-label="Copiar prompt gerado" title="Copiar">
-                            <i class="far fa-copy" aria-hidden="true"></i> Copiar
-                        </button>
-                    </div>
-                    @if ($selectedTemplate)
-                    <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"
-                        style="background: var(--gueass-bg-muted); border: 1px solid var(--gueass-border); font-size: 0.8rem;">
-                        <span class="fw-semibold text-uppercase" style="color: var(--gueass-accent); letter-spacing: 0.06em;">Template Ativado:</span>
-                        <span class="rounded px-2 py-1 fw-medium"
-                            style="background: rgba(91, 76, 230, 0.12); color: var(--gueass-accent); border: 1px solid rgba(91, 76, 230, 0.3); font-family: ui-monospace, Consolas, monospace;">
-                            {{ $selectedTemplate->nome }}
-                        </span>
-                        @if ($selectedTemplate->descricao)
-                        <span class="d-none d-sm-inline text-muted">|</span>
-                        <span class="fst-italic text-muted">{{ $selectedTemplate->descricao }}</span>
-                        @endif
-                    </div>
-                    @endif
-                    <textarea id="output_text" class="form-control bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" rows="12" readonly
-                        placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
+                <textarea name="user_input" id="user_input" class="form-control bg-light h-full min-h-[280px] focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('user_input') is-invalid @enderror" rows="12" required
+                    minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
+                    maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
+                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('user_input') }}</textarea>
+                @error('user_input')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="prompt-io-col h-full">
+                <div class="prompt-io-toolbar">
+                    <label for="output_text" class="form-label text-muted small mb-0">Prompt gerado</label>
+                    <button type="button" class="btn btn-sm btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" id="btn-copy-output" aria-label="Copiar prompt gerado" title="Copiar">
+                        <i class="far fa-copy" aria-hidden="true"></i> Copiar
+                    </button>
                 </div>
+                <textarea id="output_text" class="form-control bg-white h-full min-h-[280px] focus:ring-2 focus:ring-indigo-500 focus:outline-none" rows="12" readonly
+                    placeholder="O resultado aparece aqui após gerar.">{{ session('last_output') }}</textarea>
+            </div>
         </div>
 
         <div class="text-center mt-4">

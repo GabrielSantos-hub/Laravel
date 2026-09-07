@@ -18,6 +18,7 @@ Route::get('/languages', [LanguageController::class, 'index'])->name('languages.
 Route::get('/frameworks', [FrameworkController::class, 'index'])->name('frameworks.index');
 Route::get('/architectures', [ArchitectureController::class, 'index'])->name('architectures.index');
 Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
+Route::view('/privacidade', 'privacy')->name('privacidade');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [PromptController::class, 'index'])->name('home');
