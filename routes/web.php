@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ArchitectureController;
 use App\Http\Controllers\FrameworkController;
 use App\Http\Controllers\LanguageController;
@@ -10,10 +11,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-// Rotas de Autenticação 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register'])->name('register');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+});
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/languages', [LanguageController::class, 'index'])->name('languages.index');
@@ -39,23 +41,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/languages/{language}/frameworks', function (\App\Models\Language $language) {
         return response()->json($language->frameworks);
     })->name('api.languages.frameworks');
-
-    // Alimenta os campos dinâmicos da tela de geração quando o usuário troca
-    // de template sem recarregar a página.
-    Route::get('/api/templates/{template}/variables', function (\App\Models\Template $template) {
-        return response()->json([
-            'id' => $template->id,
-            'nome' => $template->nome,
-            'descricao' => $template->descricao,
-            'variables' => array_map(
-                fn (string $nome): array => [
-                    'nome' => $nome,
-                    'rotulo' => \App\Models\Template::variableLabel($nome),
-                ],
-                $template->dynamicVariables()
-            ),
-        ]);
-    })->name('api.templates.variables');
 });
 
 // Rotas do Administrador
@@ -64,6 +49,8 @@ Route::middleware(['role.adm'])->group(function () {
         return redirect()->route('admin.dashboard');
     });
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::put('/admin/users/{user}/password', [AdminUserController::class, 'resetPassword'])->name('admin.users.password');
 
     Route::resource('languages', LanguageController::class)->except(['index']);
     Route::resource('frameworks', FrameworkController::class)->except(['index']);

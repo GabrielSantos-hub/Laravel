@@ -26,23 +26,12 @@ class PromptController extends Controller
 
     public function index(): View
     {
-        // A escolha manual vem, nesta ordem, de um envio que voltou com erro,
-        // do botão "Selecionar" do catálogo (?template_id=) e do que o usuário
-        // escolheu na última geração. Nula significa seleção automática.
-        $selectedTemplate = $this->template(
-            old('template_id', request('template_id', session('last_template_id')))
-        );
-
         return view('prompts.index', [
             'architectures' => Architecture::query()->orderBy('nome')->get(),
             'languages' => Language::query()->orderBy('nome')->get(),
             'frameworks' => Framework::query()->with('language')->orderBy('nome')->get(),
-            'templates' => Template::query()->where('is_active', true)->orderBy('nome')->get(),
-            'selectedTemplate' => $selectedTemplate,
-            'templateVariables' => $selectedTemplate?->dynamicVariables() ?? [],
-            'variableValues' => session('last_variables', []),
-            // O template de fato usado na última geração, que no modo
-            // automático é escolhido pelo pipeline e não pelo usuário.
+            // O template usado na última geração. A escolha é sempre do
+            // pipeline, então aqui ele só é exibido como retorno visual.
             'activeTemplate' => $this->template(session('selected_template_id')),
             'lastPromptId' => session('last_prompt_id'),
         ]);
@@ -72,7 +61,6 @@ class PromptController extends Controller
         try {
             $resultado = $this->pipeline->generate(
                 $validated['user_input'],
-                forcedTemplateId: isset($validated['template_id']) ? (int) $validated['template_id'] : null,
                 catalogHints: [
                     'language_id' => $validated['language_id'] ?? null,
                     'framework_id' => $validated['framework_id'] ?? null,
@@ -108,8 +96,6 @@ class PromptController extends Controller
             ->with('sucesso', 'Prompt gerado e salvo no histórico.')
             ->with('last_output', $resultado->prompt)
             ->with('last_prompt_id', $prompt->id)
-            ->with('last_variables', $variaveis)
-            ->with('last_template_id', $validated['template_id'] ?? null)
             ->with('selected_template_id', $resultado->template->getKey());
     }
 

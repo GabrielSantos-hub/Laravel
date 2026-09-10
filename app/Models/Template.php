@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Services\AI\TemplateInterpolator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Template extends Model
 {
@@ -63,25 +61,6 @@ class Template extends Model
     public function architectures(): BelongsToMany
     {
         return $this->belongsToMany(Architecture::class);
-    }
-
-    /**
-     * Marcadores do corpo que o usuário precisa preencher na tela de geração:
-     * tudo o que o pipeline não deriva sozinho da intenção.
-     *
-     * @return array<int, string>
-     */
-    public function dynamicVariables(): array
-    {
-        return (new TemplateInterpolator)->extractVariables((string) $this->corpo_template);
-    }
-
-    /**
-     * Rótulo do campo no formulário: NOME_DA_ENTIDADE vira "Nome da entidade".
-     */
-    public static function variableLabel(string $variable): string
-    {
-        return Str::ucfirst(Str::lower(str_replace('_', ' ', trim($variable))));
     }
 
     public function resolveBloco(): string

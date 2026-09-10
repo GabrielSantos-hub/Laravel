@@ -45,7 +45,6 @@ class PromptPipelineService
      */
     public function generate(
         string $userInput,
-        ?int $forcedTemplateId = null,
         array $catalogHints = [],
         array $customVariables = [],
     ): PromptPipelineResult {
@@ -65,19 +64,16 @@ class PromptPipelineService
 
         $intent = $this->enrichIntent($intent, $catalogHints);
 
-        $template = $this->selector->select($intent, $forcedTemplateId);
+        $template = $this->selector->select($intent);
 
         if ($template === null) {
-            throw $forcedTemplateId !== null
-                ? NoCompatibleTemplateException::forManualSelection($forcedTemplateId)
-                : NoCompatibleTemplateException::forIntent();
+            throw NoCompatibleTemplateException::forIntent();
         }
 
         return new PromptPipelineResult(
             prompt: $this->composerFor($offlineProvider)->compose($intent, $template, $customVariables),
             template: $template,
             intent: $intent,
-            manualSelection: $forcedTemplateId !== null,
             degraded: $offlineProvider !== null,
         );
     }

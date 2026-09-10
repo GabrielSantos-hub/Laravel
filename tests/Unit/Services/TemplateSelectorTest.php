@@ -23,39 +23,16 @@ class TemplateSelectorTest extends TestCase
         $this->selector = new TemplateSelector;
     }
 
-    // (a) Seleção manual
+    // (a) Seleção automática
 
-    public function test_selecao_manual_retorna_o_template_do_id_informado(): void
+    public function test_template_inativo_fica_fora_da_selecao(): void
     {
         $php = $this->language('PHP', 'php');
-        $compativel = $this->template('Template PHP');
-        $compativel->languages()->attach($php);
-
-        $escolhidoNaMao = $this->template('Template em branco');
-
-        $selecionado = $this->selector->select(
-            $this->intent(technologies: ['PHP']),
-            $escolhidoNaMao->id
-        );
-
-        $this->assertNotNull($selecionado);
-        $this->assertTrue($escolhidoNaMao->is($selecionado));
-        $this->assertFalse($compativel->is($selecionado));
-    }
-
-    public function test_selecao_manual_de_template_inativo_retorna_null(): void
-    {
         $inativo = $this->template('Template arquivado', active: false);
+        $inativo->languages()->attach($php);
 
-        $this->assertNull($this->selector->select($this->intent(), $inativo->id));
+        $this->assertNull($this->selector->select($this->intent(technologies: ['PHP'])));
     }
-
-    public function test_selecao_manual_com_id_inexistente_retorna_null(): void
-    {
-        $this->assertNull($this->selector->select($this->intent(), 9999));
-    }
-
-    // (b) Seleção automática
 
     public function test_selecao_automatica_escolhe_o_template_mais_compativel(): void
     {

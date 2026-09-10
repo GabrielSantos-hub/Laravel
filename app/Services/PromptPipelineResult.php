@@ -28,7 +28,6 @@ readonly class PromptPipelineResult
         public string $prompt,
         public Template $template,
         public array $intent,
-        public bool $manualSelection,
         public bool $degraded = false,
     ) {}
 
@@ -46,7 +45,6 @@ readonly class PromptPipelineResult
                 'versao' => $this->template->versao,
             ],
             'intent' => $this->intent,
-            'manual_selection' => $this->manualSelection,
             'degraded' => $this->degraded,
         ];
     }

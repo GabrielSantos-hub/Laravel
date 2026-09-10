@@ -120,6 +120,9 @@
             return;
         }
 
+        // Sem isto o Chart.js desenha rótulos e tooltips na fonte própria dele.
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+
         const metricas = @json($metricas);
         const graficos = [];
 

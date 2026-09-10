@@ -22,11 +22,10 @@ class HomeRouteTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('prompts.index');
-        $response->assertViewHas(['architectures', 'languages', 'frameworks', 'templates', 'selectedTemplate']);
-        $this->assertNull($response->viewData('selectedTemplate'));
+        $response->assertViewHas(['architectures', 'languages', 'frameworks']);
     }
 
-    public function test_a_tela_de_geracao_oferece_a_escolha_manual_de_template(): void
+    public function test_a_tela_de_geracao_nao_oferece_escolha_manual_de_template(): void
     {
         Template::query()->create([
             'nome' => 'Template ativo',
@@ -38,23 +37,7 @@ class HomeRouteTest extends TestCase
         $response = $this->actingAs(User::factory()->create())->get('/');
 
         $response->assertOk();
-        $response->assertSee('name="template_id"', false);
-        $response->assertSee('Deixar a IA escolher o template…', false);
-        $response->assertSee('Template ativo');
-    }
-
-    public function test_templates_inativos_ficam_fora_da_escolha_manual(): void
-    {
-        Template::query()->create([
-            'nome' => 'Template aposentado',
-            'corpo_template' => 'Corpo.',
-            'versao' => '1',
-            'is_active' => false,
-        ]);
-
-        $response = $this->actingAs(User::factory()->create())->get('/');
-
-        $response->assertOk();
-        $response->assertDontSee('Template aposentado');
+        $response->assertDontSee('name="template_id"', false);
+        $response->assertDontSee('Template ativo');
     }
 }

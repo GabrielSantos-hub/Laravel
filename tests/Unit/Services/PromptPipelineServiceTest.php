@@ -45,7 +45,6 @@ class PromptPipelineServiceTest extends TestCase
 
         $this->assertInstanceOf(PromptPipelineResult::class, $resultado);
         $this->assertTrue($template->is($resultado->template));
-        $this->assertFalse($resultado->manualSelection);
 
         $this->assertSame(['PHP', 'Laravel'], $resultado->intent['technologies']);
         $this->assertSame('Clean Architecture', $resultado->intent['architecture']);
@@ -58,56 +57,28 @@ class PromptPipelineServiceTest extends TestCase
         );
     }
 
-    public function test_o_id_forcado_ignora_a_pontuacao_e_marca_a_selecao_como_manual(): void
-    {
-        $this->templateClassificado();
-
-        $manual = Template::query()->create([
-            'nome' => 'Template manual',
-            'corpo_template' => 'Manual: {user_input}',
-            'versao' => '1',
-            'is_active' => true,
-        ]);
-
-        $resultado = $this->pipeline->generate(
-            'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
-            $manual->id
-        );
-
-        $this->assertTrue($manual->is($resultado->template));
-        $this->assertTrue($resultado->manualSelection);
-        $this->assertStringStartsWith('Manual:', $resultado->prompt);
-    }
-
     public function test_sem_template_compativel_lanca_excecao_de_dominio(): void
     {
         $this->templateClassificado();
 
-        try {
-            $this->pipeline->generate('asdfgh qwerty zxcvbn');
-            $this->fail('Esperava uma NoCompatibleTemplateException.');
-        } catch (NoCompatibleTemplateException $e) {
-            $this->assertFalse($e->wasManualSelection());
-            $this->assertStringContainsString('Nenhum template compatível', $e->getMessage());
-        }
+        $this->expectException(NoCompatibleTemplateException::class);
+        $this->expectExceptionMessage('Nenhum template compatível');
+
+        $this->pipeline->generate('asdfgh qwerty zxcvbn');
     }
 
-    public function test_id_forcado_inativo_lanca_excecao_apontando_a_selecao_manual(): void
+    public function test_template_inativo_fica_de_fora_da_selecao(): void
     {
-        $inativo = Template::query()->create([
+        Template::query()->create([
             'nome' => 'Template arquivado',
             'corpo_template' => 'Corpo.',
             'versao' => '1',
             'is_active' => false,
         ]);
 
-        try {
-            $this->pipeline->generate('Criar uma API REST em Laravel.', $inativo->id);
-            $this->fail('Esperava uma NoCompatibleTemplateException.');
-        } catch (NoCompatibleTemplateException $e) {
-            $this->assertTrue($e->wasManualSelection());
-            $this->assertStringContainsString((string) $inativo->id, $e->getMessage());
-        }
+        $this->expectException(NoCompatibleTemplateException::class);
+
+        $this->pipeline->generate('Criar uma API REST em Laravel.');
     }
 
     public function test_entrada_curta_demais_para_no_analisador(): void
@@ -192,7 +163,6 @@ class PromptPipelineServiceTest extends TestCase
         $resultado = $this->pipeline->generate('Faça um crud de cadastro de clientes.');
 
         $this->assertTrue($fallback->is($resultado->template));
-        $this->assertFalse($resultado->manualSelection);
         $this->assertStringStartsWith('Módulo:', $resultado->prompt);
     }
 

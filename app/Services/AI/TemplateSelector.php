@@ -12,12 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * Segunda etapa do pipeline: escolhe qual Template atende melhor a intenção já
  * estruturada pelo IntentAnalyzer.
  *
- * A decisão é 100% local (Eloquent/SQL), sem nenhuma chamada a API de IA.
- *
- * Modo manual: quando o usuário escolhe o template na tela, o id vem em
- * $forcedTemplateId e a pontuação é ignorada.
- *
- * Modo automático: cada template ativo recebe uma pontuação de compatibilidade.
+ * A decisão é 100% local (Eloquent/SQL), sem nenhuma chamada a API de IA, e
+ * sempre automática: cada template ativo recebe uma pontuação de compatibilidade.
  * Templates classificados (com linguagens, frameworks ou arquiteturas
  * associados) são pontuados pelas relações; templates ainda não classificados
  * caem num fallback textual, deliberadamente limitado a MAX_TEXT_SCORE para
@@ -82,22 +78,7 @@ class TemplateSelector
     /**
      * @param  array<string, mixed>  $structuredIntent  Saída do IntentAnalyzer.
      */
-    public function select(array $structuredIntent, ?int $forcedTemplateId = null): ?Template
-    {
-        if ($forcedTemplateId !== null) {
-            return Template::query()
-                ->whereKey($forcedTemplateId)
-                ->where('is_active', true)
-                ->first();
-        }
-
-        return $this->selectAutomatically($structuredIntent);
-    }
-
-    /**
-     * @param  array<string, mixed>  $structuredIntent
-     */
-    private function selectAutomatically(array $structuredIntent): ?Template
+    public function select(array $structuredIntent): ?Template
     {
         $context = $this->buildContext($structuredIntent);
 

@@ -12,7 +12,7 @@ class LayoutAccessibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_o_layout_expoe_controles_de_tema_acessibilidade_e_sidebar(): void
+    public function test_o_login_usa_layout_de_visitante_com_preferencias(): void
     {
         $resposta = $this->get(route('login'));
 
@@ -20,25 +20,52 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('Pular para o conteúdo', false);
         $resposta->assertSee('id="theme-toggle"', false);
         $resposta->assertSee('id="user-menu-toggle"', false);
+        $resposta->assertSee('Preferências', false);
+        $resposta->assertSee('Alto contraste', false);
+        $resposta->assertSee('>+A</button>', false);
+        $resposta->assertSee('>-A</button>', false);
+        $resposta->assertSee('gueass-theme', false);
+        $resposta->assertSee('Esqueceu a senha?', false);
+        $resposta->assertSee('suporte@gueass.com', false);
+        $resposta->assertSee('focus:ring-2 focus:ring-indigo-500 focus:outline-none', false);
+        $resposta->assertSee('Política de Privacidade', false);
+        $resposta->assertSee('/privacidade', false);
+        $resposta->assertSee('id="guest-dashboard-mock"', false);
+        $resposta->assertSee('pointer-events-none select-none', false);
+        $resposta->assertSee('aria-hidden="true"', false);
+        $resposta->assertSee('bg-slate-900/40', false);
+        $resposta->assertSee('backdrop-blur-[2px]', false);
+        $resposta->assertSee('fixed inset-0 z-20 flex items-center justify-center', false);
+        $resposta->assertSee('rounded-3xl', false);
+        $resposta->assertSee('shadow-2xl', false);
+        $resposta->assertSee('fixed top-4 right-4 z-30', false);
+        $resposta->assertSee('Seleção de Stacks', false);
+        $resposta->assertSee('Histórico', false);
+        $resposta->assertSee('role="dialog"', false);
+        $resposta->assertSee('aria-modal="true"', false);
+        $resposta->assertDontSee('id="sidebar-toggle"', false);
+        $resposta->assertDontSee('id="app-sidebar"', false);
+        $resposta->assertDontSee('Recursos', false);
+        $resposta->assertDontSee('fa-github', false);
+        $resposta->assertDontSee('id="a11y-toggle"', false);
+        $resposta->assertDontSee('Privacy Policy', false);
+        $resposta->assertDontSee('/forgot-password', false);
+    }
+
+    public function test_o_layout_autenticado_expoe_controles_de_tema_acessibilidade_e_sidebar(): void
+    {
+        $resposta = $this->actingAs(User::factory()->create())->get(route('home'));
+
+        $resposta->assertOk();
         $resposta->assertSee('id="sidebar-toggle"', false);
         $resposta->assertSee('id="app-sidebar"', false);
         $resposta->assertSee('Seleção de Stacks', false);
         $resposta->assertSee('>Templates</span>', false);
         $resposta->assertSee('Histórico', false);
-        $resposta->assertDontSee('Recursos', false);
-        $resposta->assertDontSee('fa-github', false);
-        $resposta->assertSee('Alto contraste', false);
-        $resposta->assertSee('>+A</button>', false);
-        $resposta->assertSee('>-A</button>', false);
-        $resposta->assertSee('gueass-theme', false);
+        $resposta->assertSee('id="theme-toggle"', false);
         $resposta->assertSee('sidebar-collapsed', false);
-        $resposta->assertSee('role="dialog"', false);
-        $resposta->assertSee('aria-modal="true"', false);
-        $resposta->assertSee('focus:ring-2 focus:ring-indigo-500 focus:outline-none', false);
-        $resposta->assertDontSee('id="a11y-toggle"', false);
-        $resposta->assertSee('Política de Privacidade', false);
-        $resposta->assertDontSee('Privacy Policy', false);
-        $resposta->assertSee('/privacidade', false);
+        $resposta->assertSee('Menu do usuário', false);
+        $resposta->assertDontSee('>Preferências</span>', false);
     }
 
     public function test_a_pagina_de_privacidade_academica_esta_publica(): void
@@ -123,7 +150,7 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('id="user-menu-toggle"', false);
         $resposta->assertSee('+ Nova Linguagem', false);
         $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4', false);
-        $resposta->assertSee('btn-catalog-edit', false);
+        $resposta->assertSee('btn-catalog-secondary', false);
         $resposta->assertSee('btn-catalog-delete', false);
         $resposta->assertSee('catalog-tag', false);
         $resposta->assertDontSee('btn-dark', false);

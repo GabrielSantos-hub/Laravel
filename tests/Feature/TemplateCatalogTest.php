@@ -44,7 +44,7 @@ class TemplateCatalogTest extends TestCase
         $resposta->assertSee('Análise / Etapa 0', false);
         $resposta->assertSee('<article class="catalog-card">', false);
         $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-3 gap-4', false);
-        $resposta->assertSee('btn-catalog-edit', false);
+        $resposta->assertSee('btn-catalog-secondary', false);
         $resposta->assertSee('btn-catalog-delete', false);
         $resposta->assertDontSee('btn-dark', false);
         $resposta->assertDontSee('catalog-table', false);
@@ -72,7 +72,8 @@ class TemplateCatalogTest extends TestCase
         $resposta->assertOk();
         $resposta->assertSee('<article class="catalog-card">', false);
         $resposta->assertSee('Features', false);
-        $resposta->assertSee('Selecionar', false);
+        // O template é escolhido pelo pipeline, então o catálogo é só consulta.
+        $resposta->assertDontSee('Selecionar', false);
         $resposta->assertDontSee('catalog-table', false);
         $resposta->assertDontSee('btn-dark', false);
     }

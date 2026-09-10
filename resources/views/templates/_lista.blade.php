@@ -15,6 +15,8 @@
             @if ($t->descricao)
                 <p class="small text-muted mb-2">{{ \Illuminate\Support\Str::limit($t->descricao, 110) }}</p>
             @endif
+            {{-- O template é escolhido pelo pipeline a partir do texto do usuário,
+                 então o catálogo é só consulta para quem não é administrador. --}}
             @auth
                 @if(auth()->user()->role === 'ADM')
                     @include('partials.catalog-admin-actions', [
@@ -22,10 +24,6 @@
                         'destroyUrl' => route('templates.destroy', $t),
                         'destroyConfirm' => 'Excluir este template?',
                     ])
-                @else
-                    <div class="d-flex flex-wrap gap-2 mt-auto">
-                        <a href="{{ route('home', array_merge(request()->query(), ['template_id' => $t->id])) }}" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none">Selecionar</a>
-                    </div>
                 @endif
             @endauth
         </article>

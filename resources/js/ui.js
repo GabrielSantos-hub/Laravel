@@ -249,6 +249,72 @@ function initSidebar() {
     syncViewport();
 }
 
+function initModals() {
+    const openModal = (modal) => {
+        if (!modal) {
+            return;
+        }
+
+        modal.hidden = false;
+        document.body.classList.add('drawer-locked');
+
+        const preferred = modal.querySelector('input:not([type="hidden"]), textarea, select')
+            ?? modal.querySelector('.app-modal-panel');
+        preferred?.focus();
+    };
+
+    const closeModal = (modal) => {
+        if (!modal) {
+            return;
+        }
+
+        modal.hidden = true;
+        if (!document.querySelector('.app-modal:not([hidden])')) {
+            document.body.classList.remove('drawer-locked');
+        }
+    };
+
+    document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            const modal = document.getElementById(trigger.getAttribute('data-modal-open'));
+            if (!modal) {
+                return;
+            }
+
+            if (trigger.dataset.resetAction) {
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.action = trigger.dataset.resetAction;
+                    form.querySelectorAll('input[type="password"]').forEach((input) => {
+                        input.value = '';
+                    });
+                }
+
+                const nameEl = modal.querySelector('[data-reset-user-name]');
+                if (nameEl) {
+                    nameEl.textContent = trigger.dataset.resetName ?? '';
+                }
+            }
+
+            openModal(modal);
+        });
+    });
+
+    document.querySelectorAll('.app-modal').forEach((modal) => {
+        modal.querySelectorAll('[data-modal-close]').forEach((closer) => {
+            closer.addEventListener('click', () => closeModal(modal));
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        document.querySelectorAll('.app-modal:not([hidden])').forEach((modal) => closeModal(modal));
+    });
+}
+
 function initUserMenu() {
     const root = document.getElementById('user-menu-widget');
     const trigger = document.getElementById('user-menu-toggle');
@@ -289,4 +355,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initPreferences();
     initSidebar();
     initUserMenu();
+    initModals();
 });

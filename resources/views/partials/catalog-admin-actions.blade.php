@@ -1,5 +1,5 @@
 <div class="d-flex flex-wrap gap-2 mt-auto">
-    <a href="{{ $editUrl }}" class="btn-catalog btn-catalog-edit focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+    <a href="{{ $editUrl }}" class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         Editar
     </a>
     <form action="{{ $destroyUrl }}" method="POST" class="m-0"

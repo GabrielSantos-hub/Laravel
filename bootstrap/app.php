@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectUsersTo('/');
         $middleware->alias([
             'role.adm' => \App\Http\Middleware\RoleAdmMiddleware::class,
             'role.usu' => \App\Http\Middleware\RoleUsuMiddleware::class,

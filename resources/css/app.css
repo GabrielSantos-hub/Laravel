@@ -87,12 +87,110 @@ body {
     min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6,
+/* A fonte display fica restrita à marca e aos títulos principais de página.
+   Do h4 para baixo — nomes de card, títulos de gráfico — vale a fonte do corpo. */
+h1, h2, h3,
 .display-1, .display-2, .display-3, .display-4,
-.brand-text, .chats-title {
+.brand-text {
     font-family: 'Orbitron', sans-serif !important;
     font-weight: 700;
     letter-spacing: 1px;
+}
+
+h4, h5, h6 {
+    font-family: inherit !important;
+    font-weight: 600;
+    letter-spacing: normal;
+}
+
+.auth-card {
+    background-color: var(--gueass-surface);
+    color: var(--gueass-text);
+}
+
+.btn-gueass,
+.nav-pills .nav-link.active {
+    background-color: var(--gueass-accent, #5b4ce6) !important;
+    border-color: var(--gueass-accent, #5b4ce6) !important;
+    color: #ffffff !important;
+}
+
+.btn-gueass:hover {
+    background-color: var(--gueass-accent-hover, #483bc4) !important;
+    border-color: var(--gueass-accent-hover, #483bc4) !important;
+    color: #ffffff !important;
+}
+
+.text-gueass {
+    color: var(--gueass-accent, #5b4ce6) !important;
+}
+
+html.high-contrast .btn-gueass,
+html.high-contrast .nav-pills .nav-link.active {
+    color: #000 !important;
+}
+
+.auth-forgot-link {
+    font-size: 0.8rem;
+    color: var(--gueass-accent, #5b4ce6);
+    text-decoration: none;
+}
+
+button.auth-forgot-link {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.auth-forgot-link:hover {
+    text-decoration: underline;
+    color: var(--gueass-accent-hover, #483bc4);
+}
+
+.guest-shell {
+    min-height: 100vh;
+    overflow: hidden;
+    background-color: var(--gueass-bg);
+}
+
+.guest-mock {
+    min-height: 100vh;
+    position: relative;
+    z-index: 0;
+}
+
+.guest-mock .app-sidebar,
+.guest-mock .app-header {
+    z-index: 0;
+}
+
+.guest-mock .nav-menu-item .nav-link {
+    color: var(--gueass-text);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.guest-privacy a {
+    color: #e5e7eb;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.guest-privacy a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+html.high-contrast .auth-card {
+    background: #000 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
 }
 
 .skip-link {
@@ -228,7 +326,6 @@ html.high-contrast .skip-link {
 
 .sidebar-section-title,
 .chats-title {
-    font-family: 'Orbitron', sans-serif !important;
     font-weight: 600;
     font-size: 0.72rem;
     color: var(--gueass-text-muted);
@@ -412,30 +509,6 @@ html.high-contrast .skip-link {
     resize: vertical;
 }
 
-.template-variables {
-    background: var(--gueass-bg-muted);
-    border: 1px solid var(--gueass-border);
-    border-radius: 0.75rem;
-    padding: 0.9rem 1rem 1rem;
-}
-
-.template-variables[hidden] {
-    display: none !important;
-}
-
-.template-variables-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--gueass-accent);
-}
-
-.template-variables-hint {
-    font-size: 0.8rem;
-    color: var(--gueass-text-muted);
-}
-
 .prompt-feedback {
     display: inline-flex;
     align-items: center;
@@ -512,6 +585,61 @@ html.high-contrast .prompt-feedback-btn.is-active {
     margin: 0 auto;
 }
 
+/* Cartão de autenticação no layout de visitante. */
+
+.auth-card {
+    background-color: var(--gueass-surface);
+    color: var(--gueass-text);
+}
+
+.auth-submit {
+    background-color: var(--gueass-accent);
+    color: #ffffff;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.auth-submit:hover {
+    background-color: var(--gueass-accent-hover);
+    color: #ffffff;
+}
+
+.auth-link {
+    color: var(--gueass-accent);
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+.auth-link:hover {
+    color: var(--gueass-accent-hover);
+    text-decoration: underline;
+}
+
+.btn-gueass,
+.nav-pills .nav-link.active {
+    background-color: var(--gueass-accent) !important;
+    border-color: var(--gueass-accent) !important;
+    color: #ffffff !important;
+}
+
+.btn-gueass:hover {
+    background-color: var(--gueass-accent-hover) !important;
+    border-color: var(--gueass-accent-hover) !important;
+    color: #ffffff !important;
+}
+
+.text-gueass {
+    color: var(--gueass-accent) !important;
+}
+
+html.high-contrast .btn-gueass,
+html.high-contrast .nav-pills .nav-link.active,
+html.high-contrast .auth-submit {
+    background-color: #ffff00 !important;
+    border-color: #ffff00 !important;
+    color: #000 !important;
+}
+
 .metric-grid,
 .chart-grid {
     display: grid;
@@ -544,9 +672,8 @@ html.high-contrast .prompt-feedback-btn.is-active {
 }
 
 .metric-card-value {
-    font-family: 'Orbitron', sans-serif;
     font-size: 1.75rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.15;
     color: var(--gueass-text);
     margin: 0;
@@ -555,7 +682,6 @@ html.high-contrast .prompt-feedback-btn.is-active {
 /* Nome de template ou de stack não cabe no corpo numérico do card: vira texto
    normal, que quebra por palavra em vez de esticar a caixa. */
 .metric-card-value.is-text {
-    font-family: inherit;
     font-size: 1.05rem;
     line-height: 1.35;
     overflow-wrap: break-word;
@@ -578,6 +704,7 @@ html.high-contrast .prompt-feedback-btn.is-active {
 
 .chart-card-title {
     font-size: 1rem;
+    font-weight: 600;
     margin-bottom: 0.15rem;
 }
 
@@ -652,8 +779,8 @@ html.high-contrast .chart-card {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.42rem 0.95rem;
-    border-radius: 0.7rem;
+    padding: 0.42rem 1.1rem;
+    border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.25;
@@ -672,13 +799,15 @@ html.high-contrast .chart-card {
     color: #ffffff;
 }
 
-.btn-catalog-edit {
+/* Botão secundário do catálogo: mesma aparência para "Editar" (admin) e
+   "Selecionar" (usuário comum). */
+.btn-catalog-secondary {
     background: color-mix(in srgb, var(--gueass-accent) 12%, var(--gueass-surface));
     color: var(--gueass-accent);
     border-color: color-mix(in srgb, var(--gueass-accent) 28%, transparent);
 }
 
-.btn-catalog-edit:hover {
+.btn-catalog-secondary:hover {
     background: color-mix(in srgb, var(--gueass-accent) 20%, var(--gueass-surface));
     color: var(--gueass-accent);
 }
@@ -1042,6 +1171,20 @@ body.drawer-locked {
 }
 
 @media (min-width: 768px) {
+    .guest-mock .app-shell {
+        display: flex;
+    }
+
+    .guest-mock .app-sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        transform: none;
+        width: 16.5rem;
+        flex: 0 0 16.5rem;
+        z-index: 0;
+    }
+
     .catalog-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }

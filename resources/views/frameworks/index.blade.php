@@ -25,7 +25,7 @@
                     ])
                 @else
                     <div class="d-flex flex-wrap gap-2 mt-auto">
-                        <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $fw->language_id, 'framework_id' => $fw->id])) }}" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none">Selecionar</a>
+                        <a href="{{ route('home', array_merge(request()->query(), ['language_id' => $fw->language_id, 'framework_id' => $fw->id])) }}" class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none">Selecionar</a>
                     </div>
                 @endif
             @endauth

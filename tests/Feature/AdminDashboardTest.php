@@ -127,11 +127,14 @@ class AdminDashboardTest extends TestCase
     {
         $this->actingAs($this->admin())
             ->get(route('home'))
-            ->assertSee('Painel de métricas');
+            ->assertSee('Painel de métricas')
+            ->assertSee('Usuários')
+            ->assertDontSee('Administração');
 
         $this->actingAs(User::factory()->create(['role' => 'USU']))
             ->get(route('home'))
-            ->assertDontSee('Painel de métricas');
+            ->assertDontSee('Painel de métricas')
+            ->assertDontSee('>Usuários</span>', false);
     }
 
     private function admin(): User

@@ -72,31 +72,31 @@ class PromptPipelineTest extends TestCase
         );
     }
 
-    public function test_o_pipeline_respeita_o_template_escolhido_manualmente(): void
+    public function test_o_pipeline_escolhe_o_template_classificado_pela_linguagem(): void
     {
         $php = Language::query()->create(['nome' => 'PHP', 'slug' => 'php']);
 
-        $automatico = Template::query()->create([
+        $classificado = Template::query()->create([
             'nome' => 'Template automático',
             'corpo_template' => 'Automático: {user_input}',
             'versao' => '1',
             'is_active' => true,
         ]);
-        $automatico->languages()->attach($php);
+        $classificado->languages()->attach($php);
 
-        $manual = Template::query()->create([
-            'nome' => 'Template manual',
-            'corpo_template' => 'Manual: {user_input}',
+        Template::query()->create([
+            'nome' => 'Template avulso',
+            'corpo_template' => 'Avulso: {user_input}',
             'versao' => '1',
             'is_active' => true,
         ]);
 
         $intencao = app(IntentAnalyzer::class)->analyze('Criar um relatório de vendas em PHP.');
-        $selecionado = app(TemplateSelector::class)->select($intencao, $manual->id);
+        $selecionado = app(TemplateSelector::class)->select($intencao);
 
-        $this->assertTrue($manual->is($selecionado));
+        $this->assertTrue($classificado->is($selecionado));
         $this->assertSame(
-            'Manual: Criar um relatório de vendas em PHP',
+            'Automático: Criar um relatório de vendas em PHP',
             app(PromptComposer::class)->compose($intencao, $selecionado)
         );
     }
