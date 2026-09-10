@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ArchitectureController;
 use App\Http\Controllers\FrameworkController;
 use App\Http\Controllers\LanguageController;
@@ -32,18 +33,37 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('prompts.generate');
     Route::get('/prompts/{prompt}', [PromptController::class, 'show'])->name('prompts.show');
+    Route::post('/prompts/{prompt}/feedback', [PromptController::class, 'feedback'])->name('prompts.feedback');
     Route::delete('/prompts/{prompt}', [PromptController::class, 'destroy'])->name('prompts.destroy');
 
     Route::get('/api/languages/{language}/frameworks', function (\App\Models\Language $language) {
         return response()->json($language->frameworks);
     })->name('api.languages.frameworks');
+
+    // Alimenta os campos dinâmicos da tela de geração quando o usuário troca
+    // de template sem recarregar a página.
+    Route::get('/api/templates/{template}/variables', function (\App\Models\Template $template) {
+        return response()->json([
+            'id' => $template->id,
+            'nome' => $template->nome,
+            'descricao' => $template->descricao,
+            'variables' => array_map(
+                fn (string $nome): array => [
+                    'nome' => $nome,
+                    'rotulo' => \App\Models\Template::variableLabel($nome),
+                ],
+                $template->dynamicVariables()
+            ),
+        ]);
+    })->name('api.templates.variables');
 });
 
 // Rotas do Administrador
 Route::middleware(['role.adm'])->group(function () {
     Route::get('/admin', function () {
-        return redirect()->route('languages.index');
+        return redirect()->route('admin.dashboard');
     });
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::resource('languages', LanguageController::class)->except(['index']);
     Route::resource('frameworks', FrameworkController::class)->except(['index']);

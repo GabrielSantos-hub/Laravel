@@ -15,6 +15,15 @@ class Prompt extends Model
         'framework_id',
         'input_text',
         'output_text',
+        'is_useful',
+    ];
+
+    /**
+     * `is_useful` fica nulo enquanto o prompt não é avaliado, por isso não tem
+     * default: null, true e false são três estados distintos nas métricas.
+     */
+    protected $casts = [
+        'is_useful' => 'boolean',
     ];
 
     public function template(): BelongsTo

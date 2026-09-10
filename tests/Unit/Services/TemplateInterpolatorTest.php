@@ -90,4 +90,51 @@ class TemplateInterpolatorTest extends TestCase
 
         $this->assertSame("Exemplo em PHP:\n    return true;", $resultado);
     }
+
+    public function test_extrai_os_marcadores_dinamicos_na_ordem_de_aparicao(): void
+    {
+        $variaveis = $this->interpolator->extractVariables(
+            'Crie o CRUD de {NOME_DA_ENTIDADE} em {language} com o campo {CAMPO_BANCO}. Contexto: {user_input}.'
+        );
+
+        $this->assertSame(['NOME_DA_ENTIDADE', 'CAMPO_BANCO'], $variaveis);
+    }
+
+    public function test_marcadores_repetidos_aparecem_uma_unica_vez(): void
+    {
+        $variaveis = $this->interpolator->extractVariables(
+            'Tabela {CAMPO}, coluna {CAMPO}, índice de {CAMPO}.'
+        );
+
+        $this->assertSame(['CAMPO'], $variaveis);
+    }
+
+    public function test_extrai_tambem_a_variavel_de_um_bloco_condicional(): void
+    {
+        $variaveis = $this->interpolator->extractVariables(
+            'Base: {user_input}{% if REGRA_DE_NEGOCIO %} Regra: {REGRA_DE_NEGOCIO}{% endif %}'
+        );
+
+        $this->assertSame(['REGRA_DE_NEGOCIO'], $variaveis);
+    }
+
+    public function test_trechos_de_codigo_e_json_nao_viram_variaveis(): void
+    {
+        $variaveis = $this->interpolator->extractVariables(
+            'Responda no formato {"nome": "valor"} usando {} como padrão e {2} itens.'
+        );
+
+        $this->assertSame([], $variaveis);
+    }
+
+    public function test_as_variaveis_reservadas_podem_ser_incluidas_sob_demanda(): void
+    {
+        $corpo = 'Em {language}: {NOME_DA_ENTIDADE}.';
+
+        $this->assertSame(['NOME_DA_ENTIDADE'], $this->interpolator->extractVariables($corpo));
+        $this->assertSame(
+            ['language', 'NOME_DA_ENTIDADE'],
+            $this->interpolator->extractVariables($corpo, includeReserved: true)
+        );
+    }
 }

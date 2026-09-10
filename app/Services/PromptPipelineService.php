@@ -37,6 +37,8 @@ class PromptPipelineService
 
     /**
      * @param  array{language_id?: int|null, framework_id?: int|null, architecture_id?: int|null}  $catalogHints
+     * @param  array<string, mixed>  $customVariables  Marcadores dinâmicos do
+     *                                                 template preenchidos na tela.
      *
      * @throws InvalidIntentException Entrada vazia ou curta demais.
      * @throws NoCompatibleTemplateException Nenhum template utilizável.
@@ -45,6 +47,7 @@ class PromptPipelineService
         string $userInput,
         ?int $forcedTemplateId = null,
         array $catalogHints = [],
+        array $customVariables = [],
     ): PromptPipelineResult {
         $offlineProvider = null;
 
@@ -71,7 +74,7 @@ class PromptPipelineService
         }
 
         return new PromptPipelineResult(
-            prompt: $this->composerFor($offlineProvider)->compose($intent, $template),
+            prompt: $this->composerFor($offlineProvider)->compose($intent, $template, $customVariables),
             template: $template,
             intent: $intent,
             manualSelection: $forcedTemplateId !== null,

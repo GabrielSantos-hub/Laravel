@@ -44,9 +44,12 @@
     </div>
 
     <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
             <h6 class="text-muted mb-0">Saída</h6>
-            <button type="button" class="btn btn-sm btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" id="copy-all" aria-label="Copiar saída do prompt">Copiar saída</button>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                @include('partials.prompt-feedback', ['promptId' => $prompt->id, 'isUseful' => $prompt->is_useful])
+                <button type="button" class="btn btn-sm btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" id="copy-all" aria-label="Copiar saída do prompt">Copiar saída</button>
+            </div>
         </div>
         @if ($prompt->template)
         <div class="mb-3 d-flex flex-wrap align-items-center gap-2 rounded-3 px-3 py-2"

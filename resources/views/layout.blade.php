@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>GUEASS - Gerador de Prompts</title>
 
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
@@ -113,6 +114,25 @@
                     </div>
                 </div>
             </div>
+
+            @auth
+            @if (Auth::user()->role === 'ADM')
+            <div class="sidebar-section">
+                <p class="sidebar-section-title" id="admin-titulo">Administração</p>
+                <div role="list" aria-labelledby="admin-titulo">
+                    <div class="nav-menu-item" role="listitem">
+                        <a href="{{ route('admin.dashboard') }}"
+                           class="nav-link focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                           title="Painel de métricas"
+                           @if (request()->routeIs('admin.*')) aria-current="page" @endif>
+                            <i class="fas fa-chart-simple fa-fw" aria-hidden="true"></i>
+                            <span class="nav-label">Painel de métricas</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endif
+            @endauth
 
             <div class="sidebar-section chats-section">
                 <div class="chats-list" aria-labelledby="historico-titulo">

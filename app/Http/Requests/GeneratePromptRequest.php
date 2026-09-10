@@ -30,6 +30,12 @@ class GeneratePromptRequest extends FormRequest
             'architecture_id' => ['nullable', 'integer', 'exists:architectures,id'],
             'language_id' => ['nullable', 'integer', 'exists:languages,id'],
             'framework_id' => ['nullable', 'integer', 'exists:frameworks,id'],
+            'template_id' => ['nullable', 'integer', 'exists:templates,id'],
+            // Marcadores dinâmicos do template escolhido, no formato
+            // variables[NOME_DA_VARIAVEL]. Quais chaves existem depende do
+            // corpo do template, então aqui só validamos o formato.
+            'variables' => ['nullable', 'array'],
+            'variables.*' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -56,6 +62,8 @@ class GeneratePromptRequest extends FormRequest
             'architecture_id.exists' => 'A arquitetura selecionada não existe.',
             'language_id.exists' => 'A linguagem selecionada não existe.',
             'framework_id.exists' => 'O framework selecionado não existe.',
+            'template_id.exists' => 'O template selecionado não existe.',
+            'variables.*.max' => 'O valor informado para uma das variáveis é longo demais: o limite é de :max caracteres.',
         ];
     }
 
@@ -69,6 +77,7 @@ class GeneratePromptRequest extends FormRequest
             'architecture_id' => 'arquitetura',
             'language_id' => 'linguagem',
             'framework_id' => 'framework',
+            'template_id' => 'template',
         ];
     }
 }

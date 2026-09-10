@@ -15,6 +15,24 @@ namespace App\Services\AI;
 class TemplateInterpolator
 {
     /**
+     * Marcadores que o pipeline preenche sozinho, a partir da intenção
+     * estruturada (ver PromptComposer::variables). Tudo o que aparece no corpo
+     * fora desta lista é variável dinâmica: quem preenche é o usuário.
+     *
+     * @var array<int, string>
+     */
+    public const RESERVED_VARIABLES = [
+        'user_input',
+        'objective',
+        'type',
+        'architecture',
+        'technologies',
+        'language',
+        'framework',
+        'constraints',
+    ];
+
+    /**
      * Resolve os placeholders e normaliza o espaçamento do resultado.
      *
      * @param  array<string, mixed>  $variables
@@ -37,6 +55,45 @@ class TemplateInterpolator
         $variables = $this->normalizeVariables($variables);
 
         return $this->replaceTokens($this->resolveConditionals($body, $variables), $variables);
+    }
+
+    /**
+     * Lista os marcadores declarados no corpo do template, tanto os
+     * placeholders `{CHAVE}` quanto as condições `{% if CHAVE %}`.
+     *
+     * O padrão exige um identificador entre as chaves, então trechos de código
+     * e JSON de exemplo (`{"nome": "valor"}`, `{}`) ficam de fora. A ordem de
+     * aparição é preservada para o formulário sair na mesma sequência do texto.
+     *
+     * @param  bool  $includeReserved  Inclui o que o pipeline já preenche.
+     * @return array<int, string>
+     */
+    public function extractVariables(string $body, bool $includeReserved = false): array
+    {
+        preg_match_all(
+            '/\{([A-Za-z_][A-Za-z0-9_]*)\}|\{%\s*if\s+([A-Za-z_][A-Za-z0-9_]*)\s*%\}/u',
+            $body,
+            $matches,
+            PREG_SET_ORDER
+        );
+
+        $names = [];
+
+        foreach ($matches as $match) {
+            $name = $match[1] !== '' ? $match[1] : ($match[2] ?? '');
+
+            if ($name === '' || in_array($name, $names, true)) {
+                continue;
+            }
+
+            if (! $includeReserved && in_array($name, self::RESERVED_VARIABLES, true)) {
+                continue;
+            }
+
+            $names[] = $name;
+        }
+
+        return $names;
     }
 
     /**

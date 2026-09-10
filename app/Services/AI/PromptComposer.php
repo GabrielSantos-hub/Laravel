@@ -40,11 +40,13 @@ class PromptComposer
 
     /**
      * @param  array<string, mixed>  $structuredIntent  Saída do IntentAnalyzer.
+     * @param  array<string, mixed>  $customVariables  Marcadores dinâmicos do
+     *                                                 template, preenchidos na tela.
      */
-    public function compose(array $structuredIntent, Template $template): string
+    public function compose(array $structuredIntent, Template $template, array $customVariables = []): string
     {
         $body = (string) $template->corpo_template;
-        $variables = $this->variables($structuredIntent);
+        $variables = $this->variables($structuredIntent, $customVariables);
 
         try {
             $composed = $this->cleanUp(
@@ -70,10 +72,15 @@ class PromptComposer
     /**
      * Achata a intenção estruturada no mapa de variáveis que o template usa.
      *
+     * As chaves derivadas da intenção são as de TemplateInterpolator::
+     * RESERVED_VARIABLES e têm precedência sobre as dinâmicas: um template não
+     * consegue redefinir {user_input} através de um campo da tela.
+     *
      * @param  array<string, mixed>  $intent
+     * @param  array<string, mixed>  $customVariables
      * @return array<string, string>
      */
-    private function variables(array $intent): array
+    private function variables(array $intent, array $customVariables = []): array
     {
         $technologies = $this->stringList($intent['technologies'] ?? []);
         $constraints = $this->stringList($intent['constraints'] ?? []);
@@ -96,7 +103,24 @@ class PromptComposer
                 static fn (string $constraint): string => "- {$constraint}",
                 $constraints
             )),
-        ];
+        ] + $this->stringMap($customVariables);
+    }
+
+    /**
+     * @param  array<mixed, mixed>  $values
+     * @return array<string, string>
+     */
+    private function stringMap(array $values): array
+    {
+        $map = [];
+
+        foreach ($values as $key => $value) {
+            if (is_string($key) && $key !== '') {
+                $map[$key] = $this->text($value);
+            }
+        }
+
+        return $map;
     }
 
     /**

@@ -394,7 +394,8 @@ html.high-contrast .skip-link {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
     min-height: 2.25rem;
     margin-bottom: 0.5rem;
 }
@@ -411,9 +412,216 @@ html.high-contrast .skip-link {
     resize: vertical;
 }
 
+.template-variables {
+    background: var(--gueass-bg-muted);
+    border: 1px solid var(--gueass-border);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem 1rem;
+}
+
+.template-variables[hidden] {
+    display: none !important;
+}
+
+.template-variables-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gueass-accent);
+}
+
+.template-variables-hint {
+    font-size: 0.8rem;
+    color: var(--gueass-text-muted);
+}
+
+.prompt-feedback {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.prompt-feedback-label {
+    font-size: 0.78rem;
+    color: var(--gueass-text-muted);
+}
+
+.prompt-feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--gueass-border);
+    border-radius: 9999px;
+    background: var(--gueass-surface);
+    color: var(--gueass-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.prompt-feedback-btn:hover:not(:disabled) {
+    border-color: var(--gueass-accent);
+    color: var(--gueass-accent);
+}
+
+.prompt-feedback-btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.prompt-feedback-btn.is-useful.is-active {
+    background: color-mix(in srgb, #16a34a 16%, var(--gueass-surface));
+    border-color: #16a34a;
+    color: #15803d;
+    font-weight: 600;
+}
+
+.prompt-feedback-btn.is-not-useful.is-active {
+    background: color-mix(in srgb, var(--gueass-danger) 16%, var(--gueass-surface));
+    border-color: var(--gueass-danger);
+    color: var(--gueass-danger);
+    font-weight: 600;
+}
+
+html.dark .prompt-feedback-btn.is-useful.is-active {
+    color: #4ade80;
+}
+
+html.high-contrast .prompt-feedback-btn.is-active {
+    background: #ffff00 !important;
+    color: #000 !important;
+    border: 2px solid #fff !important;
+}
+
+.prompt-feedback-status {
+    font-size: 0.75rem;
+    color: var(--gueass-text-muted);
+}
+
+/* Depois do voto a confirmação toma o lugar da pergunta: as duas juntas não
+   cabem na coluna estreita do prompt gerado. */
+.prompt-feedback.is-answered .prompt-feedback-label {
+    display: none;
+}
+
 .catalog-page {
     max-width: 1100px;
     margin: 0 auto;
+}
+
+.metric-grid,
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.metric-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    background: var(--gueass-surface);
+    border: 1px solid var(--gueass-border);
+    border-radius: 1rem;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    min-width: 0;
+}
+
+.metric-card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gueass-text-muted);
+    margin: 0;
+}
+
+.metric-card-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--gueass-text);
+    margin: 0;
+}
+
+/* Nome de template ou de stack não cabe no corpo numérico do card: vira texto
+   normal, que quebra por palavra em vez de esticar a caixa. */
+.metric-card-value.is-text {
+    font-family: inherit;
+    font-size: 1.05rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+}
+
+.metric-card-hint {
+    font-size: 0.78rem;
+    color: var(--gueass-text-muted);
+    margin: 0;
+}
+
+.chart-card {
+    background: var(--gueass-surface);
+    border: 1px solid var(--gueass-border);
+    border-radius: 1rem;
+    padding: 1.15rem 1.25rem 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    min-width: 0;
+}
+
+.chart-card-title {
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+}
+
+.chart-card-hint {
+    font-size: 0.8rem;
+    color: var(--gueass-text-muted);
+    margin-bottom: 0.85rem;
+}
+
+/* Chart.js precisa de um contêiner com altura definida para o modo responsivo. */
+.chart-canvas {
+    position: relative;
+    height: 260px;
+}
+
+.chart-canvas.is-short {
+    height: 150px;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--gueass-text-muted);
+}
+
+.chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.chart-legend i {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 0.2rem;
+    display: inline-block;
+}
+
+html.high-contrast .metric-card,
+html.high-contrast .chart-card {
+    border-width: 2px;
 }
 
 .catalog-card {
@@ -838,7 +1046,8 @@ body.drawer-locked {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .prompt-io-grid {
+    .prompt-io-grid,
+    .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -856,6 +1065,14 @@ html:not(.dark) [data-icon="sun"] {
 }
 
 @media (min-width: 1024px) {
+    .metric-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .app-shell {
         display: flex;
     }
