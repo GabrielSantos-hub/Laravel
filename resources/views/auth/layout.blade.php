@@ -2,7 +2,7 @@
 
 @section('conteudo')
 <div
-    class="auth-card w-full max-w-md rounded-3xl bg-white dark:bg-slate-800 p-8 shadow-2xl border border-slate-100 dark:border-slate-700"
+    class="auth-card w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-800 p-5 sm:p-8 shadow-2xl border border-slate-100 dark:border-slate-700"
     role="dialog"
     aria-modal="true"
     aria-labelledby="auth-dialog-title"

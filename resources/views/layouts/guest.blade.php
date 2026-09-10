@@ -62,8 +62,8 @@
         @include('partials.user-menu')
     </div>
 
-    <div class="guest-dialog fixed inset-0 z-20 flex items-center justify-center p-4 pb-16">
-        <main id="conteudo-principal" class="w-full max-w-md" tabindex="-1">
+    <div class="guest-dialog fixed inset-0 z-20 flex items-center justify-center p-3 sm:p-4 pb-16">
+        <main id="conteudo-principal" class="w-full" tabindex="-1">
             @yield('conteudo')
         </main>
     </div>

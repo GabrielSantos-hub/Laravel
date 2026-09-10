@@ -66,7 +66,7 @@
                 <button
                     type="button"
                     id="nav-close"
-                    class="icon-btn lg:hidden focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="icon-btn md:hidden focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     aria-label="Fechar menu de navegação"
                 >
                     <i class="fas fa-xmark" aria-hidden="true"></i>

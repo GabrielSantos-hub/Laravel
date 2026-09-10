@@ -71,7 +71,7 @@
 @section('auth-modals')
 <div id="forgot-password-modal" class="app-modal" hidden role="dialog" aria-modal="true" aria-labelledby="forgot-password-title">
     <div class="app-modal-backdrop" data-modal-close></div>
-    <div class="app-modal-panel" style="width:min(28rem, calc(100% - 2rem));" tabindex="-1">
+    <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
         <div class="app-modal-header">
             <h2 id="forgot-password-title" class="h5 mb-0">Redefinição de senha</h2>
             <button
@@ -85,7 +85,7 @@
         </div>
         <p class="mb-0">
             Para redefinir sua senha em nosso ambiente de testes, entre em contato com o administrador pelo e-mail:
-            <a href="mailto:suporte@gueass.com" class="auth-forgot-link focus:ring-2 focus:ring-indigo-500 focus:outline-none">suporte@gueass.com</a>
+            <a href="mailto:suportegueass@gmail.com" class="auth-forgot-link focus:ring-2 focus:ring-indigo-500 focus:outline-none">suportegueass@gmail.com</a>
             informando seu e-mail cadastrado.
         </p>
         <div class="d-flex justify-content-end mt-3">

@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="metric-grid mb-4">
+    <div class="metric-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
         <article class="metric-card">
             <p class="metric-card-label">
                 <i class="fas fa-bolt fa-fw" aria-hidden="true"></i>

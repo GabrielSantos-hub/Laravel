@@ -26,7 +26,9 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('>-A</button>', false);
         $resposta->assertSee('gueass-theme', false);
         $resposta->assertSee('Esqueceu a senha?', false);
-        $resposta->assertSee('suporte@gueass.com', false);
+        $resposta->assertSee('suportegueass@gmail.com', false);
+        $resposta->assertSee('mailto:suportegueass@gmail.com', false);
+        $resposta->assertDontSee('suporte@gueass.com', false);
         $resposta->assertSee('focus:ring-2 focus:ring-indigo-500 focus:outline-none', false);
         $resposta->assertSee('Política de Privacidade', false);
         $resposta->assertSee('/privacidade', false);
@@ -36,7 +38,8 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('bg-slate-900/40', false);
         $resposta->assertSee('backdrop-blur-[2px]', false);
         $resposta->assertSee('fixed inset-0 z-20 flex items-center justify-center', false);
-        $resposta->assertSee('rounded-3xl', false);
+        $resposta->assertSee('w-[90%] sm:max-w-md mx-auto', false);
+        $resposta->assertSee('max-h-[90vh] overflow-y-auto', false);
         $resposta->assertSee('shadow-2xl', false);
         $resposta->assertSee('fixed top-4 right-4 z-30', false);
         $resposta->assertSee('Seleção de Stacks', false);

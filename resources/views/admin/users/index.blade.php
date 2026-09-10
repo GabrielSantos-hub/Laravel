@@ -23,7 +23,7 @@
     </div>
     @endif
 
-    <div class="catalog-table-wrap">
+    <div class="catalog-table-wrap overflow-x-auto">
         <div class="table-responsive">
             <table class="table catalog-table">
                 <thead>
@@ -65,7 +65,7 @@
 
 <div id="reset-password-modal" class="app-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
     <div class="app-modal-backdrop" data-modal-close></div>
-    <div class="app-modal-panel" tabindex="-1">
+    <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
         <div class="app-modal-header">
             <h4 id="reset-password-title" class="h5 mb-0">Redefinir senha</h4>
             <button

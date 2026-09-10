@@ -33,6 +33,7 @@ class AdminDashboardTest extends TestCase
         $resposta->assertOk();
         $resposta->assertViewIs('admin.dashboard');
         $resposta->assertSee('Painel de métricas');
+        $resposta->assertSee('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4', false);
     }
 
     public function test_a_rota_admin_leva_ao_painel(): void

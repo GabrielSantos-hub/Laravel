@@ -884,7 +884,7 @@ html.high-contrast .catalog-tabs .nav-link.active {
     background: var(--gueass-surface);
     border: 1px solid var(--gueass-border);
     border-radius: 0.75rem;
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 .catalog-table {
@@ -951,6 +951,10 @@ html.high-contrast .catalog-tabs .nav-link.active {
     position: fixed;
     inset: 0;
     z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
 }
 
 .app-modal-backdrop {
@@ -962,10 +966,11 @@ html.high-contrast .catalog-tabs .nav-link.active {
 .app-modal-panel {
     position: relative;
     z-index: 1;
-    width: min(36rem, calc(100% - 2rem));
-    max-height: min(80vh, 40rem);
-    overflow: auto;
-    margin: 10vh auto 0;
+    width: 90%;
+    max-width: 28rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 0 auto;
     background: var(--gueass-surface);
     color: var(--gueass-text);
     border: 1px solid var(--gueass-border);
@@ -1170,6 +1175,12 @@ body.drawer-locked {
     overflow: hidden;
 }
 
+@media (min-width: 640px) {
+    .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (min-width: 768px) {
     .guest-mock .app-shell {
         display: flex;
@@ -1189,31 +1200,12 @@ body.drawer-locked {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .prompt-io-grid,
-    .metric-grid {
+    .prompt-io-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .app-content {
         padding: 1.25rem 1.75rem;
-    }
-}
-
-html.dark [data-icon="moon"] {
-    display: none !important;
-}
-
-html:not(.dark) [data-icon="sun"] {
-    display: none !important;
-}
-
-@media (min-width: 1024px) {
-    .metric-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .chart-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .app-shell {
@@ -1221,7 +1213,7 @@ html:not(.dark) [data-icon="sun"] {
     }
 
     #nav-close,
-    .lg\:hidden {
+    .md\:hidden {
         display: none !important;
     }
 
@@ -1275,6 +1267,24 @@ html:not(.dark) [data-icon="sun"] {
 
     .app-overlay {
         display: none !important;
+    }
+}
+
+html.dark [data-icon="moon"] {
+    display: none !important;
+}
+
+html:not(.dark) [data-icon="sun"] {
+    display: none !important;
+}
+
+@media (min-width: 1024px) {
+    .metric-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .app-content {

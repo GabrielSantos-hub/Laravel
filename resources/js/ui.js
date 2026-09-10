@@ -181,7 +181,7 @@ function initSidebar() {
         return;
     }
 
-    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const desktopQuery = window.matchMedia('(min-width: 768px)');
 
     const setMobileOpen = (open) => {
         sidebar.classList.toggle('is-open', open);

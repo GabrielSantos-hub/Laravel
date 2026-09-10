@@ -16,7 +16,9 @@ class PasswordResetTest extends TestCase
             ->assertOk()
             ->assertSee('Esqueceu a senha?', false)
             ->assertSee('id="forgot-password-modal"', false)
-            ->assertSee('suporte@gueass.com', false)
+            ->assertSee('suportegueass@gmail.com', false)
+            ->assertSee('mailto:suportegueass@gmail.com', false)
+            ->assertDontSee('suporte@gueass.com', false)
             ->assertSee('ambiente de testes', false)
             ->assertDontSee('/forgot-password', false)
             ->assertDontSee('/reset-password', false);

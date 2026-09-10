@@ -39,6 +39,7 @@ class AdminUserTest extends TestCase
             ->assertSee('ana@example.com')
             ->assertSee('Admin Gueass')
             ->assertSee('Redefinir Senha')
+            ->assertSee('overflow-x-auto', false)
             ->assertSee('id="reset-password-modal"', false);
     }
 
