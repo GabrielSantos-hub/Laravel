@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Contracts\AIProviderInterface;
+use App\Exceptions\InputUnprocessableException;
 use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
 use App\Models\User;
+use App\Services\PromptBuilderService;
 use App\Services\PromptGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -50,6 +52,13 @@ class PromptControllerTest extends TestCase
         $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $saida);
         $this->assertStringContainsString('Regra de negócio', $saida);
         $this->assertStringContainsString('Requisitos implícitos', $saida);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $saida);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $saida);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $saida);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $saida);
+        $this->assertStringNotContainsString('Template Laravel', $saida);
+        $this->assertStringNotContainsString('Alternância', $saida);
+        $this->assertStringNotContainsString('tema claro/escuro', $saida);
 
         $this->assertDatabaseCount('prompts', 1);
 
@@ -129,7 +138,7 @@ class PromptControllerTest extends TestCase
 
         $resposta->assertUnprocessable();
         $resposta->assertJsonValidationErrors([
-            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+            'intencao' => InputUnprocessableException::MESSAGE,
         ]);
         $this->assertDatabaseCount('prompts', 0);
     }
@@ -158,7 +167,8 @@ class PromptControllerTest extends TestCase
         $this->assertStringContainsString('tema', mb_strtolower($prompt));
         $this->assertStringContainsString('arquitetura', mb_strtolower($prompt));
         $this->assertStringContainsString('fluxo de dados', mb_strtolower($prompt));
-        $this->assertStringNotContainsString('Criar uma tela de login com suporte a modo escuro', $prompt);
+        $this->assertStringContainsString('Criar uma tela de login com suporte a modo escuro', $prompt);
+        $this->assertStringStartsWith(PromptBuilderService::SECTION_ROLE, $prompt);
         $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $prompt);
         $this->assertDatabaseCount('prompts', 1);
     }
@@ -173,7 +183,7 @@ class PromptControllerTest extends TestCase
 
         $resposta->assertUnprocessable();
         $resposta->assertJsonValidationErrors([
-            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+            'intencao' => InputUnprocessableException::MESSAGE,
         ]);
         $this->assertDatabaseCount('prompts', 0);
     }
@@ -206,7 +216,7 @@ class PromptControllerTest extends TestCase
 
         $resposta->assertUnprocessable();
         $resposta->assertJsonValidationErrors([
-            'intencao' => 'Não foi possível identificar um fluxo ou requisito de sistema válido nessa instrução.',
+            'intencao' => InputUnprocessableException::MESSAGE,
         ]);
         $this->assertDatabaseCount('prompts', 0);
     }
@@ -277,7 +287,7 @@ class PromptControllerTest extends TestCase
         $resposta->assertSee('Revise os campos destacados abaixo.');
         $resposta->assertSee('is-invalid', false);
         $resposta->assertSee('invalid-feedback', false);
-        $resposta->assertSee('A entrada não apresenta um objetivo ou escopo de software coerente.');
+        $resposta->assertSee(InputUnprocessableException::MESSAGE);
         $resposta->assertSee('papo rato padeiro');
         $this->assertDatabaseCount('prompts', 0);
     }

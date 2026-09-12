@@ -12,7 +12,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * `role` fica de fora de propósito: o cadastro público não promove ADM.
      *
      * @var list<string>
      */

@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
 use App\Models\Template;
+use App\Services\PromptOutputPolicy;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -28,9 +29,10 @@ class PromptComposer
         Regras de composição:
         - Use o template apenas como guia estrutural; não faça substituição mecânica de chaves.
         - Resolva os blocos condicionais {% if chave %}...{% endif %}, mantendo o conteúdo apenas quando a variável tiver valor e removendo o bloco inteiro caso contrário.
-        - {user_input} já é um briefing técnico expandido: integre-o em prosa contínua, sem aspas e sem colar o texto cru do usuário.
+        - {user_input} traz o pedido específico e o briefing: preserve todos os detalhes concretos (serviços, endpoints, parâmetros, tecnologias). O template só estrutura; nunca apague nem generalize esses detalhes.
         - Produza um documento coeso e bem redigido, sem partes que pareçam inserções brutas de formulário.
         - Não invente requisitos, tecnologias ou restrições que não estejam na intenção ou no briefing.
+        - Se o pedido proibir código ou pedir só documentação, não solicite implementação em código.
         - Responda apenas com o prompt final, sem comentários, explicações ou cercas de código.
         TXT;
 
@@ -41,6 +43,7 @@ class PromptComposer
         private readonly TemplateInterpolator $interpolator = new TemplateInterpolator,
         private readonly ?LoggerInterface $logger = null,
         ?IntentSynthesizer $synthesizer = null,
+        private readonly PromptOutputPolicy $policy = new PromptOutputPolicy,
     ) {
         $this->synthesizer = $synthesizer ?? new IntentSynthesizer($this->provider);
     }
@@ -55,6 +58,14 @@ class PromptComposer
     {
         $body = (string) $template->corpo_template;
         $variables = $this->variables($structuredIntent, $customVariables, $rawIntent);
+        $pedido = $variables['intencao'] ?? '';
+
+        $proseOnly = $this->policy->isProseOnly($pedido, $structuredIntent);
+
+        if ($proseOnly) {
+            $body = $this->policy->stripCodeInstructions($body);
+            $body = $this->policy->rewriteProseFraming($body);
+        }
 
         try {
             $composed = $this->cleanUp(
@@ -66,14 +77,22 @@ class PromptComposer
             }
 
             // Rede de segurança: um LLM pode deixar placeholders para trás.
-            return $this->interpolator->resolvePlaceholders($composed, $variables);
+            $composed = $this->interpolator->resolvePlaceholders($composed, $variables);
+
+            return $proseOnly
+                ? $this->policy->rewriteProseFraming($composed)
+                : $composed;
         } catch (Throwable $e) {
             $this->logger?->error($e->getMessage(), [
                 'template_id' => $template->getKey(),
                 'exception' => $e->getMessage(),
             ]);
 
-            return $this->interpolator->render($body, $variables);
+            $fallback = $this->interpolator->render($body, $variables);
+
+            return $proseOnly
+                ? $this->policy->rewriteProseFraming($fallback)
+                : $fallback;
         }
     }
 
@@ -94,7 +113,7 @@ class PromptComposer
         $constraints = $this->stringList($intent['constraints'] ?? []);
         $objective = $this->text($intent['objective'] ?? null);
         $intencao = trim((string) $rawIntent) !== '' ? trim((string) $rawIntent) : $objective;
-        $briefing = $this->synthesizer->synthesize($intencao, $intent);
+        $briefing = $this->synthesizer->frame($intencao, $intent);
 
         return [
             'intencao' => $intencao,

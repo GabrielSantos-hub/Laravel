@@ -7,6 +7,7 @@ use App\Models\Template;
 use App\Services\AI\NullAIProvider;
 use App\Services\AI\PromptComposer;
 use App\Services\AI\TemplateInterpolator;
+use App\Services\PromptOutputPolicy;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
@@ -177,6 +178,83 @@ class PromptComposerTest extends TestCase
         $resultado = $composer->compose([], $this->template('Tarefa: {user_input} em {language}.'));
 
         $this->assertSame('Tarefa: em .', $resultado);
+    }
+
+    public function test_o_user_input_preserva_o_pedido_e_os_detalhes_citados(): void
+    {
+        $pedido = 'Criar uma API de upload para S3 com Queues e o endpoint POST /uploads.';
+
+        $resultado = (new PromptComposer(new NullAIProvider))->compose(
+            [
+                'objective' => $pedido,
+                'technologies' => ['PHP', 'Laravel'],
+                'architecture' => null,
+                'constraints' => [],
+                'type' => 'feature',
+            ],
+            $this->template('Enquadramento: {user_input}'),
+            [],
+            $pedido
+        );
+
+        $this->assertStringContainsString($pedido, $resultado);
+        $this->assertStringContainsString('S3', $resultado);
+        $this->assertStringContainsString('Queues', $resultado);
+        $this->assertStringContainsString('POST /uploads', $resultado);
+        $this->assertStringContainsString('Regra de negócio', $resultado);
+        $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $resultado);
+    }
+
+    public function test_pedido_sem_codigo_remove_instrucoes_de_implementacao_do_template(): void
+    {
+        $pedido = 'Descreva a API de billing. Não quero código PHP agora.';
+
+        $resultado = (new PromptComposer(new NullAIProvider))->compose(
+            [
+                'objective' => $pedido,
+                'technologies' => ['Laravel'],
+                'architecture' => null,
+                'constraints' => [],
+                'type' => 'feature',
+            ],
+            $this->template(
+                "Escreva o código completo para o domínio.\n"
+                ."Apresente os blocos de código correspondentes.\n"
+                .'Contexto: {user_input}'
+            ),
+            [],
+            $pedido
+        );
+
+        $this->assertStringContainsString($pedido, $resultado);
+        $this->assertStringContainsString('Contexto:', $resultado);
+        $this->assertStringNotContainsString('Escreva o código completo', $resultado);
+        $this->assertStringNotContainsString('blocos de código correspondentes', $resultado);
+    }
+
+    public function test_pedido_em_prosa_reescreve_o_enquadramento_de_solucao_de_codigo(): void
+    {
+        $pedido = 'Elabore a especificação técnica do 2FA em prosa. Não quero código PHP.';
+
+        $resultado = (new PromptComposer(new NullAIProvider))->compose(
+            [
+                'objective' => $pedido,
+                'technologies' => ['Laravel'],
+                'architecture' => null,
+                'constraints' => [],
+                'type' => 'documentation',
+            ],
+            $this->template(
+                PromptOutputPolicy::CODE_TASK_LEAD
+                ." para o seguinte escopo de negócio:\n{user_input}"
+            ),
+            [],
+            $pedido
+        );
+
+        $this->assertStringContainsString(PromptOutputPolicy::PROSE_TASK_LEAD, $resultado);
+        $this->assertStringNotContainsString(PromptOutputPolicy::CODE_TASK_LEAD, $resultado);
+        $this->assertStringContainsString($pedido, $resultado);
     }
 
     // Helpers

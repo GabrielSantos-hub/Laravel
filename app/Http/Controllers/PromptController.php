@@ -18,9 +18,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class PromptController extends Controller
 {
+    public const GENERIC_FAILURE_MESSAGE = 'Não foi possível processar a solicitação.';
+
     public function __construct(
         protected PromptPipelineService $pipeline,
     ) {}
@@ -71,12 +74,29 @@ class PromptController extends Controller
                 customVariables: $variaveis,
             );
         } catch (InvalidIntentException $e) {
-            // Fail-closed: valido só conta como aprovação se for o booleano true.
-            Log::error($e->getMessage());
-            throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
+            Log::error('Intenção rejeitada na geração de prompt.', [
+                'type' => $e::class,
+            ]);
+            throw ValidationException::withMessages([
+                'intencao' => $this->mensagemPublica($e),
+            ]);
         } catch (NoCompatibleTemplateException $e) {
-            Log::error($e->getMessage());
-            throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
+            Log::error('Nenhum template compatível na geração de prompt.', [
+                'type' => $e::class,
+            ]);
+            throw ValidationException::withMessages([
+                'intencao' => $this->mensagemPublica($e),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Falha inesperada na geração de prompt.', [
+                'type' => $e::class,
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => self::GENERIC_FAILURE_MESSAGE], 500);
+            }
+
+            return back()->withErrors(['intencao' => self::GENERIC_FAILURE_MESSAGE]);
         }
 
         $prompt = Prompt::query()->create([
@@ -148,7 +168,7 @@ class PromptController extends Controller
                 continue;
             }
 
-            $valor = is_scalar($valor) ? trim((string) $valor) : '';
+            $valor = is_scalar($valor) ? trim(strip_tags((string) $valor)) : '';
 
             if ($valor !== '') {
                 $limpas[$nome] = $valor;
@@ -183,6 +203,29 @@ class PromptController extends Controller
             (int) $prompt->user_id === Auth::id(),
             403,
             "Você só pode {$acao} prompts do seu próprio histórico."
+        );
+    }
+
+    /**
+     * Mensagens de domínio vão ao cliente; caminhos de arquivo, SQLSTATE
+     * e stack traces nunca saem da resposta HTTP.
+     */
+    private function mensagemPublica(Throwable $e): string
+    {
+        $mensagem = $e->getMessage();
+
+        if ($this->pareceVazamentoInterno($mensagem)) {
+            return self::GENERIC_FAILURE_MESSAGE;
+        }
+
+        return $mensagem;
+    }
+
+    private function pareceVazamentoInterno(string $mensagem): bool
+    {
+        return (bool) preg_match(
+            '/(?:[A-Za-z]:\\\\|\/(?:var|home|usr|laragon|app)\/|\.php\b|stack trace|SQLSTATE)/i',
+            $mensagem
         );
     }
 }

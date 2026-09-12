@@ -5,6 +5,7 @@ namespace Tests\Unit\Services;
 use App\Contracts\AIProviderInterface;
 use App\Exceptions\InvalidIntentException;
 use App\Exceptions\NoCompatibleTemplateException;
+use App\Exceptions\PromptAssemblyException;
 use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
@@ -12,6 +13,7 @@ use App\Models\Template;
 use App\Services\AI\NullAIProvider;
 use App\Services\AI\PromptComposer;
 use App\Services\AI\TemplateSelector;
+use App\Services\PromptBuilderService;
 use App\Services\PromptGeneratorService;
 use App\Services\PromptPipelineResult;
 use App\Services\PromptPipelineService;
@@ -55,8 +57,18 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertStringContainsString('Requisitos implícitos', $resultado->prompt);
         $this->assertStringContainsString('Fluxo do usuário', $resultado->prompt);
         $this->assertStringContainsString('fluxo de dados', $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $resultado->prompt);
+        $this->assertStringContainsString('Contexto especializado: Implementação de funcionalidade em ambiente PHP e Laravel, alinhado a Clean Architecture.', $resultado->prompt);
+        $this->assertStringNotContainsString('Template Laravel', $resultado->prompt);
+        $this->assertStringNotContainsString('padrão do template', $resultado->prompt);
+        $this->assertStringNotContainsString('Alternância', $resultado->prompt);
+        $this->assertStringNotContainsString('tema claro/escuro', $resultado->prompt);
         $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $resultado->prompt);
-        $this->assertStringNotContainsString(
+        $this->assertStringStartsWith(PromptBuilderService::SECTION_ROLE, $resultado->prompt);
+        $this->assertStringContainsString(
             'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
             $resultado->prompt
         );
@@ -171,7 +183,11 @@ class PromptPipelineServiceTest extends TestCase
         $resultado = $this->pipeline->generate('Faça um crud de cadastro de clientes.');
 
         $this->assertTrue($fallback->is($resultado->template));
-        $this->assertStringStartsWith('Módulo:', $resultado->prompt);
+        $this->assertStringContainsString('Módulo:', $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $resultado->prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $resultado->prompt);
     }
 
     public function test_dicas_do_catalogo_completam_a_intencao_sem_sobrescrever_o_texto(): void
@@ -285,6 +301,25 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertSame('architecture', $resultado->intent['type']);
     }
 
+    public function test_falha_na_montagem_profissional_devolve_o_corpo_original(): void
+    {
+        $this->templateClassificado();
+
+        $builder = new class extends PromptBuilderService
+        {
+            public function assemble(string $corePrompt, array $intent = [], ?Template $template = null, ?string $rawIntent = null): string
+            {
+                throw PromptAssemblyException::emptyCore();
+            }
+        };
+
+        $resultado = $this->pipelineCom(new NullAIProvider, builder: $builder)
+            ->generate('Criar uma API REST em Laravel com PHP seguindo Clean Architecture.');
+
+        $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $resultado->prompt);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_ROLE, $resultado->prompt);
+    }
+
     public function test_mistura_ilogica_com_termos_tecnicos_nao_e_gerada(): void
     {
         $this->templateClassificado();
@@ -297,7 +332,8 @@ class PromptPipelineServiceTest extends TestCase
 
     private function pipelineCom(
         AIProviderInterface $provedor,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?PromptBuilderService $builder = null
     ): PromptPipelineService {
         return new PromptPipelineService(
             new PromptGeneratorService(
@@ -305,6 +341,7 @@ class PromptPipelineServiceTest extends TestCase
                 app(TemplateSelector::class),
                 new PromptComposer($provedor, logger: $logger),
                 $logger,
+                $builder ?? new PromptBuilderService,
             )
         );
     }

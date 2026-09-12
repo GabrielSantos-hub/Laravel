@@ -4,7 +4,8 @@ namespace App\Services;
 
 /**
  * Fachada estável do pipeline de geração. A orquestração (JSON estruturado
- * da IA + seleção local de template) vive em PromptGeneratorService.
+ * da IA + seleção local de template + envelope profissional) vive em
+ * PromptGeneratorService.
  */
 class PromptPipelineService
 {

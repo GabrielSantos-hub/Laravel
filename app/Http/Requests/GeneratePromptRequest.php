@@ -2,8 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Exceptions\InputUnprocessableException;
 use App\Services\AI\IntentAnalyzer;
+use App\Services\Guardrails\InputSanityGuardrail;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Throwable;
 
 class GeneratePromptRequest extends FormRequest
 {
@@ -47,6 +51,50 @@ class GeneratePromptRequest extends FormRequest
                 'user_input' => $intencao,
             ]);
         }
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->has('intencao')) {
+                return;
+            }
+
+            $intencao = $this->input('intencao');
+
+            if (! is_string($intencao)) {
+                return;
+            }
+
+            $guardrail = app(InputSanityGuardrail::class);
+
+            try {
+                $guardrail->assertSane($intencao);
+            } catch (InputUnprocessableException $e) {
+                $validator->errors()->add('intencao', $e->getMessage());
+
+                return;
+            } catch (Throwable) {
+                $validator->errors()->add('intencao', 'Não foi possível processar a solicitação.');
+
+                return;
+            }
+
+            $variaveis = $this->input('variables');
+
+            if (! is_array($variaveis)) {
+                return;
+            }
+
+            foreach ($variaveis as $chave => $valor) {
+                if (is_string($valor) && $guardrail->isMalicious($valor)) {
+                    $validator->errors()->add(
+                        'variables.'.$chave,
+                        InputUnprocessableException::MESSAGE
+                    );
+                }
+            }
+        });
     }
 
     /**

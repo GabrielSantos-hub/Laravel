@@ -76,4 +76,59 @@ class IntentSynthesizerTest extends TestCase
     {
         $this->assertSame('', (new IntentSynthesizer(new NullAIProvider))->synthesize('', []));
     }
+
+    public function test_o_frame_preserva_s3_queues_e_endpoints_citados(): void
+    {
+        $pedido = 'Criar uma API de upload para S3 com Queues e o endpoint POST /uploads.';
+        $framed = (new IntentSynthesizer(new NullAIProvider))->frame($pedido, ['type' => 'feature']);
+
+        $this->assertStringContainsString($pedido, $framed);
+        $this->assertStringContainsString('S3', $framed);
+        $this->assertStringContainsString('Queues', $framed);
+        $this->assertStringContainsString('POST /uploads', $framed);
+        $this->assertStringContainsString('elementos citados', $framed);
+        $this->assertStringContainsString('Regra de negócio', $framed);
+    }
+
+    public function test_sistema_e_api_nao_recebem_requisitos_de_tema(): void
+    {
+        $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize(
+            'Criar um sistema de API REST de pedidos em Laravel.',
+            ['type' => 'feature', 'technologies' => ['Laravel']]
+        );
+
+        $this->assertStringContainsString('API', $briefing);
+        $this->assertStringContainsString('Contratos de request/response', $briefing);
+        $this->assertStringNotContainsString('tema claro/escuro', $briefing);
+        $this->assertStringNotContainsString('Alternância', $briefing);
+        $this->assertStringNotContainsString('preferência visual', $briefing);
+        $this->assertStringNotContainsString('interface deve respeitar', $briefing);
+    }
+
+    public function test_login_sem_modo_escuro_nao_inventa_requisito_de_tema(): void
+    {
+        $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize(
+            'Faça um sistema de login com recuperação de senha.',
+            ['type' => 'feature']
+        );
+
+        $this->assertStringContainsString('autenticação', $briefing);
+        $this->assertStringNotContainsString('tema claro/escuro', $briefing);
+        $this->assertStringNotContainsString('Alternância', $briefing);
+        $this->assertStringNotContainsString('preferência visual', $briefing);
+        $this->assertStringNotContainsString('tema escolhido', $briefing);
+    }
+
+    public function test_defeito_de_backend_nao_recebe_requisitos_de_interface(): void
+    {
+        $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize(
+            'Corrigir o erro 500 no endpoint de relatórios.',
+            ['type' => 'bugfix', 'technologies' => ['Laravel']]
+        );
+
+        $this->assertStringNotContainsString('tema claro/escuro', $briefing);
+        $this->assertStringNotContainsString('Alternância', $briefing);
+        $this->assertStringNotContainsString('estados vazios visíveis', $briefing);
+        $this->assertStringNotContainsString('interface, regra de negócio', $briefing);
+    }
 }

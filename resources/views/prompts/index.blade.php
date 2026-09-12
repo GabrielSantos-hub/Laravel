@@ -133,7 +133,7 @@
         const frameworkSelect = document.getElementById('framework_select');
 
         if (languageSelect && frameworkSelect) {
-            let targetFrameworkId = "{{ old('framework_id', request('framework_id')) }}";
+            let targetFrameworkId = @json(old('framework_id', request('framework_id')));
 
             function carregarFrameworks(languageId, selectedFrameworkId = null) {
                 if (!languageId) {
@@ -158,8 +158,9 @@
                         });
                         frameworkSelect.disabled = false;
                     })
-                    .catch(error => {
-                        console.error('Erro ao carregar frameworks:', error);
+                    .catch(() => {
+                        frameworkSelect.innerHTML = '<option value="">Não foi possível carregar os frameworks.</option>';
+                        frameworkSelect.disabled = true;
                     });
             }
 

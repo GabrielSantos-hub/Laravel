@@ -52,23 +52,23 @@ class PromptPipelineTest extends TestCase
             'is_active' => true,
         ]);
 
-        $intencao = app(IntentAnalyzer::class)->analyze(
-            "Criar uma API REST em Laravel com PHP seguindo Clean Architecture.\n"
-            .'Não deve usar pacotes pagos.'
-        );
+        $pedido = "Criar uma API REST em Laravel com PHP seguindo Clean Architecture.\n"
+            .'Não deve usar pacotes pagos.';
+        $intencao = app(IntentAnalyzer::class)->analyze($pedido);
 
         $selecionado = app(TemplateSelector::class)->select($intencao);
 
         $this->assertTrue($template->is($selecionado));
         $this->assertFalse($ignorado->is($selecionado));
 
-        $prompt = app(PromptComposer::class)->compose($intencao, $selecionado);
+        $prompt = app(PromptComposer::class)->compose($intencao, $selecionado, [], $pedido);
 
         $this->assertStringContainsString('Você é um especialista em PHP e no framework Laravel, seguindo Clean Architecture.', $prompt);
         $this->assertStringContainsString('Regra de negócio', $prompt);
         $this->assertStringContainsString('Requisitos implícitos', $prompt);
         $this->assertStringContainsString('Fluxo do usuário', $prompt);
         $this->assertStringContainsString("Restrições:\n- Não deve usar pacotes pagos", $prompt);
+        $this->assertStringContainsString('Criar uma API REST em Laravel com PHP seguindo Clean Architecture.', $prompt);
         $this->assertStringNotContainsString('"Criar uma API REST', $prompt);
     }
 

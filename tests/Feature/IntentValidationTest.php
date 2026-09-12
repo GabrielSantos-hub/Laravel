@@ -198,7 +198,7 @@ it('devolve erro amigável no formulário quando a entrada é recusada', functio
     $resposta->assertOk();
     $resposta->assertSee('alert-danger', false);
     $resposta->assertSee('is-invalid', false);
-    $resposta->assertSee('A entrada não apresenta um objetivo ou escopo de software coerente.');
+    $resposta->assertSee(\App\Exceptions\InputUnprocessableException::MESSAGE);
     expect(Prompt::query()->count())->toBe(0);
 });
 

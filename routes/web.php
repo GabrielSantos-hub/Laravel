@@ -53,7 +53,7 @@ Route::middleware(['auth', 'can:admin'])->group(function () {
     Route::put('/admin/users/{user}/password', [AdminUserController::class, 'resetPassword'])->name('admin.users.password');
 
     Route::resource('languages', LanguageController::class)->except(['index']);
-    Route::resource('frameworks', FrameworkController::class)->except(['index']);
-    Route::resource('architectures', ArchitectureController::class)->except(['index']);
-    Route::resource('templates', TemplateController::class)->except(['index']);
+    Route::resource('frameworks', FrameworkController::class)->except(['index', 'show']);
+    Route::resource('architectures', ArchitectureController::class)->except(['index', 'show']);
+    Route::resource('templates', TemplateController::class)->except(['index', 'show']);
 });

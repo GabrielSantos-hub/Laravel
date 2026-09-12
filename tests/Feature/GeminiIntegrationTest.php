@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Contracts\AIProviderInterface;
+use App\Exceptions\InputUnprocessableException;
 use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
@@ -10,6 +11,7 @@ use App\Models\Prompt;
 use App\Models\Template;
 use App\Models\User;
 use App\Services\AI\Providers\GeminiAIProvider;
+use App\Services\PromptBuilderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -63,14 +65,21 @@ class GeminiIntegrationTest extends TestCase
         ]);
 
         $resposta->assertCreated();
-        $resposta->assertJsonPath('prompt', 'Prompt final redigido pelo Gemini.');
         $resposta->assertJsonPath('template.id', $template->id);
         $resposta->assertJsonPath('degraded', false);
         $resposta->assertJsonPath('intent.objective', 'Criar uma API REST de pedidos em Laravel com PHP');
 
+        $prompt = $resposta->json('prompt');
+        $this->assertIsString($prompt);
+        $this->assertStringContainsString('Prompt final redigido pelo Gemini.', $prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $prompt);
+        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
+
         Http::assertSentCount(1);
 
-        $this->assertSame(
+        $this->assertStringContainsString(
             'Prompt final redigido pelo Gemini.',
             Prompt::query()->sole()->output_text
         );
@@ -154,7 +163,7 @@ class GeminiIntegrationTest extends TestCase
         $resposta->assertUnprocessable();
         $resposta->assertJsonValidationErrorFor('intencao');
         $resposta->assertJsonValidationErrors([
-            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+            'intencao' => InputUnprocessableException::MESSAGE,
         ]);
         $this->assertDatabaseCount('prompts', 0);
     }

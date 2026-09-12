@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
+use App\Services\PromptOutputPolicy;
 use Throwable;
 
 /**
@@ -28,8 +29,22 @@ class IntentSynthesizer
         TXT;
 
     public function __construct(
-        private readonly AIProviderInterface $provider
+        private readonly AIProviderInterface $provider,
+        private readonly PromptOutputPolicy $policy = new PromptOutputPolicy,
     ) {}
+
+    /**
+     * Pedido específico + briefing expandido. O template usa este texto em
+     * {user_input}: o enquadramento nunca substitui os detalhes citados.
+     *
+     * @param  array<string, mixed>  $intent
+     */
+    public function frame(string $intencao, array $intent = []): string
+    {
+        $source = trim($intencao) !== '' ? trim($intencao) : $this->text($intent['objective'] ?? null);
+
+        return $this->policy->mergeTaskBody($source, $this->synthesize($source, $intent));
+    }
 
     /**
      * @param  array<string, mixed>  $intent
@@ -77,9 +92,9 @@ class IntentSynthesizer
         $temas = $this->themes($intencao, $intent);
 
         return implode("\n\n", array_filter([
-            $this->specificationLead($temas, $intent),
+            $this->specificationLead($temas, $intent, $intencao),
             'Regra de negócio principal: '.$this->businessRule($temas),
-            "Requisitos implícitos:\n".$this->requirements($temas),
+            "Requisitos implícitos:\n".$this->requirements($temas, $intent),
             'Fluxo do usuário: '.$this->userFlow($temas),
         ]));
     }
@@ -95,15 +110,15 @@ class IntentSynthesizer
 
         foreach ([
             'login' => ['login', 'autentic', 'senha', 'logon'],
-            'tema' => ['modo escuro', 'dark mode', 'tema'],
+            'tema' => ['modo escuro', 'dark mode', 'modo claro', 'light mode', 'tema claro', 'tema escuro', 'dark theme', 'light theme'],
             'api' => ['api', 'rest', 'endpoint'],
             'crud' => ['crud', 'cadastro'],
             'teste' => ['teste', 'testes', 'phpunit'],
             'validacao' => ['validac', 'valida'],
-            'pagamento' => ['pagament', 'cobranc', 'pedido'],
+            'pagamento' => ['pagament', 'cobranc', 'checkout', 'fatura', 'billing'],
         ] as $tema => $needles) {
             foreach ($needles as $needle) {
-                if (str_contains($haystack, $needle)) {
+                if ($this->themeMatches($haystack, $needle)) {
                     $found[] = $tema;
                     break;
                 }
@@ -117,7 +132,7 @@ class IntentSynthesizer
      * @param  list<string>  $temas
      * @param  array<string, mixed>  $intent
      */
-    private function specificationLead(array $temas, array $intent): string
+    private function specificationLead(array $temas, array $intent, string $intencao = ''): string
     {
         $foco = match (true) {
             in_array('login', $temas, true) && in_array('tema', $temas, true) => 'uma experiência de autenticação com preferência visual persistente',
@@ -146,7 +161,75 @@ class IntentSynthesizer
             ? ''
             : ' '.implode(', ', $qualificadores);
 
-        return 'Especifique '.$foco.$complemento.', descrevendo a arquitetura, o fluxo de dados e os requisitos em prosa contínua.';
+        $lead = 'Especifique '.$foco.$complemento.', descrevendo a arquitetura, o fluxo de dados e os requisitos em prosa contínua.';
+        $citados = $this->citedDetails($intencao);
+
+        if ($citados !== []) {
+            $lead .= ' Inclua obrigatoriamente os elementos citados: '.implode(', ', $citados).'.';
+        }
+
+        return $lead;
+    }
+
+    /**
+     * Serviços, rotas e tokens técnicos que o briefing genérico não pode
+     * deixar para trás (S3, Queues, /uploads, etc.).
+     *
+     * @return list<string>
+     */
+    private function citedDetails(string $intencao): array
+    {
+        $found = [];
+
+        preg_match_all('#(/[A-Za-z0-9_\-{}]+(?:/[A-Za-z0-9_\-{}]+)+)#u', $intencao, $paths);
+
+        foreach ($paths[1] ?? [] as $path) {
+            $found[] = $path;
+        }
+
+        foreach ([
+            'S3', 'SQS', 'SNS', 'Lambda', 'Queues', 'Queue', 'filas', 'fila',
+            'Redis', 'RabbitMQ', 'Kafka', 'webhook', 'webhooks',
+            'GraphQL', 'WebSocket', 'Sanctum', 'JWT', 'OpenAPI',
+        ] as $term) {
+            if (preg_match('/(?<![\p{L}\p{N}_])'.preg_quote($term, '/').'(?![\p{L}\p{N}_])/u', $intencao) === 1) {
+                $found[] = $term;
+            }
+        }
+
+        preg_match_all('/\b(?:GET|POST|PUT|PATCH|DELETE)\s+\/\S+/u', $intencao, $verbs);
+
+        foreach ($verbs[0] ?? [] as $verb) {
+            $found[] = $verb;
+        }
+
+        $unique = [];
+
+        foreach ($found as $item) {
+            $item = trim($item);
+
+            if ($item !== '' && ! $this->alreadyCited($unique, $item)) {
+                $unique[] = $item;
+            }
+        }
+
+        return $unique;
+    }
+
+    /**
+     * @param  list<string>  $items
+     */
+    private function alreadyCited(array $items, string $candidate): bool
+    {
+        $needle = mb_strtolower($candidate);
+
+        foreach ($items as $item) {
+            if (mb_strtolower($item) === $needle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -166,8 +249,9 @@ class IntentSynthesizer
 
     /**
      * @param  list<string>  $temas
+     * @param  array<string, mixed>  $intent
      */
-    private function requirements(array $temas): string
+    private function requirements(array $temas, array $intent = []): string
     {
         $itens = [];
 
@@ -200,14 +284,68 @@ class IntentSynthesizer
         $itens = array_slice(array_values(array_unique($itens)), 0, 3);
 
         if (count($itens) < 2) {
-            $itens[] = 'Tratamento de erros e estados vazios visíveis para quem opera a funcionalidade.';
-            $itens[] = 'Separação entre interface, regra de negócio e persistência o suficiente para evoluir o recurso.';
+            array_push($itens, ...$this->fallbackRequirements($temas, $intent));
         }
 
         return implode("\n", array_map(
             static fn (string $item): string => '- '.$item,
-            array_slice($itens, 0, 3)
+            array_slice(array_values(array_unique($itens)), 0, 3)
         ));
+    }
+
+    /**
+     * Completa a lista só com requisitos do mesmo escopo. Não mistura
+     * interface/tema em pedidos de API, backend ou correção de defeito.
+     *
+     * @param  list<string>  $temas
+     * @param  array<string, mixed>  $intent
+     * @return list<string>
+     */
+    private function fallbackRequirements(array $temas, array $intent): array
+    {
+        $type = is_string($intent['type'] ?? null) ? mb_strtolower(trim($intent['type'])) : '';
+
+        if (in_array('api', $temas, true) || $type === 'architecture') {
+            return [
+                'Contratos explícitos de entrada, saída e erro.',
+                'Separação entre regra de negócio e persistência o suficiente para evoluir o recurso.',
+            ];
+        }
+
+        if ($type === 'bugfix') {
+            return [
+                'Reprodução do defeito e critério de aceite da correção.',
+                'Proteção contra regressão no fluxo afetado.',
+            ];
+        }
+
+        if ($type === 'test') {
+            return [
+                'Cobertura de casos felizes e de falha.',
+                'Asserções explícitas sobre o comportamento esperado.',
+            ];
+        }
+
+        return [
+            'Tratamento de erros e respostas explícitas de sucesso ou falha.',
+            'Separação entre regra de negócio e persistência o suficiente para evoluir o recurso.',
+        ];
+    }
+
+    /**
+     * Casa frases inteiras ou o radical no início do token. Evita o falso
+     * positivo de "tema" dentro de "sistema".
+     */
+    private function themeMatches(string $haystack, string $needle): bool
+    {
+        if (str_contains($needle, ' ')) {
+            return str_contains($haystack, $needle);
+        }
+
+        return preg_match(
+            '/(?<![\p{L}\p{N}_])'.preg_quote($needle, '/').'/u',
+            $haystack
+        ) === 1;
     }
 
     /**

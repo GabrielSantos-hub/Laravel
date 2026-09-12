@@ -1,8 +1,17 @@
 <?php
 
+use App\Exceptions\InputUnprocessableException;
+use App\Http\Controllers\PromptController;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,11 +21,28 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo('/');
-        $middleware->alias([
-            'role.adm' => \App\Http\Middleware\RoleAdmMiddleware::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Com APP_DEBUG=false o Laravel não renderiza stack traces; as views
-        // em resources/views/errors/ também nunca exibem $exception.
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if (! $request->expectsJson()) {
+                return null;
+            }
+
+            if ($e instanceof ValidationException
+                || $e instanceof AuthenticationException
+                || $e instanceof AuthorizationException
+                || $e instanceof HttpExceptionInterface
+                || $e instanceof ModelNotFoundException
+                || $e instanceof TokenMismatchException) {
+                return null;
+            }
+
+            $message = $e instanceof InputUnprocessableException
+                ? $e->getMessage()
+                : PromptController::GENERIC_FAILURE_MESSAGE;
+
+            $status = $e instanceof InputUnprocessableException ? 422 : 500;
+
+            return response()->json(['message' => $message], $status);
+        });
     })->create();

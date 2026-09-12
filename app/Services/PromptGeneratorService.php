@@ -4,19 +4,22 @@ namespace App\Services;
 
 use App\Contracts\AIProviderInterface;
 use App\Exceptions\AIProviderException;
+use App\Exceptions\InputUnprocessableException;
 use App\Exceptions\InvalidIntentException;
 use App\Exceptions\NoCompatibleTemplateException;
+use App\Exceptions\PromptAssemblyException;
 use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
+use App\Models\Template;
 use App\Services\AI\IntentAnalyzer;
 use App\Services\AI\IntentSynthesizer;
 use App\Services\AI\NullAIProvider;
 use App\Services\AI\PromptComposer;
 use App\Services\AI\TemplateInterpolator;
 use App\Services\AI\TemplateSelector;
+use App\Services\Guardrails\InputSanityGuardrail;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -69,6 +72,8 @@ class PromptGeneratorService
         private readonly TemplateSelector $selector,
         private readonly PromptComposer $composer,
         private readonly ?LoggerInterface $logger = null,
+        private readonly PromptBuilderService $builder = new PromptBuilderService,
+        private readonly InputSanityGuardrail $guardrail = new InputSanityGuardrail,
     ) {}
 
     /**
@@ -80,6 +85,12 @@ class PromptGeneratorService
         array $catalogHints = [],
         array $customVariables = [],
     ): PromptPipelineResult {
+        $verdict = $this->guardrail->assess($userInput);
+
+        if (! $verdict->accepted) {
+            throw InputUnprocessableException::disconnected();
+        }
+
         $localAnalyzer = new IntentAnalyzer(new NullAIProvider);
         $intent = $this->enrichIntent($localAnalyzer->analyze($userInput), $catalogHints);
 
@@ -102,22 +113,8 @@ class PromptGeneratorService
                 'cause' => $e->getPrevious()?->getMessage() ?? $e->getMessage(),
             ]);
 
-            Log::info('Resposta Validador IA:', [
-                'input' => $userInput,
-                'response' => $e->getMessage(),
-            ]);
-
             throw InvalidIntentException::unclear();
         }
-
-        $rawForLog = is_array($rawAiResponse)
-            ? ($rawAiResponse['_raw'] ?? $rawAiResponse)
-            : $rawAiResponse;
-
-        Log::info('Resposta Validador IA:', [
-            'input' => $userInput,
-            'response' => $rawForLog,
-        ]);
 
         $payload = $this->decodeStructuredResponse($rawAiResponse);
 
@@ -129,14 +126,14 @@ class PromptGeneratorService
             throw NoCompatibleTemplateException::forIntent();
         }
 
-        $prompt = $payload['prompt_gerado'];
+        $prompt = $verdict->lean ? '' : $payload['prompt_gerado'];
 
-        if ($prompt === '') {
+        if ($prompt === '' && ! $verdict->lean) {
             $prompt = $this->composer->compose($intent, $template, $customVariables, $userInput);
         }
 
         return new PromptPipelineResult(
-            prompt: $prompt,
+            prompt: $this->assembleProfessionalPrompt($prompt, $intent, $template, $userInput),
             template: $template,
             intent: $intent,
             degraded: false,
@@ -205,6 +202,25 @@ class PromptGeneratorService
             'motivo_rejeicao' => self::UNCLEAR_MESSAGE,
             'prompt_gerado' => '',
         ];
+    }
+
+    /**
+     * Envelopa o corpo gerado nas camadas profissionais. Se a montagem
+     * falhar, devolve o corpo original: a geração já foi aprovada.
+     *
+     * @param  array<string, mixed>  $intent
+     */
+    private function assembleProfessionalPrompt(string $prompt, array $intent, Template $template, string $rawIntent): string
+    {
+        try {
+            return $this->builder->assemble($prompt, $intent, $template, $rawIntent);
+        } catch (PromptAssemblyException $e) {
+            $this->logger?->warning($e->getMessage(), [
+                'template_id' => $template->getKey(),
+            ]);
+
+            return $prompt;
+        }
     }
 
     /**
@@ -288,7 +304,7 @@ class PromptGeneratorService
             }
         }
 
-        $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize($intencao, $intent);
+        $briefing = (new IntentSynthesizer(new NullAIProvider))->frame($intencao, $intent);
 
         $map = [
             'intencao' => $intencao,
