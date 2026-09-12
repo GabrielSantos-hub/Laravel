@@ -858,6 +858,58 @@ html.high-contrast .chart-card {
     display: block;
 }
 
+#crop-modal[hidden] {
+    display: none !important;
+}
+
+.crop-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(36rem, calc(100% - 2rem));
+    max-height: min(90vh, 44rem);
+    overflow: auto;
+    background: var(--gueass-surface);
+    color: var(--gueass-text);
+    border: 1px solid var(--gueass-border);
+    border-radius: 1rem;
+    padding: 1.1rem 1.2rem 1.25rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.crop-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.crop-modal-preview {
+    width: 100%;
+    max-height: 60vh;
+    overflow: hidden;
+    background: var(--gueass-bg-muted);
+    border: 1px solid var(--gueass-border);
+    border-radius: 0.75rem;
+}
+
+.crop-modal-preview img {
+    display: block;
+    max-width: 100%;
+}
+
+.crop-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+html.high-contrast .crop-modal-panel {
+    border-width: 2px;
+}
+
 .catalog-tabs {
     gap: 0.4rem;
     flex-wrap: wrap;

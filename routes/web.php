@@ -27,6 +27,7 @@ Route::view('/privacidade', 'privacy')->name('privacidade');
 Route::middleware(['auth'])->group(function () {
     Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/perfil/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     Route::get('/', [PromptController::class, 'index'])->name('home');
     // A cota gratuita do Gemini é por minuto: 6 gerações por usuário protegem

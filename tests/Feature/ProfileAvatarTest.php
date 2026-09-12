@@ -34,6 +34,7 @@ class ProfileAvatarTest extends TestCase
         $user->refresh();
         $this->assertSame('Nome Novo', $user->name);
         $this->assertNotNull($user->avatar);
+        $this->assertStringStartsWith('avatars/'.$user->id.'-', $user->avatar);
         Storage::disk('public')->assertExists($user->avatar);
 
         $home = $this->actingAs($user)->get(route('home'));
@@ -52,6 +53,77 @@ class ProfileAvatarTest extends TestCase
         $resposta->assertOk();
         $resposta->assertSee('user-avatar-fallback', false);
         $resposta->assertSee('Meu perfil', false);
+    }
+
+    public function test_a_tela_de_perfil_oferece_o_recorte_da_foto(): void
+    {
+        $resposta = $this->actingAs(User::factory()->create())->get(route('profile.edit'));
+
+        $resposta->assertOk();
+        $resposta->assertSee('id="avatar-input"', false);
+        $resposta->assertSee('id="crop-modal"', false);
+        $resposta->assertSee('Salvar Foto', false);
+        $resposta->assertSee('cropper.min.js', false);
+        $resposta->assertSee('aspectRatio: 1', false);
+        $resposta->assertSee(route('profile.avatar'), false);
+    }
+
+    public function test_avatar_cortado_e_salvo_via_ajax(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $resposta = $this->actingAs($user)->postJson(route('profile.avatar'), [
+            'avatar' => $this->avatarPng(),
+        ]);
+
+        $resposta->assertOk();
+        $resposta->assertJsonStructure(['avatar_url', 'message']);
+
+        $user->refresh();
+        $this->assertNotNull($user->avatar);
+        $this->assertStringStartsWith('avatars/'.$user->id.'-', $user->avatar);
+        $this->assertStringEndsWith('.png', $user->avatar);
+        Storage::disk('public')->assertExists($user->avatar);
+        $this->assertSame(url('storage/'.$user->avatar), $resposta->json('avatar_url'));
+    }
+
+    public function test_novo_avatar_substitui_o_arquivo_anterior(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson(route('profile.avatar'), [
+            'avatar' => $this->avatarPng(),
+        ])->assertOk();
+
+        $anterior = $user->fresh()->avatar;
+
+        $this->actingAs($user)->postJson(route('profile.avatar'), [
+            'avatar' => $this->avatarPng(),
+        ])->assertOk();
+
+        $user->refresh();
+        $this->assertNotSame($anterior, $user->avatar);
+        Storage::disk('public')->assertMissing($anterior);
+        Storage::disk('public')->assertExists($user->avatar);
+    }
+
+    public function test_avatar_sem_arquivo_e_rejeitado(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('profile.avatar'), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['avatar']);
+    }
+
+    public function test_visitante_nao_envia_avatar(): void
+    {
+        $this->post(route('profile.avatar'), [
+            'avatar' => $this->avatarPng(),
+        ])->assertRedirect(route('login'));
     }
 
     private function avatarPng(): UploadedFile
