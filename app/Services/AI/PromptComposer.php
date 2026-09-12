@@ -12,23 +12,24 @@ use Throwable;
  * Terceira etapa do pipeline: funde a intenção estruturada com o template
  * escolhido e devolve o prompt final.
  *
- * O caminho principal delega ao provedor de IA, que além de substituir as
- * variáveis refina a redação. Se o provedor falhar, devolver texto vazio ou
- * quebrar de qualquer outra forma, a composição cai para a interpolação
- * determinística do TemplateInterpolator: o usuário sempre recebe um prompt
- * utilizável, nunca um erro.
+ * O caminho principal envia a intenção e o template ao provedor de IA para
+ * uma reescrita fluida — não uma substituição mecânica de chaves. Se o
+ * provedor falhar, devolver texto vazio ou quebrar de qualquer outra forma,
+ * a composição cai para a interpolação determinística do TemplateInterpolator:
+ * o usuário sempre recebe um prompt utilizável, nunca um erro.
  */
 class PromptComposer
 {
-    private const INSTRUCTION = <<<'TXT'
-        Você é um engenheiro de prompts. Analise a intenção do usuário: '{intencao}'. Reescreva e expanda essa ideia em termos técnicos claros, identificando a regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário. Integre esse conteúdo de forma natural e fluida na estrutura do template final.
+    public const INSTRUCTION = <<<'TXT'
+        Você é um Engenheiro de Prompt especialista. Receba a intenção bruta do usuário: '{intencao}'. Normalize erros de digitação, remova qualquer ruído e reescreva essa ideia transformando-a em uma especificação de software fluida, elegante e contínua.
 
-        Regras:
-        - Substitua todo placeholder no formato {chave} pelo valor correspondente das variáveis.
+        NÃO faça 'copia e cola' do texto do usuário. Em vez de criar um bloco estático como 'Solicitação do usuário: [texto bruto]', integre a ideia de forma orgânica ao corpo do prompt final, descrevendo a arquitetura, o fluxo de dados e os requisitos como um texto técnico profissional coeso.
+
+        Regras de composição:
+        - Use o template apenas como guia estrutural; não faça substituição mecânica de chaves.
         - Resolva os blocos condicionais {% if chave %}...{% endif %}, mantendo o conteúdo apenas quando a variável tiver valor e removendo o bloco inteiro caso contrário.
-        - {user_input} já é um briefing técnico expandido: integre-o em prosa, sem aspas e sem colar o texto cru do usuário.
-        - Preserve a estrutura, as seções e o tom do template.
-        - Refine a redação para ficar clara, direta e sem redundância.
+        - {user_input} já é um briefing técnico expandido: integre-o em prosa contínua, sem aspas e sem colar o texto cru do usuário.
+        - Produza um documento coeso e bem redigido, sem partes que pareçam inserções brutas de formulário.
         - Não invente requisitos, tecnologias ou restrições que não estejam na intenção ou no briefing.
         - Responda apenas com o prompt final, sem comentários, explicações ou cercas de código.
         TXT;
@@ -67,7 +68,7 @@ class PromptComposer
             // Rede de segurança: um LLM pode deixar placeholders para trás.
             return $this->interpolator->resolvePlaceholders($composed, $variables);
         } catch (Throwable $e) {
-            $this->logger?->warning('Composição via IA falhou; usando interpolação simples.', [
+            $this->logger?->error($e->getMessage(), [
                 'template_id' => $template->getKey(),
                 'exception' => $e->getMessage(),
             ]);

@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-use App\Services\AI\IntentCoherenceChecker;
+use App\Services\PromptGeneratorService;
 use InvalidArgumentException;
 
 class InvalidIntentException extends InvalidArgumentException
@@ -12,9 +12,13 @@ class InvalidIntentException extends InvalidArgumentException
         return new self('A intenção informada está vazia.');
     }
 
-    public static function unclear(): self
+    public static function unclear(?string $motivo = null): self
     {
-        return new self(IntentCoherenceChecker::UNCLEAR_MESSAGE);
+        $motivo = is_string($motivo) && trim($motivo) !== ''
+            ? trim($motivo)
+            : PromptGeneratorService::UNCLEAR_MESSAGE;
+
+        return new self($motivo);
     }
 
     public static function tooShort(int $length, int $minimum): self

@@ -3,8 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Services\AI\IntentAnalyzer;
-use App\Services\AI\IntentCoherenceChecker;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GeneratePromptRequest extends FormRequest
@@ -15,10 +13,8 @@ class GeneratePromptRequest extends FormRequest
     }
 
     /**
-     * O catálogo (arquitetura, linguagem, framework) passou a ser opcional: o
-     * IntentAnalyzer deduz essas informações do próprio texto. Os campos
-     * continuam sendo aceitos e validados porque a tela ainda os envia, e
-     * quando presentes são gravados no histórico.
+     * Só presença e tamanho. A coerência semântica é decidida pela IA
+     * na saída JSON estruturada (`valido` / `motivo_rejeicao`).
      */
     public function rules(): array
     {
@@ -32,18 +28,11 @@ class GeneratePromptRequest extends FormRequest
             'architecture_id' => ['nullable', 'integer', 'exists:architectures,id'],
             'language_id' => ['nullable', 'integer', 'exists:languages,id'],
             'framework_id' => ['nullable', 'integer', 'exists:frameworks,id'],
-            // Marcadores dinâmicos do template escolhido pelo pipeline, no
-            // formato variables[NOME_DA_VARIAVEL]. Quais chaves existem depende
-            // do corpo do template, então aqui só validamos o formato.
             'variables' => ['nullable', 'array'],
             'variables.*' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
-    /**
-     * Aceita `intencao` e os nomes antigos do formulário/API (`user_input`,
-     * `input_text`) para não quebrar clientes que ainda enviam o campo legado.
-     */
     protected function prepareForValidation(): void
     {
         $intencao = $this->input('intencao');
@@ -58,23 +47,6 @@ class GeneratePromptRequest extends FormRequest
                 'user_input' => $intencao,
             ]);
         }
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $intencao = $this->input('intencao');
-
-            if (! is_string($intencao) || app(IntentCoherenceChecker::class)->isCoherent($intencao)) {
-                return;
-            }
-
-            $validator->errors()->add('intencao', IntentCoherenceChecker::UNCLEAR_MESSAGE);
-        });
     }
 
     /**

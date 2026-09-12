@@ -100,21 +100,6 @@ class IntentAnalyzerTest extends TestCase
         $this->assertSame('feature', $result['type']);
     }
 
-    public function test_entrada_desconexa_lanca_excecao_antes_do_provedor(): void
-    {
-        $provider = $this->spyProvider();
-        $analyzer = new IntentAnalyzer($provider);
-
-        try {
-            $analyzer->analyze('LKJHTVBD asdfgh');
-            $this->fail('Esperava InvalidIntentException.');
-        } catch (InvalidIntentException $e) {
-            $this->assertStringContainsString('objetivo claro de software', $e->getMessage());
-        }
-
-        $this->assertSame(0, $provider->calls);
-    }
-
     public function test_o_provedor_nao_e_chamado_quando_a_entrada_e_invalida(): void
     {
         $provider = $this->spyProvider();
@@ -292,6 +277,15 @@ class IntentAnalyzerTest extends TestCase
                 return $templateBody;
             }
 
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => true,
+                    'motivo_rejeicao' => null,
+                    'prompt_gerado' => $templateBody,
+                ];
+            }
+
             public function name(): string
             {
                 return 'fake-llm';
@@ -311,6 +305,11 @@ class IntentAnalyzerTest extends TestCase
             }
 
             public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                throw $this->error;
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
             {
                 throw $this->error;
             }
@@ -341,6 +340,15 @@ class IntentAnalyzerTest extends TestCase
             public function composePrompt(string $instruction, string $templateBody, array $variables): string
             {
                 return $templateBody;
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => true,
+                    'motivo_rejeicao' => null,
+                    'prompt_gerado' => $templateBody,
+                ];
             }
 
             public function name(): string

@@ -76,6 +76,82 @@ class NullAIProviderTest extends TestCase
         );
     }
 
+    public function test_keysmash_nao_e_perdoado_por_termos_tecnicos(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'asdfghjk lkjhgf docker kubernetes zxcvbnm criar banco de dados',
+            'Tarefa: {user_input}',
+            ['user_input' => 'ruído']
+        );
+
+        $this->assertFalse($resultado['valido']);
+    }
+
+    public function test_frase_cotidiana_sem_escopo_de_software_e_recusada(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'hoje o dia está muito bonito para comer bola e sapato com manteiga',
+            'Tarefa: {user_input}',
+            ['user_input' => 'ruído']
+        );
+
+        $this->assertFalse($resultado['valido']);
+    }
+
+    public function test_ruido_de_comida_misturado_com_jargao_e_recusado(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'api rest json banana frita com queijo e cebola roxa rodando em background',
+            'Tarefa: {user_input}',
+            ['user_input' => 'ruído']
+        );
+
+        $this->assertFalse($resultado['valido']);
+        $this->assertSame('', $resultado['prompt_gerado']);
+    }
+
+    public function test_few_shot_de_salada_de_palavras_e_recusado(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'papo rato padeiro',
+            'Tarefa: {user_input}',
+            ['user_input' => 'papo rato padeiro']
+        );
+
+        $this->assertFalse($resultado['valido']);
+        $this->assertSame(
+            'A entrada não apresenta um objetivo ou escopo de software coerente.',
+            $resultado['motivo_rejeicao']
+        );
+        $this->assertSame('', $resultado['prompt_gerado']);
+    }
+
+    public function test_keysmash_e_recusado_na_saida_estruturada(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'asdfgh qwerty zxcvbn',
+            'Tarefa: {user_input}',
+            ['user_input' => 'asdfgh qwerty zxcvbn']
+        );
+
+        $this->assertFalse($resultado['valido']);
+        $this->assertNotEmpty($resultado['motivo_rejeicao']);
+        $this->assertSame('', $resultado['prompt_gerado']);
+    }
+
+    public function test_dominio_aberto_nao_e_recusado_offline(): void
+    {
+        $resultado = $this->provider->generateStructuredPrompt(
+            'Calcular a dosagem de insulina no prontuário eletrônico do hospital.',
+            'Tarefa: {user_input}',
+            ['user_input' => 'Briefing clínico']
+        );
+
+        $this->assertTrue($resultado['valido']);
+        $this->assertNull($resultado['motivo_rejeicao']);
+        $this->assertStringContainsString('Briefing clínico', $resultado['prompt_gerado']);
+    }
+
     public function test_e_deterministico_e_nunca_lanca_excecao(): void
     {
         $input = 'Migrar tudo para microserviços com Docker e PostgreSQL.';

@@ -37,6 +37,14 @@ interface AIProviderInterface
     public function composePrompt(string $instruction, string $templateBody, array $variables): string;
 
     /**
+     * Valida a intenção e gera o prompt final numa única resposta estruturada.
+     *
+     * @param  array<string, string>  $variables
+     * @return array{valido?: bool, motivo_rejeicao?: string|null, prompt_gerado?: string|null}
+     */
+    public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array;
+
+    /**
      * Identificador curto do provedor, usado em logs e mensagens de erro.
      */
     public function name(): string;

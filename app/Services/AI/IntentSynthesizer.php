@@ -15,14 +15,16 @@ use Throwable;
 class IntentSynthesizer
 {
     public const SYNTHESIS_INSTRUCTION = <<<'TXT'
-        Você é um engenheiro de prompts. Analise a intenção do usuário: '{intencao}'. Reescreva e expanda essa ideia em termos técnicos claros, identificando a regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário. Integre esse conteúdo de forma natural e fluida na estrutura do template final.
+        Você é um Engenheiro de Prompt especialista. Receba a intenção bruta do usuário: '{intencao}'. Normalize erros de digitação, remova qualquer ruído e reescreva essa ideia transformando-a em uma especificação de software fluida, elegante e contínua.
+
+        NÃO faça 'copia e cola' do texto do usuário. Em vez de criar um bloco estático como 'Solicitação do usuário: [texto bruto]', integre a ideia de forma orgânica ao corpo do prompt final, descrevendo a arquitetura, o fluxo de dados e os requisitos como um texto técnico profissional coeso.
 
         Regras:
         - Não copie a frase original entre aspas nem a cole como um bloco cru.
-        - Responda em português, em prosa profissional.
+        - Responda em português, em prosa profissional e contínua.
         - Inclua explicitamente: regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário.
         - Use a stack informada nas variáveis quando ela existir; não invente tecnologias.
-        - Responda apenas com o briefing expandido, sem cercas de código e sem comentários.
+        - Responda apenas com a especificação reescrita, sem cercas de código e sem comentários.
         TXT;
 
     public function __construct(
@@ -60,7 +62,7 @@ class IntentSynthesizer
             if ($this->isUsable($remote, $source)) {
                 return $remote;
             }
-        } catch (Throwable) {
+        } catch (Throwable $e) {
             // A composição final ainda recebe um briefing utilizável.
         }
 
@@ -72,12 +74,11 @@ class IntentSynthesizer
      */
     public function expandOffline(string $intencao, array $intent = []): string
     {
-        $pedido = $this->opening($intencao);
         $temas = $this->themes($intencao, $intent);
 
         return implode("\n\n", array_filter([
-            $pedido,
-            'Regra de negócio principal: '.$this->businessRule($temas, $pedido),
+            $this->specificationLead($temas, $intent),
+            'Regra de negócio principal: '.$this->businessRule($temas),
             "Requisitos implícitos:\n".$this->requirements($temas),
             'Fluxo do usuário: '.$this->userFlow($temas),
         ]));
@@ -114,8 +115,44 @@ class IntentSynthesizer
 
     /**
      * @param  list<string>  $temas
+     * @param  array<string, mixed>  $intent
      */
-    private function businessRule(array $temas, string $pedido): string
+    private function specificationLead(array $temas, array $intent): string
+    {
+        $foco = match (true) {
+            in_array('login', $temas, true) && in_array('tema', $temas, true) => 'uma experiência de autenticação com preferência visual persistente',
+            in_array('login', $temas, true) => 'um fluxo de autenticação de usuários',
+            in_array('api', $temas, true) => 'uma API com contratos HTTP explícitos',
+            in_array('crud', $temas, true) => 'um módulo de cadastro e manutenção de registros',
+            in_array('pagamento', $temas, true) => 'um fluxo de pedidos e pagamento',
+            in_array('teste', $temas, true) => 'uma suíte de verificação da funcionalidade pedida',
+            in_array('validacao', $temas, true) => 'um conjunto de regras de validação da funcionalidade pedida',
+            default => 'a funcionalidade descrita, com comportamento previsível de ponta a ponta',
+        };
+
+        $stack = $this->join($intent['technologies'] ?? []);
+        $architecture = $this->text($intent['architecture'] ?? null);
+        $qualificadores = [];
+
+        if ($stack !== '') {
+            $qualificadores[] = 'na stack '.$stack;
+        }
+
+        if ($architecture !== '') {
+            $qualificadores[] = 'alinhada a '.$architecture;
+        }
+
+        $complemento = $qualificadores === []
+            ? ''
+            : ' '.implode(', ', $qualificadores);
+
+        return 'Especifique '.$foco.$complemento.', descrevendo a arquitetura, o fluxo de dados e os requisitos em prosa contínua.';
+    }
+
+    /**
+     * @param  list<string>  $temas
+     */
+    private function businessRule(array $temas): string
     {
         return match (true) {
             in_array('login', $temas, true) && in_array('tema', $temas, true) => 'o acesso à aplicação depende de autenticação válida, e a interface deve respeitar a preferência visual do usuário.',
@@ -123,7 +160,7 @@ class IntentSynthesizer
             in_array('api', $temas, true) => 'os clientes consomem recursos HTTP bem definidos, com contratos claros de entrada, saída e erro.',
             in_array('crud', $temas, true) => 'os registros do domínio precisam ser criados, consultados, atualizados e removidos com consistência.',
             in_array('pagamento', $temas, true) => 'o ciclo financeiro só avança quando os dados do pedido e do pagamento são válidos.',
-            default => 'a solução precisa cobrir o objetivo descrito de ponta a ponta, com comportamento previsível e regras explícitas. '.$pedido,
+            default => 'a solução precisa cobrir o objetivo descrito de ponta a ponta, com comportamento previsível e regras explícitas.',
         };
     }
 
@@ -187,36 +224,29 @@ class IntentSynthesizer
         };
     }
 
-    private function opening(string $intencao): string
-    {
-        $text = trim($intencao);
-        $text = rtrim($text, " \t\n\r\0\x0B.;");
-
-        if ($text === '') {
-            return 'Construa a funcionalidade pedida com clareza técnica.';
-        }
-
-        if (! preg_match('/^(construa|implemente|desenvolva|crie|faca|faça|gere|escreva|corrija|refatore)\b/iu', $text)) {
-            $text = 'Construa '.mb_strtolower(mb_substr($text, 0, 1)).mb_substr($text, 1);
-        }
-
-        return rtrim($text, '.').'.';
-    }
-
     private function isUsable(string $remote, string $source): bool
     {
         if (mb_strlen($remote) < 40) {
             return false;
         }
 
-        if (mb_strtolower(trim($remote, " \t\n\"'")) === mb_strtolower($source)) {
+        $normalizedRemote = mb_strtolower(trim($remote, " \t\n\"'"));
+        $normalizedSource = mb_strtolower($source);
+
+        if ($normalizedRemote === $normalizedSource) {
             return false;
         }
 
-        return str_contains(mb_strtolower($remote), 'requisito')
-            || str_contains(mb_strtolower($remote), 'fluxo')
-            || str_contains(mb_strtolower($remote), 'negócio')
-            || str_contains(mb_strtolower($remote), 'negocio');
+        if (str_contains($normalizedRemote, 'solicitação do usuário:')
+            || str_contains($normalizedRemote, 'solicitacao do usuario:')) {
+            return false;
+        }
+
+        return str_contains($normalizedRemote, 'requisito')
+            || str_contains($normalizedRemote, 'fluxo')
+            || str_contains($normalizedRemote, 'arquitetura')
+            || str_contains($normalizedRemote, 'negócio')
+            || str_contains($normalizedRemote, 'negocio');
     }
 
     /**

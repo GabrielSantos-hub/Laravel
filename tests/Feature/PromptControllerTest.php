@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\AIProviderInterface;
 use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
 use App\Models\User;
+use App\Services\PromptGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -152,15 +154,19 @@ class PromptControllerTest extends TestCase
         $this->assertStringContainsString('Regra de negócio', $prompt);
         $this->assertStringContainsString('Requisitos implícitos', $prompt);
         $this->assertStringContainsString('Fluxo do usuário', $prompt);
-        $this->assertStringContainsString('login', mb_strtolower($prompt));
+        $this->assertStringContainsString('autenticação', mb_strtolower($prompt));
         $this->assertStringContainsString('tema', mb_strtolower($prompt));
-        $this->assertStringNotContainsString('"Criar uma tela de login com suporte a modo escuro"', $prompt);
+        $this->assertStringContainsString('arquitetura', mb_strtolower($prompt));
+        $this->assertStringContainsString('fluxo de dados', mb_strtolower($prompt));
+        $this->assertStringNotContainsString('Criar uma tela de login com suporte a modo escuro', $prompt);
+        $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $prompt);
         $this->assertDatabaseCount('prompts', 1);
     }
 
     public function test_entrada_aleatoria_com_palavras_reais_e_recusada(): void
     {
         $this->templateClassificado();
+        $this->iaRejeitaIntencao();
 
         $resposta = $this->actingAs($this->usuario)
             ->postJson(route('prompts.generate'), ['intencao' => 'papo rato desenvolver carro']);
@@ -170,6 +176,128 @@ class PromptControllerTest extends TestCase
             'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
         ]);
         $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_mistura_ilogica_com_termos_tecnicos_e_recusada(): void
+    {
+        $this->templateClassificado();
+        $this->iaRejeitaIntencao();
+
+        $resposta = $this->actingAs($this->usuario)
+            ->postJson(route('prompts.generate'), [
+                'intencao' => 'rato motorista analogico sistema mysql',
+            ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrors([
+            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+        ]);
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_amontoado_com_jargao_tecnico_de_enfeite_e_recusado(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)
+            ->postJson(route('prompts.generate'), [
+                'intencao' => 'tESTE O SISTEMA DO RATO PRETO MOTORISTA ANALOGICO HIGH TECH',
+            ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrors([
+            'intencao' => 'Não foi possível identificar um fluxo ou requisito de sistema válido nessa instrução.',
+        ]);
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_frase_cotidiana_sem_intencao_de_software_e_recusada(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'hoje o dia está muito bonito para comer bola e sapato com manteiga',
+        ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrorFor('intencao');
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_keysmash_com_docker_e_mysql_e_recusado(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'asdfghjk lkjhgf docker kubernetes zxcvbnm criar banco de dados',
+        ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrorFor('intencao');
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_frase_11_banana_frita_e_recusada(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'api rest json banana frita com queijo e cebola roxa rodando em background',
+        ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrorFor('intencao');
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_frase_13_papo_rato_com_mysql_e_recusada(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'papo rato desenvolver média carro total padeiro no sistema mysql',
+        ]);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrorFor('intencao');
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_salada_de_palavras_volta_ao_formulario_com_erro_em_vermelho(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)
+            ->from(route('home'))
+            ->followingRedirects()
+            ->post(route('prompts.generate'), ['intencao' => 'papo rato padeiro']);
+
+        $resposta->assertOk();
+        $resposta->assertSee('alert-danger', false);
+        $resposta->assertSee('Revise os campos destacados abaixo.');
+        $resposta->assertSee('is-invalid', false);
+        $resposta->assertSee('invalid-feedback', false);
+        $resposta->assertSee('A entrada não apresenta um objetivo ou escopo de software coerente.');
+        $resposta->assertSee('papo rato padeiro');
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_termo_tecnico_de_dominio_aberto_e_aceito(): void
+    {
+        $this->templateClassificado();
+        Template::query()->create([
+            'nome' => 'Desenvolvimento de Módulo / Feature',
+            'corpo_template' => 'Módulo: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'Calcular a dosagem de insulina no prontuário eletrônico do hospital.',
+        ]);
+
+        $resposta->assertCreated();
+        $this->assertDatabaseCount('prompts', 1);
     }
 
     public function test_erro_de_dominio_volta_para_o_formulario_com_o_input_preservado(): void
@@ -554,6 +682,36 @@ class PromptControllerTest extends TestCase
         $resposta->assertSee('Revise os campos destacados abaixo.');
         $resposta->assertSee('invalid-feedback', false);
         $resposta->assertSee('Descreva sua intenção com mais detalhes', false);
+    }
+
+    private function iaRejeitaIntencao(): void
+    {
+        $this->app->instance(AIProviderInterface::class, new class implements AIProviderInterface
+        {
+            public function analyzeIntent(string $userInput): array
+            {
+                return [];
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                return '';
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => false,
+                    'motivo_rejeicao' => PromptGeneratorService::UNCLEAR_MESSAGE,
+                    'prompt_gerado' => '',
+                ];
+            }
+
+            public function name(): string
+            {
+                return 'fake-reject';
+            }
+        });
     }
 
     private function prompt(?User $dono): Prompt

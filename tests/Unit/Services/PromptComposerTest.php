@@ -35,8 +35,9 @@ class PromptComposerTest extends TestCase
             $this->template('Corpo cru com {user_input}.')
         );
 
-        $this->assertStringContainsString('engenheiro de prompts', $provider->lastInstruction);
-        $this->assertStringContainsString('Reescreva e expanda essa ideia', $provider->lastInstruction);
+        $this->assertStringContainsString('Engenheiro de Prompt especialista', $provider->lastInstruction);
+        $this->assertStringContainsString('especificação de software fluida', $provider->lastInstruction);
+        $this->assertStringContainsString('Solicitação do usuário', $provider->lastInstruction);
         $this->assertSame('Corpo cru com {user_input}.', $provider->lastBody);
 
         $this->assertSame('Criar uma API de cobrança recorrente', $provider->lastVariables['intencao']);
@@ -138,7 +139,7 @@ class PromptComposerTest extends TestCase
         ))->compose($this->intent(), $this->template('Tarefa: {user_input}.'));
 
         $this->assertCount(1, $logger->records);
-        $this->assertSame('warning', $logger->records[0]['level']);
+        $this->assertSame('error', $logger->records[0]['level']);
         $this->assertStringContainsString('503 Service Unavailable', $logger->records[0]['context']['exception']);
         $this->assertArrayHasKey('template_id', $logger->records[0]['context']);
     }
@@ -186,6 +187,7 @@ class PromptComposerTest extends TestCase
         $this->assertStringContainsString('Requisitos implícitos', $prompt);
         $this->assertStringContainsString('Fluxo do usuário', $prompt);
         $this->assertDoesNotMatchRegularExpression('/Tarefa:\s*"[^"]+"/u', $prompt);
+        $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $prompt);
     }
 
     /**
@@ -229,6 +231,15 @@ class PromptComposerTest extends TestCase
                 return $this->output;
             }
 
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => true,
+                    'motivo_rejeicao' => null,
+                    'prompt_gerado' => $this->output,
+                ];
+            }
+
             public function name(): string
             {
                 return 'fake-llm';
@@ -248,6 +259,11 @@ class PromptComposerTest extends TestCase
             }
 
             public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                throw $this->error;
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
             {
                 throw $this->error;
             }
@@ -282,6 +298,15 @@ class PromptComposerTest extends TestCase
                 $this->lastVariables = $variables;
 
                 return 'ok';
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => true,
+                    'motivo_rejeicao' => null,
+                    'prompt_gerado' => $this->composePrompt('instrução', $templateBody, $variables),
+                ];
             }
 
             public function name(): string

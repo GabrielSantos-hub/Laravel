@@ -10,12 +10,12 @@ use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
-use App\Services\AI\IntentCoherenceChecker;
 use App\Services\PromptPipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -23,7 +23,6 @@ class PromptController extends Controller
 {
     public function __construct(
         protected PromptPipelineService $pipeline,
-        protected IntentCoherenceChecker $coherence
     ) {}
 
     public function index(): View
@@ -61,12 +60,6 @@ class PromptController extends Controller
         $intencao = $validated['intencao'];
         $variaveis = $this->variaveisDinamicas($validated['variables'] ?? []);
 
-        if (! $this->coherence->isCoherent($intencao)) {
-            throw ValidationException::withMessages([
-                'intencao' => IntentCoherenceChecker::UNCLEAR_MESSAGE,
-            ]);
-        }
-
         try {
             $resultado = $this->pipeline->generate(
                 $intencao,
@@ -78,8 +71,11 @@ class PromptController extends Controller
                 customVariables: $variaveis,
             );
         } catch (InvalidIntentException $e) {
+            // Fail-closed: valido só conta como aprovação se for o booleano true.
+            Log::error($e->getMessage());
             throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
         } catch (NoCompatibleTemplateException $e) {
+            Log::error($e->getMessage());
             throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
         }
 

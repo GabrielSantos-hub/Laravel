@@ -9,10 +9,10 @@ use App\Models\Architecture;
 use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Template;
-use App\Services\AI\IntentAnalyzer;
 use App\Services\AI\NullAIProvider;
 use App\Services\AI\PromptComposer;
 use App\Services\AI\TemplateSelector;
+use App\Services\PromptGeneratorService;
 use App\Services\PromptPipelineResult;
 use App\Services\PromptPipelineService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +54,12 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertStringContainsString('Regra de negócio', $resultado->prompt);
         $this->assertStringContainsString('Requisitos implícitos', $resultado->prompt);
         $this->assertStringContainsString('Fluxo do usuário', $resultado->prompt);
+        $this->assertStringContainsString('fluxo de dados', $resultado->prompt);
+        $this->assertDoesNotMatchRegularExpression('/Solicitação do usuário:/iu', $resultado->prompt);
+        $this->assertStringNotContainsString(
+            'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.',
+            $resultado->prompt
+        );
     }
 
     public function test_sem_template_compativel_lanca_excecao_de_dominio(): void
@@ -91,21 +97,16 @@ class PromptPipelineServiceTest extends TestCase
 
     // Resiliência: provedor de IA indisponível
 
-    public function test_falha_do_provedor_de_ia_degrada_para_o_modo_offline(): void
+    public function test_falha_do_provedor_de_ia_recusa_por_fail_closed(): void
     {
-        $template = $this->templateClassificado();
-        $provedor = $this->provedorForaDoAr();
+        $this->templateClassificado();
 
-        $resultado = $this->pipelineCom($provedor)->generate(
+        $this->expectException(InvalidIntentException::class);
+        $this->expectExceptionMessage('objetivo claro de software');
+
+        $this->pipelineCom($this->provedorForaDoAr())->generate(
             'Criar uma API REST em Laravel com PHP seguindo Clean Architecture.'
         );
-
-        // Mesmo resultado que o modo offline produziria, sem exceção alguma.
-        $this->assertTrue($template->is($resultado->template));
-        $this->assertTrue($resultado->degraded);
-        $this->assertSame(['PHP', 'Laravel'], $resultado->intent['technologies']);
-        $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $resultado->prompt);
-        $this->assertStringContainsString('Regra de negócio', $resultado->prompt);
     }
 
     public function test_provedor_fora_do_ar_nao_e_chamado_de_novo_na_composicao(): void
@@ -113,24 +114,35 @@ class PromptPipelineServiceTest extends TestCase
         $this->templateClassificado();
         $provedor = $this->provedorForaDoAr();
 
-        $this->pipelineCom($provedor)->generate('Criar uma API REST em Laravel com PHP.');
+        try {
+            $this->pipelineCom($provedor)->generate('Criar uma API REST em Laravel com PHP.');
+            $this->fail('Esperava InvalidIntentException.');
+        } catch (InvalidIntentException) {
+            // fail-closed: sem JSON válido a intenção é recusada.
+        }
 
-        $this->assertSame(1, $provedor->analises, 'A análise deveria ter sido tentada uma vez.');
+        $this->assertSame(1, $provedor->estruturados, 'A geração estruturada deveria ter sido tentada uma vez.');
         $this->assertSame(0, $provedor->composicoes, 'A composição não deveria insistir num provedor caído.');
     }
 
-    public function test_a_degradacao_registra_warning_no_log(): void
+    public function test_a_falha_do_provedor_registra_warning_no_log(): void
     {
         $this->templateClassificado();
         $logger = $this->loggerEspiao();
 
-        $this->pipelineCom($this->provedorForaDoAr(), $logger)
-            ->generate('Criar uma API REST em Laravel com PHP.');
+        try {
+            $this->pipelineCom($this->provedorForaDoAr(), $logger)
+                ->generate('Criar uma API REST em Laravel com PHP.');
+        } catch (InvalidIntentException) {
+            // esperado
+        }
 
-        $this->assertCount(1, $logger->registros);
-        $this->assertSame('warning', $logger->registros[0]['nivel']);
-        $this->assertStringContainsString('provedor offline', $logger->registros[0]['mensagem']);
-        $this->assertStringContainsString('503', $logger->registros[0]['contexto']['cause']);
+        $niveis = array_column($logger->registros, 'nivel');
+        $this->assertContains('warning', $niveis);
+        $aviso = collect($logger->registros)->firstWhere('nivel', 'warning');
+        $this->assertIsArray($aviso);
+        $this->assertStringContainsString('fail-closed', $aviso['mensagem']);
+        $this->assertStringContainsString('503', $aviso['contexto']['cause']);
     }
 
     public function test_a_execucao_saudavel_nao_marca_o_resultado_como_degradado(): void
@@ -208,15 +220,92 @@ class PromptPipelineServiceTest extends TestCase
         $this->pipelineCom($this->provedorForaDoAr())->generate('oi');
     }
 
+    public function test_modulo_jwt_nao_cai_no_roleplay(): void
+    {
+        $php = Language::query()->create(['nome' => 'PHP', 'slug' => 'php']);
+        $laravel = Framework::query()->create([
+            'nome' => 'Laravel',
+            'slug' => 'laravel',
+            'language_id' => $php->id,
+        ]);
+
+        $roleplay = Template::query()->create([
+            'nome' => 'Role-Play & Restrição Absoluta (A1)',
+            'slug' => 'roleplay-restricao-absoluta',
+            'descricao' => 'Geração direta de código com persona sênior.',
+            'intent_type' => 'feature',
+            'corpo_template' => 'Roleplay: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+        $roleplay->languages()->attach($php);
+        $roleplay->frameworks()->attach($laravel);
+
+        $feature = Template::query()->create([
+            'nome' => 'ICCE — Desenvolvimento de Módulo',
+            'slug' => 'icce-framework',
+            'descricao' => 'Para funcionalidades específicas e desenvolvimento de módulos.',
+            'intent_type' => 'feature',
+            'corpo_template' => 'Feature: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resultado = $this->pipeline->generate('Criar módulo de autenticação JWT');
+
+        $this->assertTrue($feature->is($resultado->template));
+        $this->assertFalse($roleplay->is($resultado->template));
+        $this->assertSame('feature', $resultado->intent['type']);
+    }
+
+    public function test_arquitetura_microservicos_escolhe_template_de_design(): void
+    {
+        Template::query()->create([
+            'nome' => 'Role-Play & Restrição Absoluta (A1)',
+            'slug' => 'roleplay-restricao-absoluta',
+            'intent_type' => 'feature',
+            'corpo_template' => 'Roleplay: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $c4 = Template::query()->create([
+            'nome' => 'C4 Model & System Design (D1)',
+            'slug' => 'c4-model-system-design',
+            'descricao' => 'Desenha a arquitetura em alto nível antes do código.',
+            'intent_type' => 'architecture',
+            'corpo_template' => 'Arquitetura: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resultado = $this->pipeline->generate('Desenhar arquitetura microserviços');
+
+        $this->assertTrue($c4->is($resultado->template));
+        $this->assertSame('architecture', $resultado->intent['type']);
+    }
+
+    public function test_mistura_ilogica_com_termos_tecnicos_nao_e_gerada(): void
+    {
+        $this->templateClassificado();
+
+        $this->expectException(InvalidIntentException::class);
+        $this->expectExceptionMessage('objetivo claro de software');
+
+        $this->pipelineCom($this->provedorQueRejeita())->generate('rato motorista analogico sistema mysql');
+    }
+
     private function pipelineCom(
         AIProviderInterface $provedor,
         ?LoggerInterface $logger = null
     ): PromptPipelineService {
         return new PromptPipelineService(
-            new IntentAnalyzer($provedor),
-            app(TemplateSelector::class),
-            new PromptComposer($provedor),
-            $logger,
+            new PromptGeneratorService(
+                $provedor,
+                app(TemplateSelector::class),
+                new PromptComposer($provedor, logger: $logger),
+                $logger,
+            )
         );
     }
 
@@ -227,14 +316,12 @@ class PromptPipelineServiceTest extends TestCase
     {
         return new class implements AIProviderInterface
         {
-            public int $analises = 0;
+            public int $estruturados = 0;
 
             public int $composicoes = 0;
 
             public function analyzeIntent(string $userInput): array
             {
-                $this->analises++;
-
                 throw new RuntimeException('503 Service Unavailable');
             }
 
@@ -245,9 +332,46 @@ class PromptPipelineServiceTest extends TestCase
                 throw new RuntimeException('503 Service Unavailable');
             }
 
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                $this->estruturados++;
+
+                throw new RuntimeException('503 Service Unavailable');
+            }
+
             public function name(): string
             {
                 return 'fake-llm';
+            }
+        };
+    }
+
+    private function provedorQueRejeita(): AIProviderInterface
+    {
+        return new class implements AIProviderInterface
+        {
+            public function analyzeIntent(string $userInput): array
+            {
+                return [];
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                return '';
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => false,
+                    'motivo_rejeicao' => PromptGeneratorService::UNCLEAR_MESSAGE,
+                    'prompt_gerado' => '',
+                ];
+            }
+
+            public function name(): string
+            {
+                return 'fake-reject';
             }
         };
     }

@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Contracts\AIProviderInterface;
 use App\Services\AI\NullAIProvider;
 use App\Services\AI\Providers\GeminiAIProvider;
+use App\Services\AI\TemplateSelector;
 use Illuminate\Support\ServiceProvider;
+use Psr\Log\LoggerInterface;
 
 class AIServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,13 @@ class AIServiceProvider extends ServiceProvider
             baseUrl: (string) config('services.gemini.base_url', GeminiAIProvider::DEFAULT_BASE_URL),
             timeout: (int) config('services.gemini.timeout', 15),
             tries: (int) config('services.gemini.tries', 2),
+        ));
+
+        // A escolha de template é local (tags/categorias). O provedor de IA só
+        // entra quando alguém instancia o seletor com ele — e nesse caso o
+        // prompt leva o catálogo de IDs e nomes.
+        $this->app->bind(TemplateSelector::class, fn ($app): TemplateSelector => new TemplateSelector(
+            logger: $app->make(LoggerInterface::class),
         ));
     }
 }

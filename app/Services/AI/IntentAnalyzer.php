@@ -66,10 +66,6 @@ class IntentAnalyzer
             throw InvalidIntentException::tooShort($length, self::MIN_INPUT_LENGTH);
         }
 
-        if (! (new IntentCoherenceChecker)->isCoherent($sanitized)) {
-            throw InvalidIntentException::unclear();
-        }
-
         try {
             $payload = $this->provider->analyzeIntent($sanitized);
         } catch (Throwable $e) {

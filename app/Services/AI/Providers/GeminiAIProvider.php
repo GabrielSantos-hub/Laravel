@@ -5,6 +5,7 @@ namespace App\Services\AI\Providers;
 use App\Contracts\AIProviderInterface;
 use App\Exceptions\AIProviderException;
 use App\Services\AI\IntentAnalyzer;
+use App\Services\PromptGeneratorService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
@@ -23,8 +24,8 @@ use Throwable;
  *
  * Qualquer falha (rede, cota, chave ausente, resposta sem conteúdo) sai daqui
  * como AIProviderException, sempre com a causa original em `getPrevious()`.
- * Quem decide o que fazer com isso é o PromptPipelineService, que degrada para
- * o provedor offline em vez de devolver erro ao usuário.
+ * Quem decide o que fazer com isso é o PromptGeneratorService, em política
+ * fail-closed: sem JSON válido com valido=true a intenção é recusada.
  */
 class GeminiAIProvider implements AIProviderInterface
 {
@@ -37,6 +38,8 @@ class GeminiAIProvider implements AIProviderInterface
 
     private const ANALYSIS_INSTRUCTION = <<<'TXT'
         Você extrai a intenção técnica de um pedido escrito em linguagem natural por um desenvolvedor.
+
+        Analise o sentido GLOBAL do texto, não a presença isolada de palavras técnicas. Se o pedido for uma mistura ilógica de termos desconexos com jargão de software, ou não descrever uma ideia de negócio viável e coesa, ainda assim preencha os campos com o que for defensável e deixe `objective` curto — a validação anterior já deve ter recusado o caso.
 
         Regras:
         - `objective`: uma frase curta, no infinitivo, dizendo o que deve ser feito.
@@ -83,6 +86,25 @@ class GeminiAIProvider implements AIProviderInterface
             $this->composeMessage($templateBody, $variables),
             ['temperature' => 0.4]
         );
+    }
+
+    public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+    {
+        $raw = $this->generateContent(
+            'generateStructuredPrompt',
+            PromptGeneratorService::SYSTEM_INSTRUCTION,
+            $this->structuredMessage($intencao, $templateBody, $variables),
+            [
+                'temperature' => 0.2,
+                // Equivalente Gemini de response_format=json: MIME + schema.
+                'responseMimeType' => 'application/json',
+                'responseSchema' => $this->structuredSchema(),
+            ]
+        );
+
+        // O parse fail-closed vive no PromptGeneratorService. Aqui só devolvemos
+        // o texto cru para o serviço decidir se é JSON válido com valido=true.
+        return ['_raw' => $raw];
     }
 
     public function name(): string
@@ -175,6 +197,29 @@ class GeminiAIProvider implements AIProviderInterface
     }
 
     /**
+     * @param  array<string, string>  $variables
+     */
+    private function structuredMessage(string $intencao, string $templateBody, array $variables): string
+    {
+        $json = json_encode($variables, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+
+        return <<<TXT
+            INTENÇÃO DO USUÁRIO:
+            <<<INTENCAO
+            {$intencao}
+            INTENCAO
+
+            CORPO DO TEMPLATE:
+            <<<TEMPLATE
+            {$templateBody}
+            TEMPLATE
+
+            VARIÁVEIS:
+            {$json}
+            TXT;
+    }
+
+    /**
      * Schema de saída estruturada. Amarrar o formato aqui é mais confiável do
      * que pedir JSON na instrução e torcer pelo resultado.
      *
@@ -194,6 +239,22 @@ class GeminiAIProvider implements AIProviderInterface
             // `architecture` fica fora: nem todo pedido menciona arquitetura, e
             // exigi-la faria o modelo inventar uma.
             'required' => ['objective', 'technologies', 'constraints', 'type'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function structuredSchema(): array
+    {
+        return [
+            'type' => 'OBJECT',
+            'properties' => [
+                'valido' => ['type' => 'BOOLEAN'],
+                'motivo_rejeicao' => ['type' => 'STRING'],
+                'prompt_gerado' => ['type' => 'STRING'],
+            ],
+            'required' => ['valido', 'motivo_rejeicao', 'prompt_gerado'],
         ];
     }
 

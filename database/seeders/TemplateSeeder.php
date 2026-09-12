@@ -455,20 +455,17 @@ EOT,
 
     private function vincularPivots(): void
     {
-        $php = Language::query()->where('nome', 'PHP')->first();
         $csharp = Language::query()->where('nome', 'C#')->first();
-
-        $laravel = Framework::query()->where('nome', 'Laravel')->first();
         $dotnet = Framework::query()->where('nome', '.NET')->first();
-
-        $mvc = Architecture::query()->where('nome', 'MVC')->first();
         $clean = Architecture::query()->where('nome', 'Clean Architecture')->first();
 
+        // O Roleplay não pode monopolizar PHP/Laravel: isso fazia toda
+        // intenção válida cair no Template #1 por pontuação de stack.
         $roleplay = Template::query()->where('slug', 'roleplay-restricao-absoluta')->first();
         if ($roleplay) {
-            $roleplay->languages()->sync($php ? [$php->id] : []);
-            $roleplay->frameworks()->sync($laravel ? [$laravel->id] : []);
-            $roleplay->architectures()->sync($mvc ? [$mvc->id] : []);
+            $roleplay->languages()->sync([]);
+            $roleplay->frameworks()->sync([]);
+            $roleplay->architectures()->sync([]);
         }
 
         $review = Template::query()->where('slug', 'analise-estrutural-code-review')->first();

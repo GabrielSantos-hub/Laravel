@@ -260,13 +260,191 @@ class TemplateSelectorTest extends TestCase
      * @param  array<int, string>  $technologies
      * @return array<string, mixed>
      */
+    public function test_modulo_jwt_escolhe_template_de_features_e_nao_roleplay(): void
+    {
+        $php = $this->language('PHP', 'php');
+        $laravel = $this->framework('Laravel', 'laravel', $php);
+
+        $roleplay = $this->template(
+            'Role-Play & Restrição Absoluta (A1)',
+            extra: [
+                'slug' => 'roleplay-restricao-absoluta',
+                'intent_type' => 'feature',
+                'descricao' => 'Geração direta de código com persona sênior.',
+            ],
+        );
+        $roleplay->languages()->attach($php);
+        $roleplay->frameworks()->attach($laravel);
+
+        $feature = $this->template(
+            'ICCE — Instrução, Contexto, Restrição, Exemplo (A2)',
+            extra: [
+                'slug' => 'icce-framework',
+                'intent_type' => 'feature',
+                'descricao' => 'Para funcionalidades específicas e desenvolvimento de módulos.',
+            ],
+        );
+
+        $selecionado = $this->selector->select($this->intent(
+            technologies: ['PHP', 'Laravel'],
+            type: 'feature',
+            objective: 'Criar módulo de autenticação JWT',
+        ));
+
+        $this->assertTrue($feature->is($selecionado));
+        $this->assertFalse($roleplay->is($selecionado));
+    }
+
+    public function test_arquitetura_microservicos_escolhe_template_de_design(): void
+    {
+        $this->template(
+            'Role-Play & Restrição Absoluta (A1)',
+            extra: [
+                'slug' => 'roleplay-restricao-absoluta',
+                'intent_type' => 'feature',
+                'descricao' => 'Geração direta de código com persona sênior.',
+            ],
+        );
+
+        $c4 = $this->template(
+            'C4 Model & System Design (D1)',
+            extra: [
+                'slug' => 'c4-model-system-design',
+                'intent_type' => 'architecture',
+                'descricao' => 'Desenha a arquitetura em alto nível antes do código.',
+            ],
+        );
+
+        $this->template(
+            'Desenvolvimento Geral & Assistente de Prompt (Fallback)',
+            extra: [
+                'slug' => 'desenvolvimento-geral-fallback',
+                'intent_type' => 'generic',
+                'is_generic' => true,
+            ],
+        );
+
+        $selecionado = $this->selector->select($this->intent(
+            architecture: 'Microservices',
+            type: 'architecture',
+            objective: 'Desenhar arquitetura microserviços',
+        ));
+
+        $this->assertTrue($c4->is($selecionado));
+    }
+
+    public function test_falha_na_selecao_via_ia_e_registrada_em_log(): void
+    {
+        $feature = $this->template(
+            'ICCE — Funcionalidades',
+            extra: ['intent_type' => 'feature', 'descricao' => 'Desenvolvimento de módulos.'],
+        );
+
+        $provider = new class implements \App\Contracts\AIProviderInterface
+        {
+            public function analyzeIntent(string $userInput): array
+            {
+                return [];
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                throw new \RuntimeException('Falha de API ao classificar template');
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                throw new \RuntimeException('Falha de API ao classificar template');
+            }
+
+            public function name(): string
+            {
+                return 'gemini';
+            }
+        };
+
+        $logger = new class extends \Psr\Log\AbstractLogger
+        {
+            /** @var list<array{level: string, message: string}> */
+            public array $records = [];
+
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->records[] = ['level' => (string) $level, 'message' => (string) $message];
+            }
+        };
+
+        $selecionado = (new TemplateSelector($provider, $logger))->select($this->intent(
+            type: 'feature',
+            objective: 'Criar módulo de autenticação JWT',
+        ));
+
+        $this->assertTrue($feature->is($selecionado));
+        $this->assertSame('error', $logger->records[0]['level'] ?? null);
+        $this->assertSame('Falha de API ao classificar template', $logger->records[0]['message'] ?? null);
+    }
+
+    public function test_ia_recebe_catalogo_com_ids_e_nomes_antes_de_escolher(): void
+    {
+        $feature = $this->template(
+            'Desenvolvimento de Módulo / Feature',
+            extra: ['intent_type' => 'feature', 'descricao' => 'Features e funcionalidades.'],
+        );
+        $roleplay = $this->template(
+            'Role-Play & Restrição Absoluta (A1)',
+            extra: ['intent_type' => 'feature', 'slug' => 'roleplay-restricao-absoluta'],
+        );
+
+        $provider = new class implements \App\Contracts\AIProviderInterface
+        {
+            public string $instruction = '';
+
+            public function analyzeIntent(string $userInput): array
+            {
+                return [];
+            }
+
+            public function composePrompt(string $instruction, string $templateBody, array $variables): string
+            {
+                $this->instruction = $instruction;
+
+                return (string) ($variables['catalog'] ?? '');
+            }
+
+            public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+            {
+                return [
+                    'valido' => true,
+                    'motivo_rejeicao' => null,
+                    'prompt_gerado' => $this->composePrompt('instrução', $templateBody, $variables),
+                ];
+            }
+
+            public function name(): string
+            {
+                return 'gemini';
+            }
+        };
+
+        $selecionado = (new TemplateSelector($provider))->select($this->intent(
+            type: 'feature',
+            objective: 'Criar módulo de autenticação JWT',
+        ));
+
+        $this->assertStringContainsString('ID '.$feature->id, $provider->instruction);
+        $this->assertStringContainsString('ID '.$roleplay->id, $provider->instruction);
+        $this->assertStringContainsString('Desenvolvimento de Módulo / Feature', $provider->instruction);
+        $this->assertTrue($feature->is($selecionado) || $roleplay->is($selecionado));
+    }
+
     private function intent(
         array $technologies = [],
         ?string $architecture = null,
         string $type = 'general',
+        string $objective = 'Objetivo de teste',
     ): array {
         return [
-            'objective' => 'Objetivo de teste',
+            'objective' => $objective,
             'technologies' => $technologies,
             'architecture' => $architecture,
             'constraints' => [],
@@ -296,13 +474,17 @@ class TemplateSelectorTest extends TestCase
         ]);
     }
 
-    private function template(string $nome, string $corpo = 'Corpo do template.', bool $active = true): Template
+    /**
+     * @param  array<string, mixed>  $extra
+     */
+    private function template(string $nome, string $corpo = 'Corpo do template.', bool $active = true, array $extra = []): Template
     {
         return Template::query()->create([
             'nome' => $nome,
             'corpo_template' => $corpo,
             'versao' => '1',
             'is_active' => $active,
+            ...$extra,
         ]);
     }
 }

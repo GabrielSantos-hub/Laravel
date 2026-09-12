@@ -91,6 +91,48 @@ class GeminiAIProviderTest extends TestCase
         $this->provider()->analyzeIntent('Criar uma API REST em Laravel.');
     }
 
+    public function test_generate_structured_prompt_devolve_o_json_do_modelo(): void
+    {
+        Http::fake(['*' => Http::response($this->resposta(json_encode([
+            'valido' => true,
+            'motivo_rejeicao' => null,
+            'prompt_gerado' => 'Prompt final estruturado.',
+        ])))]);
+
+        $resultado = $this->provider()->generateStructuredPrompt(
+            'Criar uma API REST de pedidos em Laravel.',
+            'Especialista em {technologies}. Tarefa: {user_input}',
+            ['technologies' => 'PHP, Laravel', 'user_input' => 'Briefing']
+        );
+
+        $this->assertSame(json_encode([
+            'valido' => true,
+            'motivo_rejeicao' => null,
+            'prompt_gerado' => 'Prompt final estruturado.',
+        ]), $resultado['_raw']);
+
+        Http::assertSent(function (Request $request): bool {
+            $config = $request['generationConfig'];
+
+            $this->assertSame('application/json', $config['responseMimeType']);
+            $this->assertSame('OBJECT', $config['responseSchema']['type']);
+            $this->assertArrayHasKey('valido', $config['responseSchema']['properties']);
+            $this->assertStringContainsString('Criar uma API REST de pedidos em Laravel.', $request['contents'][0]['parts'][0]['text']);
+            $this->assertNotEmpty($request['systemInstruction']['parts'][0]['text']);
+
+            return true;
+        });
+    }
+
+    public function test_texto_puro_na_geracao_estruturada_volta_cru_para_o_parse_fail_closed(): void
+    {
+        Http::fake(['*' => Http::response($this->resposta('desculpe, não consegui responder'))]);
+
+        $resultado = $this->provider()->generateStructuredPrompt('Criar uma API REST em Laravel.', 'Corpo', []);
+
+        $this->assertSame('desculpe, não consegui responder', $resultado['_raw']);
+    }
+
     // Composição do prompt
 
     public function test_compose_prompt_devolve_o_texto_refinado_pelo_modelo(): void

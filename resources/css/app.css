@@ -509,6 +509,18 @@ html.high-contrast .skip-link {
     resize: vertical;
 }
 
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--gueass-danger) !important;
+}
+
+.invalid-feedback {
+    display: block;
+    color: var(--gueass-danger);
+    font-size: 0.875rem;
+    margin-top: 0.35rem;
+}
+
 .prompt-feedback {
     display: inline-flex;
     align-items: center;
