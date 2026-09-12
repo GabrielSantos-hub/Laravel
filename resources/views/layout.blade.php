@@ -152,6 +152,19 @@
                     @endforelse
                 </div>
             </div>
+
+            <div class="sidebar-report mt-auto w-full">
+                <button
+                    type="button"
+                    id="report-bug-btn"
+                    class="sidebar-report-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    data-modal-open="report-bug-modal"
+                    aria-controls="report-bug-modal"
+                    aria-haspopup="dialog"
+                >
+                    Reportar um bug
+                </button>
+            </div>
         </nav>
 
         <div class="app-main">
@@ -189,6 +202,44 @@
                     Política de Privacidade
                 </a>
             </footer>
+        </div>
+    </div>
+
+    <div
+        id="report-bug-modal"
+        class="app-modal fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-bug-title"
+    >
+        <div class="app-modal-backdrop" data-modal-close></div>
+        <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
+            <div class="app-modal-header">
+                <h2 id="report-bug-title" class="h5 mb-0">Encontrou um erro ou falha?</h2>
+                <button
+                    type="button"
+                    class="icon-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    data-modal-close
+                    aria-label="Fechar"
+                >
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p class="mb-3">
+                Para nos ajudar a melhorar o GUEASS, envie os detalhes da falha ou o print do problema para o nosso e-mail de suporte:
+            </p>
+            <p class="mb-0">
+                <a
+                    href="mailto:suportegueass@gmail.com?subject=Report%20de%20Bug%20-%20GUEASS"
+                    class="sidebar-report-mail focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >suportegueass@gmail.com</a>
+            </p>
+            <div class="d-flex justify-content-end mt-4">
+                <button type="button" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close>
+                    Entendi
+                </button>
+            </div>
         </div>
     </div>
 

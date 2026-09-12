@@ -410,6 +410,56 @@ html.high-contrast .skip-link {
     color: var(--gueass-accent);
 }
 
+.sidebar-report {
+    margin-top: auto;
+    padding: 0.65rem 1.15rem 1rem;
+    flex-shrink: 0;
+}
+
+.sidebar-report-btn {
+    appearance: none;
+    display: block;
+    width: auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--gueass-text-muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidebar-report-btn:hover,
+.sidebar-report-btn:focus-visible {
+    background: transparent;
+    border: 0;
+    color: var(--gueass-accent);
+    text-decoration: underline;
+}
+
+.sidebar-report-mail {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--gueass-accent);
+    word-break: break-all;
+}
+
+.sidebar-report-mail:hover {
+    color: var(--gueass-accent-hover);
+    text-decoration: underline;
+}
+
+#report-bug-modal.app-modal {
+    z-index: 1200;
+}
+
 .social-icons {
     margin-top: auto;
     padding: 20px 24px;
@@ -1299,7 +1349,8 @@ body.drawer-locked {
     html.sidebar-collapsed .nav-label,
     html.sidebar-collapsed .sidebar-section-title,
     html.sidebar-collapsed .chats-list,
-    html.sidebar-collapsed .sidebar-empty-history {
+    html.sidebar-collapsed .sidebar-empty-history,
+    html.sidebar-collapsed .sidebar-report {
         display: none;
     }
 

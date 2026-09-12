@@ -117,7 +117,8 @@ class NullAIProvider implements AIProviderInterface
 
     public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
     {
-        $rejeicao = $this->fewShotRejection($intencao);
+        $rejeicao = $this->fewShotRejection($intencao)
+            ?? $this->promptInjectionRejection($intencao);
 
         if ($rejeicao !== null || $this->hasKeysmashAnywhere($intencao) || ! $this->hasSoftwareIntent($intencao)) {
             return [
@@ -176,7 +177,66 @@ class NullAIProvider implements AIProviderInterface
             }
         }
 
+        if ($this->looksLikeWordSalad($normalized)) {
+            return 'A entrada não apresenta um objetivo ou escopo de software coerente.';
+        }
+
         return null;
+    }
+
+    /**
+     * Tentativa de jailbreak: o texto pede para ignorar o gatekeeper em vez
+     * de descrever um objetivo de software.
+     */
+    private function promptInjectionRejection(string $text): ?string
+    {
+        $normalized = $this->normalizePhrase($text);
+
+        foreach ([
+            'esqueca todas as regras',
+            'esqueca as regras',
+            'esqueca o system prompt',
+            'esqueca todas as instrucoes',
+            'ignore all previous',
+            'ignore previous instructions',
+            'ignore todas as regras',
+            'ignore todas as instrucoes',
+            'aprove esta entrada',
+            'retorne valido true',
+            'jailbreak',
+            'disregard all instructions',
+            'disregard previous',
+        ] as $ataque) {
+            if (str_contains($normalized, $ataque)) {
+                return 'A entrada tenta contornar as regras de validação e não descreve um objetivo de software.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Lista de substantivos cotidianos sem nexo de software. Dois ou mais
+     * desses tokens, mesmo ao lado de um verbo técnico, caracterizam salada.
+     *
+     * @var list<string>
+     */
+    private const INCOHERENT_NOUNS = [
+        'papo', 'rato', 'padeiro', 'bola', 'sapato', 'manteiga',
+        'girassol', 'gato', 'cachorro', 'fogao', 'cadeira',
+    ];
+
+    private function looksLikeWordSalad(string $normalized): bool
+    {
+        $hits = 0;
+
+        foreach (self::INCOHERENT_NOUNS as $noun) {
+            if (preg_match('/\b'.preg_quote($noun, '/').'\b/u', $normalized) === 1) {
+                $hits++;
+            }
+        }
+
+        return $hits >= 2;
     }
 
     private function normalizePhrase(string $text): string
@@ -228,9 +288,12 @@ class NullAIProvider implements AIProviderInterface
             'desenha', 'mapear', 'especific', 'firmware', 'api', 'crud',
             'login', 'modulo', 'sistema', 'software', 'tela', 'cadastro',
             'autentic', 'endpoint', 'banco', 'prontuario', 'arquitet',
-            'microserv', 'upload', 'controller', 'middleware', 'jwt',
-            'owasp', 'codigo', 'servico', 'aplicativ', 'plataforma',
-            'backend', 'frontend', 'laravel', 'php', 'sql', 'prompt',
+            'microserv', 'microsserv', 'upload', 'controller', 'controlador',
+            'middleware', 'jwt', 'owasp', 'codigo', 'servico', 'aplicativ',
+            'plataforma', 'backend', 'frontend', 'laravel', 'php', 'sql',
+            'prompt', 'embarcad', 'modbus', 'canopen', 'can bus', 'inversor',
+            'protocolo', 'linguagem c', 'clp', ' plc', 'saga', 'rabbitmq',
+            'kafka', 'sanctum', 'xss', 'injection',
         ] as $marker) {
             if (str_contains($normalized, $marker)) {
                 return true;
@@ -246,11 +309,41 @@ class NullAIProvider implements AIProviderInterface
             if (mb_strlen($token) >= 5 && str_contains($row, $token)) {
                 return true;
             }
+
+            if ($this->containsKeyboardRun($token, $row)) {
+                return true;
+            }
         }
 
         $letters = preg_replace('/[^a-z]/u', '', $token) ?? '';
 
         return mb_strlen($letters) >= 6 && preg_match('/[aeiou]/u', $letters) !== 1;
+    }
+
+    /**
+     * Token único que cola duas fileiras (ex: asdfghjklqwertyuiop) também
+     * é ruído: a fileira inteira ou um trecho de 6+ teclas aparece dentro.
+     */
+    private function containsKeyboardRun(string $token, string $row): bool
+    {
+        if (mb_strlen($token) < 6) {
+            return false;
+        }
+
+        if (str_contains($token, $row)) {
+            return true;
+        }
+
+        $run = 6;
+        $limit = mb_strlen($row) - $run;
+
+        for ($i = 0; $i <= $limit; $i++) {
+            if (str_contains($token, mb_substr($row, $i, $run))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function extractObjective(string $input): string

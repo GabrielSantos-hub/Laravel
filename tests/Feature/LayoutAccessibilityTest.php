@@ -68,6 +68,13 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('id="theme-toggle"', false);
         $resposta->assertSee('sidebar-collapsed', false);
         $resposta->assertSee('Menu do usuário', false);
+        $resposta->assertSee('Reportar um bug', false);
+        $resposta->assertSee('id="report-bug-modal"', false);
+        $resposta->assertSee('id="report-bug-btn"', false);
+        $resposta->assertSee('Encontrou um erro ou falha?', false);
+        $resposta->assertSee('suportegueass@gmail.com', false);
+        $resposta->assertSee('mailto:suportegueass@gmail.com?subject=Report%20de%20Bug%20-%20GUEASS', false);
+        $resposta->assertSee('fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center', false);
         $resposta->assertDontSee('>Preferências</span>', false);
     }
 
