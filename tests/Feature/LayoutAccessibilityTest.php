@@ -112,7 +112,7 @@ class LayoutAccessibilityTest extends TestCase
         $resposta->assertSee('catalog-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3', false);
         $resposta->assertSee('prompt-io-grid grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch', false);
         $resposta->assertSee('id="theme-toggle"', false);
-        $resposta->assertSee('for="user_input"', false);
+        $resposta->assertSee('for="intencao"', false);
         $resposta->assertSee('dark:placeholder-slate-400', false);
         $resposta->assertSee('Descreva o que você precisa gerar ou construir', false);
         $resposta->assertSee('O resultado aparece aqui após gerar.', false);

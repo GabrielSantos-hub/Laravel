@@ -71,7 +71,7 @@ class PromptPipelineService
         }
 
         return new PromptPipelineResult(
-            prompt: $this->composerFor($offlineProvider)->compose($intent, $template, $customVariables),
+            prompt: $this->composerFor($offlineProvider)->compose($intent, $template, $customVariables, $userInput),
             template: $template,
             intent: $intent,
             degraded: $offlineProvider !== null,

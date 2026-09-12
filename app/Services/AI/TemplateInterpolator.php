@@ -22,6 +22,7 @@ class TemplateInterpolator
      * @var array<int, string>
      */
     public const RESERVED_VARIABLES = [
+        'intencao',
         'user_input',
         'objective',
         'type',

@@ -15,7 +15,8 @@ class LanguageController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role.adm', except: ['index', 'show']),
+            new Middleware('auth', except: ['index', 'show']),
+            new Middleware('can:admin', except: ['index', 'show']),
         ];
     }
 

@@ -36,18 +36,18 @@ class PromptComposerTest extends TestCase
         );
 
         $this->assertStringContainsString('engenheiro de prompts', $provider->lastInstruction);
+        $this->assertStringContainsString('Reescreva e expanda essa ideia', $provider->lastInstruction);
         $this->assertSame('Corpo cru com {user_input}.', $provider->lastBody);
 
-        $this->assertSame([
-            'user_input' => 'Criar uma API de cobrança recorrente',
-            'objective' => 'Criar uma API de cobrança recorrente',
-            'type' => 'feature',
-            'architecture' => 'Clean Architecture',
-            'technologies' => 'PHP, Laravel',
-            'language' => 'PHP',
-            'framework' => 'Laravel',
-            'constraints' => "- Sem bibliotecas pagas\n- Cobertura mínima de 80%",
-        ], $provider->lastVariables);
+        $this->assertSame('Criar uma API de cobrança recorrente', $provider->lastVariables['intencao']);
+        $this->assertSame('Criar uma API de cobrança recorrente', $provider->lastVariables['objective']);
+        $this->assertSame('feature', $provider->lastVariables['type']);
+        $this->assertSame('Clean Architecture', $provider->lastVariables['architecture']);
+        $this->assertSame('PHP, Laravel', $provider->lastVariables['technologies']);
+        $this->assertSame('PHP', $provider->lastVariables['language']);
+        $this->assertSame('Laravel', $provider->lastVariables['framework']);
+        $this->assertSame("- Sem bibliotecas pagas\n- Cobertura mínima de 80%", $provider->lastVariables['constraints']);
+        $this->assertPromptArticulado($provider->lastVariables['user_input']);
     }
 
     public function test_cerca_de_codigo_do_modelo_e_removida(): void
@@ -65,7 +65,9 @@ class PromptComposerTest extends TestCase
 
         $resultado = $composer->compose($this->intent(), $this->template('Corpo.'));
 
-        $this->assertSame('Implemente Criar uma API de cobrança recorrente usando Laravel.', $resultado);
+        $this->assertStringContainsString('Implemente ', $resultado);
+        $this->assertStringContainsString('usando Laravel.', $resultado);
+        $this->assertPromptArticulado($resultado);
     }
 
     public function test_a_indentacao_da_saida_do_modelo_e_preservada(): void
@@ -88,11 +90,9 @@ class PromptComposerTest extends TestCase
             ."\n".'Tarefa: {user_input}.'
         ));
 
-        $this->assertSame(
-            "Você é especialista em PHP e no framework Laravel.\n"
-            .'Tarefa: Criar uma API de cobrança recorrente.',
-            $resultado
-        );
+        $this->assertStringContainsString('Você é especialista em PHP e no framework Laravel.', $resultado);
+        $this->assertStringContainsString('Tarefa:', $resultado);
+        $this->assertPromptArticulado($resultado);
     }
 
     public function test_bloco_condicional_some_no_fallback_quando_nao_ha_framework(): void
@@ -113,7 +113,8 @@ class PromptComposerTest extends TestCase
 
         $resultado = $composer->compose($this->intent(), $this->template('Tarefa: {user_input}.'));
 
-        $this->assertSame('Tarefa: Criar uma API de cobrança recorrente.', $resultado);
+        $this->assertStringStartsWith('Tarefa:', $resultado);
+        $this->assertPromptArticulado($resultado);
     }
 
     public function test_erro_de_tipo_do_provedor_tambem_cai_no_fallback(): void
@@ -122,7 +123,8 @@ class PromptComposerTest extends TestCase
 
         $resultado = $composer->compose($this->intent(), $this->template('Tarefa: {user_input}.'));
 
-        $this->assertSame('Tarefa: Criar uma API de cobrança recorrente.', $resultado);
+        $this->assertStringStartsWith('Tarefa:', $resultado);
+        $this->assertPromptArticulado($resultado);
     }
 
     public function test_a_falha_do_provedor_e_registrada_no_log(): void
@@ -150,7 +152,9 @@ class PromptComposerTest extends TestCase
         $resultado = (new PromptComposer(new NullAIProvider, new TemplateInterpolator, $logger))
             ->compose($this->intent(), $this->template('Tarefa: {user_input} em {language}.'));
 
-        $this->assertSame('Tarefa: Criar uma API de cobrança recorrente em PHP.', $resultado);
+        $this->assertStringContainsString('Tarefa:', $resultado);
+        $this->assertStringContainsString('em PHP.', $resultado);
+        $this->assertPromptArticulado($resultado);
         $this->assertSame([], $logger->records);
     }
 
@@ -175,6 +179,14 @@ class PromptComposerTest extends TestCase
     }
 
     // Helpers
+
+    private function assertPromptArticulado(string $prompt): void
+    {
+        $this->assertStringContainsString('Regra de negócio', $prompt);
+        $this->assertStringContainsString('Requisitos implícitos', $prompt);
+        $this->assertStringContainsString('Fluxo do usuário', $prompt);
+        $this->assertDoesNotMatchRegularExpression('/Tarefa:\s*"[^"]+"/u', $prompt);
+    }
 
     /**
      * @param  array<int, string>  $technologies

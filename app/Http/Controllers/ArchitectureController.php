@@ -14,7 +14,8 @@ class ArchitectureController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role.adm', except: ['index']),
+            new Middleware('auth', except: ['index']),
+            new Middleware('can:admin', except: ['index']),
         ];
     }
 

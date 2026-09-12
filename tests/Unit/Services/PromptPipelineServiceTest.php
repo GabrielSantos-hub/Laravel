@@ -50,11 +50,10 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertSame('Clean Architecture', $resultado->intent['architecture']);
         $this->assertSame('feature', $resultado->intent['type']);
 
-        $this->assertSame(
-            'Especialista em PHP, Laravel, seguindo Clean Architecture. '
-            .'Tarefa: Criar uma API REST em Laravel com PHP seguindo Clean Architecture',
-            $resultado->prompt
-        );
+        $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $resultado->prompt);
+        $this->assertStringContainsString('Regra de negócio', $resultado->prompt);
+        $this->assertStringContainsString('Requisitos implícitos', $resultado->prompt);
+        $this->assertStringContainsString('Fluxo do usuário', $resultado->prompt);
     }
 
     public function test_sem_template_compativel_lanca_excecao_de_dominio(): void
@@ -64,7 +63,7 @@ class PromptPipelineServiceTest extends TestCase
         $this->expectException(NoCompatibleTemplateException::class);
         $this->expectExceptionMessage('Nenhum template compatível');
 
-        $this->pipeline->generate('asdfgh qwerty zxcvbn');
+        $this->pipeline->generate('Criar uma API REST em Django com Python.');
     }
 
     public function test_template_inativo_fica_de_fora_da_selecao(): void
@@ -105,11 +104,8 @@ class PromptPipelineServiceTest extends TestCase
         $this->assertTrue($template->is($resultado->template));
         $this->assertTrue($resultado->degraded);
         $this->assertSame(['PHP', 'Laravel'], $resultado->intent['technologies']);
-        $this->assertSame(
-            'Especialista em PHP, Laravel, seguindo Clean Architecture. '
-            .'Tarefa: Criar uma API REST em Laravel com PHP seguindo Clean Architecture',
-            $resultado->prompt
-        );
+        $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $resultado->prompt);
+        $this->assertStringContainsString('Regra de negócio', $resultado->prompt);
     }
 
     public function test_provedor_fora_do_ar_nao_e_chamado_de_novo_na_composicao(): void

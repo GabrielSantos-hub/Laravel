@@ -14,9 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/');
         $middleware->alias([
             'role.adm' => \App\Http\Middleware\RoleAdmMiddleware::class,
-            'role.usu' => \App\Http\Middleware\RoleUsuMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Com APP_DEBUG=false o Laravel não renderiza stack traces; as views
+        // em resources/views/errors/ também nunca exibem $exception.
     })->create();

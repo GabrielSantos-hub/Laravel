@@ -7,7 +7,7 @@ use Illuminate\View\View;
 
 /**
  * Painel de métricas do administrador. O acesso é garantido pelo grupo
- * `role.adm` das rotas.
+ * `auth` + `can:admin` das rotas.
  */
 class AdminDashboardController extends Controller
 {

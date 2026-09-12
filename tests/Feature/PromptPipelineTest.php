@@ -64,12 +64,12 @@ class PromptPipelineTest extends TestCase
 
         $prompt = app(PromptComposer::class)->compose($intencao, $selecionado);
 
-        $this->assertSame(
-            "Você é um especialista em PHP e no framework Laravel, seguindo Clean Architecture.\n\n"
-            ."Tarefa: Criar uma API REST em Laravel com PHP seguindo Clean Architecture\n\n"
-            ."Restrições:\n- Não deve usar pacotes pagos",
-            $prompt
-        );
+        $this->assertStringContainsString('Você é um especialista em PHP e no framework Laravel, seguindo Clean Architecture.', $prompt);
+        $this->assertStringContainsString('Regra de negócio', $prompt);
+        $this->assertStringContainsString('Requisitos implícitos', $prompt);
+        $this->assertStringContainsString('Fluxo do usuário', $prompt);
+        $this->assertStringContainsString("Restrições:\n- Não deve usar pacotes pagos", $prompt);
+        $this->assertStringNotContainsString('"Criar uma API REST', $prompt);
     }
 
     public function test_o_pipeline_escolhe_o_template_classificado_pela_linguagem(): void
@@ -95,9 +95,9 @@ class PromptPipelineTest extends TestCase
         $selecionado = app(TemplateSelector::class)->select($intencao);
 
         $this->assertTrue($classificado->is($selecionado));
-        $this->assertSame(
-            'Automático: Criar um relatório de vendas em PHP',
-            app(PromptComposer::class)->compose($intencao, $selecionado)
-        );
+        $prompt = app(PromptComposer::class)->compose($intencao, $selecionado);
+        $this->assertStringStartsWith('Automático:', $prompt);
+        $this->assertStringContainsString('Regra de negócio', $prompt);
+        $this->assertStringContainsString('Requisitos implícitos', $prompt);
     }
 }

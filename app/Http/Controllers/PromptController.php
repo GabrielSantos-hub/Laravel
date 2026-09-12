@@ -10,6 +10,7 @@ use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
+use App\Services\AI\IntentCoherenceChecker;
 use App\Services\PromptPipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,8 @@ use Illuminate\View\View;
 class PromptController extends Controller
 {
     public function __construct(
-        protected PromptPipelineService $pipeline
+        protected PromptPipelineService $pipeline,
+        protected IntentCoherenceChecker $coherence
     ) {}
 
     public function index(): View
@@ -56,11 +58,18 @@ class PromptController extends Controller
     public function generate(GeneratePromptRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
+        $intencao = $validated['intencao'];
         $variaveis = $this->variaveisDinamicas($validated['variables'] ?? []);
+
+        if (! $this->coherence->isCoherent($intencao)) {
+            throw ValidationException::withMessages([
+                'intencao' => IntentCoherenceChecker::UNCLEAR_MESSAGE,
+            ]);
+        }
 
         try {
             $resultado = $this->pipeline->generate(
-                $validated['user_input'],
+                $intencao,
                 catalogHints: [
                     'language_id' => $validated['language_id'] ?? null,
                     'framework_id' => $validated['framework_id'] ?? null,
@@ -69,9 +78,9 @@ class PromptController extends Controller
                 customVariables: $variaveis,
             );
         } catch (InvalidIntentException $e) {
-            throw ValidationException::withMessages(['user_input' => $e->getMessage()]);
+            throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
         } catch (NoCompatibleTemplateException $e) {
-            throw ValidationException::withMessages(['user_input' => $e->getMessage()]);
+            throw ValidationException::withMessages(['intencao' => $e->getMessage()]);
         }
 
         $prompt = Prompt::query()->create([
@@ -80,7 +89,7 @@ class PromptController extends Controller
             'architecture_id' => $validated['architecture_id'] ?? null,
             'language_id' => $validated['language_id'] ?? null,
             'framework_id' => $validated['framework_id'] ?? null,
-            'input_text' => $validated['user_input'],
+            'input_text' => $intencao,
             'output_text' => $resultado->prompt,
         ]);
 

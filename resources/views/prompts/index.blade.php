@@ -85,13 +85,13 @@
         <div class="prompt-io-grid grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
             <div class="prompt-io-col h-full">
                 <div class="prompt-io-toolbar">
-                    <label for="user_input" class="form-label text-muted small mb-0">Sua intenção / contexto</label>
+                    <label for="intencao" class="form-label text-muted small mb-0">Sua intenção / contexto</label>
                 </div>
-                <textarea name="user_input" id="user_input" class="form-control bg-light h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('user_input') is-invalid @enderror" rows="12" required
+                <textarea name="intencao" id="intencao" class="form-control bg-light h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('intencao') is-invalid @enderror" rows="12" required
                     minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
                     maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
-                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('user_input') }}</textarea>
-                @error('user_input')
+                    placeholder="Descreva o que você precisa gerar ou construir…">{{ old('intencao', old('user_input')) }}</textarea>
+                @error('intencao')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

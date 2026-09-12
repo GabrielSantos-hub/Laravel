@@ -40,6 +40,8 @@ class AIProviderBindingTest extends TestCase
             new Template(['nome' => 'Teste', 'corpo_template' => 'Tarefa: {user_input} em {language}.'])
         );
 
-        $this->assertSame('Tarefa: Criar um relatório de vendas em PHP.', $resultado);
+        $this->assertStringContainsString('Tarefa:', $resultado);
+        $this->assertStringContainsString('em PHP.', $resultado);
+        $this->assertStringContainsString('Regra de negócio', $resultado);
     }
 }

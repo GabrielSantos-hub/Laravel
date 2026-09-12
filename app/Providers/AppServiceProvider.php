@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Prompt;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Auth; 
-use Illuminate\Support\Facades\URL; 
+use Illuminate\Support\ServiceProvider; 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production')) {
             URL::forceScheme('https');
         }
+
+        Gate::define('admin', fn (User $user): bool => $user->isAdmin());
+
         View::composer('layout', function ($view) {
        
             $prompts = Auth::check()

@@ -100,6 +100,21 @@ class IntentAnalyzerTest extends TestCase
         $this->assertSame('feature', $result['type']);
     }
 
+    public function test_entrada_desconexa_lanca_excecao_antes_do_provedor(): void
+    {
+        $provider = $this->spyProvider();
+        $analyzer = new IntentAnalyzer($provider);
+
+        try {
+            $analyzer->analyze('LKJHTVBD asdfgh');
+            $this->fail('Esperava InvalidIntentException.');
+        } catch (InvalidIntentException $e) {
+            $this->assertStringContainsString('objetivo claro de software', $e->getMessage());
+        }
+
+        $this->assertSame(0, $provider->calls);
+    }
+
     public function test_o_provedor_nao_e_chamado_quando_a_entrada_e_invalida(): void
     {
         $provider = $this->spyProvider();
@@ -245,7 +260,10 @@ class IntentAnalyzerTest extends TestCase
         $provider = $this->spyProvider();
         $analyzer = new IntentAnalyzer($provider);
 
-        $analyzer->analyze(str_repeat('a', IntentAnalyzer::MAX_INPUT_LENGTH + 500));
+        $analyzer->analyze(str_repeat(
+            'Criar uma API REST em Laravel com PHP. ',
+            40
+        ));
 
         $this->assertSame(IntentAnalyzer::MAX_INPUT_LENGTH, mb_strlen((string) $provider->lastInput));
     }

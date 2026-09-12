@@ -61,7 +61,8 @@ class PromptMetricsService
     {
         return DB::table('prompts')
             ->join('templates', 'templates.id', '=', 'prompts.template_id')
-            ->select('templates.nome as rotulo', DB::raw('count(*) as total'))
+            ->select('templates.nome as rotulo')
+            ->selectRaw('count(*) as total')
             ->groupBy('templates.nome')
             ->orderByDesc('total')
             ->orderBy('templates.nome')
@@ -100,9 +101,19 @@ class PromptMetricsService
      */
     private function catalogRanking(string $tabela, string $coluna, string $tipo): array
     {
+        $catalogos = [
+            'languages' => 'language_id',
+            'frameworks' => 'framework_id',
+        ];
+
+        if (($catalogos[$tabela] ?? null) !== $coluna) {
+            return [];
+        }
+
         return DB::table('prompts')
             ->join($tabela, "{$tabela}.id", '=', "prompts.{$coluna}")
-            ->select("{$tabela}.nome as rotulo", DB::raw('count(*) as total'))
+            ->select("{$tabela}.nome as rotulo")
+            ->selectRaw('count(*) as total')
             ->groupBy("{$tabela}.nome")
             ->orderByDesc('total')
             ->get()

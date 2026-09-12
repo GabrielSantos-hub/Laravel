@@ -22,8 +22,8 @@ class PromptControllerTest extends TestCase
     {
         parent::setUp();
 
-        // O throttle:6,1 usa o cache. Sem limpar, testes do mesmo usuário
-        // herdariam tentativas uns dos outros e o 7º generate da suíte viraria 429.
+        // O throttle:10,1 usa o cache. Sem limpar, testes do mesmo usuário
+        // herdariam tentativas uns dos outros e o 11º generate da suíte viraria 429.
         Cache::flush();
 
         $this->usuario = User::factory()->create();
@@ -42,11 +42,12 @@ class PromptControllerTest extends TestCase
         $resposta->assertRedirect(route('home'));
         $resposta->assertSessionHas('sucesso');
         $resposta->assertSessionHas('selected_template_id', $template->id);
-        $resposta->assertSessionHas(
-            'last_output',
-            'Especialista em PHP, Laravel, seguindo Clean Architecture. '
-            .'Tarefa: Criar uma API REST em Laravel com PHP seguindo Clean Architecture'
-        );
+        $resposta->assertSessionHas('last_output');
+        $saida = session('last_output');
+        $this->assertIsString($saida);
+        $this->assertStringContainsString('Especialista em PHP, Laravel, seguindo Clean Architecture.', $saida);
+        $this->assertStringContainsString('Regra de negócio', $saida);
+        $this->assertStringContainsString('Requisitos implícitos', $saida);
 
         $this->assertDatabaseCount('prompts', 1);
 
@@ -101,7 +102,7 @@ class PromptControllerTest extends TestCase
         $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), []);
 
         $resposta->assertUnprocessable();
-        $resposta->assertJsonValidationErrors(['user_input' => 'Descreva o que você precisa gerar.']);
+        $resposta->assertJsonValidationErrors(['intencao' => 'Descreva o que você precisa gerar.']);
         $this->assertDatabaseCount('prompts', 0);
     }
 
@@ -113,23 +114,61 @@ class PromptControllerTest extends TestCase
             ->postJson(route('prompts.generate'), ['user_input' => 'oi']);
 
         $resposta->assertUnprocessable();
-        $resposta->assertJsonValidationErrorFor('user_input');
+        $resposta->assertJsonValidationErrorFor('intencao');
         $this->assertDatabaseCount('prompts', 0);
     }
 
-    public function test_entrada_aleatoria_sem_template_compativel_nao_quebra_o_pipeline(): void
+    public function test_entrada_desconexa_nao_dispara_a_geracao(): void
     {
         $this->templateClassificado();
 
         $resposta = $this->actingAs($this->usuario)
-            ->postJson(route('prompts.generate'), ['user_input' => 'asdfgh qwerty zxcvbn']);
+            ->postJson(route('prompts.generate'), ['intencao' => 'LKJHTVBD asdfgh']);
 
         $resposta->assertUnprocessable();
-        $resposta->assertJsonValidationErrorFor('user_input');
-        $this->assertStringContainsString(
-            'Nenhum template compatível',
-            $resposta->json('errors.user_input.0')
-        );
+        $resposta->assertJsonValidationErrors([
+            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+        ]);
+        $this->assertDatabaseCount('prompts', 0);
+    }
+
+    public function test_entrada_valida_simples_gera_prompt_articulado(): void
+    {
+        $this->templateClassificado();
+        Template::query()->create([
+            'nome' => 'Desenvolvimento de Módulo / Feature',
+            'corpo_template' => 'Módulo: {user_input}',
+            'versao' => '1',
+            'is_active' => true,
+        ]);
+
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'intencao' => 'Criar uma tela de login com suporte a modo escuro',
+        ]);
+
+        $resposta->assertCreated();
+        $prompt = (string) $resposta->json('prompt');
+
+        $this->assertStringContainsString('Regra de negócio', $prompt);
+        $this->assertStringContainsString('Requisitos implícitos', $prompt);
+        $this->assertStringContainsString('Fluxo do usuário', $prompt);
+        $this->assertStringContainsString('login', mb_strtolower($prompt));
+        $this->assertStringContainsString('tema', mb_strtolower($prompt));
+        $this->assertStringNotContainsString('"Criar uma tela de login com suporte a modo escuro"', $prompt);
+        $this->assertDatabaseCount('prompts', 1);
+    }
+
+    public function test_entrada_aleatoria_com_palavras_reais_e_recusada(): void
+    {
+        $this->templateClassificado();
+
+        $resposta = $this->actingAs($this->usuario)
+            ->postJson(route('prompts.generate'), ['intencao' => 'papo rato desenvolver carro']);
+
+        $resposta->assertUnprocessable();
+        $resposta->assertJsonValidationErrors([
+            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+        ]);
         $this->assertDatabaseCount('prompts', 0);
     }
 
@@ -142,7 +181,7 @@ class PromptControllerTest extends TestCase
             ->post(route('prompts.generate'), ['user_input' => 'asdfgh qwerty zxcvbn']);
 
         $resposta->assertRedirect(route('home'));
-        $resposta->assertSessionHasErrors('user_input');
+        $resposta->assertSessionHasErrors('intencao');
         $this->assertDatabaseCount('prompts', 0);
     }
 
@@ -305,13 +344,13 @@ class PromptControllerTest extends TestCase
 
     // (e) Rate limiting
 
-    public function test_a_geracao_e_limitada_a_seis_requisicoes_por_minuto(): void
+    public function test_a_geracao_e_limitada_a_dez_requisicoes_por_minuto(): void
     {
         $this->templateClassificado();
 
         $intencao = ['user_input' => 'Criar uma API REST em Laravel com PHP.'];
 
-        for ($tentativa = 1; $tentativa <= 6; $tentativa++) {
+        for ($tentativa = 1; $tentativa <= 10; $tentativa++) {
             $this->actingAs($this->usuario)
                 ->postJson(route('prompts.generate'), $intencao)
                 ->assertCreated();
@@ -322,8 +361,7 @@ class PromptControllerTest extends TestCase
         $resposta->assertStatus(429);
         $resposta->assertHeader('Retry-After');
 
-        // A sétima não passa nem grava.
-        $this->assertDatabaseCount('prompts', 6);
+        $this->assertDatabaseCount('prompts', 10);
     }
 
     // (f) A tela de geração

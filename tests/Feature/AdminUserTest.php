@@ -20,7 +20,7 @@ class AdminUserTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['role' => 'USU']))
             ->get(route('admin.users.index'))
-            ->assertRedirect(route('login'));
+            ->assertForbidden();
     }
 
     public function test_admin_lista_os_usuarios_cadastrados(): void
@@ -83,7 +83,7 @@ class AdminUserTest extends TestCase
                 'password' => 'nova-provisoria',
                 'password_confirmation' => 'nova-provisoria',
             ])
-            ->assertRedirect(route('login'));
+            ->assertForbidden();
 
         $this->assertTrue(Hash::check('senha-antiga', $alvo->fresh()->password));
     }

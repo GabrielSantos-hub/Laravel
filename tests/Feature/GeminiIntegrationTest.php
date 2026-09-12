@@ -60,6 +60,9 @@ class GeminiIntegrationTest extends TestCase
                 'constraints' => [],
                 'type' => 'feature',
             ])))
+            ->push($this->resposta(
+                'Briefing técnico: regra de negócio de pedidos, requisitos implícitos de contrato HTTP e fluxo do usuário autenticado.'
+            ))
             ->push($this->resposta('Prompt final redigido pelo Gemini.')),
         ]);
 
@@ -73,8 +76,8 @@ class GeminiIntegrationTest extends TestCase
         $resposta->assertJsonPath('degraded', false);
         $resposta->assertJsonPath('intent.objective', 'Criar uma API REST de pedidos');
 
-        // Uma chamada para analisar a intenção, outra para compor o prompt.
-        Http::assertSentCount(2);
+        // Análise, síntese da intenção e composição do prompt.
+        Http::assertSentCount(3);
 
         $this->assertSame(
             'Prompt final redigido pelo Gemini.',
@@ -96,12 +99,11 @@ class GeminiIntegrationTest extends TestCase
         $resposta->assertJsonPath('degraded', true);
         $resposta->assertJsonPath('template.id', $template->id);
 
-        // O prompt é o da interpolação determinística local.
-        $resposta->assertJsonPath(
-            'prompt',
-            'Especialista em PHP, Laravel, seguindo Clean Architecture. '
-            .'Tarefa: Criar uma API REST em Laravel com PHP seguindo Clean Architecture'
+        $this->assertStringContainsString(
+            'Especialista em PHP, Laravel, seguindo Clean Architecture.',
+            (string) $resposta->json('prompt')
         );
+        $this->assertStringContainsString('Regra de negócio', (string) $resposta->json('prompt'));
 
         // Só a análise foi tentada: a composição já saiu direto pelo offline.
         Http::assertSentCount(1);
@@ -152,9 +154,11 @@ class GeminiIntegrationTest extends TestCase
         $resposta = $this->actingAs($this->usuario)
             ->postJson(route('prompts.generate'), ['user_input' => 'asdfgh qwerty zxcvbn']);
 
-        // Degradar não pode mascarar "nenhum template compatível".
         $resposta->assertUnprocessable();
-        $resposta->assertJsonValidationErrorFor('user_input');
+        $resposta->assertJsonValidationErrorFor('intencao');
+        $resposta->assertJsonValidationErrors([
+            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+        ]);
         $this->assertDatabaseCount('prompts', 0);
     }
 

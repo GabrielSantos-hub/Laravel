@@ -26,21 +26,20 @@ class DatabaseSeeder extends Seeder
             TemplateSeeder::class,
         ]);
 
-        User::query()->firstOrCreate(
+        $admin = User::query()->firstOrCreate(
             ['email' => 'admin@email.com'],
             [
                 'name' => 'Administrador',
                 'password' => Hash::make('2133@JJ#Asfd'),
-                'role' => 'ADM',
             ]
         );
+        $admin->forceFill(['role' => 'ADM'])->save();
 
         User::query()->firstOrCreate(
             ['email' => 'usuario@email.com'],
             [
                 'name' => 'Usuario Teste',
                 'password' => Hash::make('user123'),
-                'role' => 'USU',
             ]
         );
     }

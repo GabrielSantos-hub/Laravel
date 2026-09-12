@@ -1348,6 +1348,21 @@ html:not(.dark) [data-icon="sun"] {
     }
 }
 
+.error-card {
+    width: min(32rem, 100%);
+    background: var(--gueass-surface);
+    border: 1px solid var(--gueass-border);
+    border-radius: 1.25rem;
+    padding: 2.25rem 2rem;
+    text-align: center;
+}
+
+.error-brand,
+.error-code {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--gueass-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;

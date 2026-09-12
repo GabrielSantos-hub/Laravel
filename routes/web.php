@@ -3,18 +3,20 @@
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ArchitectureController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FrameworkController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromptController;
 use App\Http\Controllers\TemplateController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:10,1')
+        ->name('register');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -30,10 +32,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/perfil/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     Route::get('/', [PromptController::class, 'index'])->name('home');
-    // A cota gratuita do Gemini é por minuto: 6 gerações por usuário protegem
-    // o limite da API e, de tabela, o custo de cada requisição.
     Route::post('/prompts/generate', [PromptController::class, 'generate'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:10,1')
         ->name('prompts.generate');
     Route::get('/prompts/{prompt}', [PromptController::class, 'show'])->name('prompts.show');
     Route::post('/prompts/{prompt}/feedback', [PromptController::class, 'feedback'])->name('prompts.feedback');
@@ -44,8 +44,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('api.languages.frameworks');
 });
 
-// Rotas do Administrador
-Route::middleware(['role.adm'])->group(function () {
+Route::middleware(['auth', 'can:admin'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('admin.dashboard');
     });
@@ -58,27 +57,3 @@ Route::middleware(['role.adm'])->group(function () {
     Route::resource('architectures', ArchitectureController::class)->except(['index']);
     Route::resource('templates', TemplateController::class)->except(['index']);
 });
-
-if (app()->environment('local')) {
-    Route::get('/debug/generate-sample', function (App\Services\PromptGenerator $promptGenerator) {
-        $template = App\Models\Template::query()->where('is_active', true)->first();
-        if (! $template) {
-            return response('Nenhum template ativo encontrado.', 404);
-        }
-
-        $architecture = App\Models\Architecture::query()->first();
-        if (! $architecture) {
-            return response('Nenhuma arquitetura encontrada.', 404);
-        }
-
-        $language = App\Models\Language::query()->first();
-        if (! $language) {
-            return response('Nenhuma linguagem encontrada.', 404);
-        }
-
-        $framework = null;
-        $output = $promptGenerator->render($template, 'Exemplo de intenção para teste', $language, $architecture, $framework);
-
-        return response(nl2br(e($output)));
-    });
-}

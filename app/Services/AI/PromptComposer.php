@@ -21,32 +21,39 @@ use Throwable;
 class PromptComposer
 {
     private const INSTRUCTION = <<<'TXT'
-        Você é um engenheiro de prompts. Sua tarefa é fundir a intenção estruturada do usuário com o corpo de template fornecido, produzindo o prompt final.
+        Você é um engenheiro de prompts. Analise a intenção do usuário: '{intencao}'. Reescreva e expanda essa ideia em termos técnicos claros, identificando a regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário. Integre esse conteúdo de forma natural e fluida na estrutura do template final.
 
         Regras:
         - Substitua todo placeholder no formato {chave} pelo valor correspondente das variáveis.
         - Resolva os blocos condicionais {% if chave %}...{% endif %}, mantendo o conteúdo apenas quando a variável tiver valor e removendo o bloco inteiro caso contrário.
+        - {user_input} já é um briefing técnico expandido: integre-o em prosa, sem aspas e sem colar o texto cru do usuário.
         - Preserve a estrutura, as seções e o tom do template.
         - Refine a redação para ficar clara, direta e sem redundância.
-        - Não invente requisitos, tecnologias ou restrições que não estejam na intenção.
+        - Não invente requisitos, tecnologias ou restrições que não estejam na intenção ou no briefing.
         - Responda apenas com o prompt final, sem comentários, explicações ou cercas de código.
         TXT;
+
+    private readonly IntentSynthesizer $synthesizer;
 
     public function __construct(
         private readonly AIProviderInterface $provider,
         private readonly TemplateInterpolator $interpolator = new TemplateInterpolator,
         private readonly ?LoggerInterface $logger = null,
-    ) {}
+        ?IntentSynthesizer $synthesizer = null,
+    ) {
+        $this->synthesizer = $synthesizer ?? new IntentSynthesizer($this->provider);
+    }
 
     /**
      * @param  array<string, mixed>  $structuredIntent  Saída do IntentAnalyzer.
      * @param  array<string, mixed>  $customVariables  Marcadores dinâmicos do
      *                                                 template, preenchidos na tela.
+     * @param  string|null  $rawIntent  Texto original digitado pelo usuário.
      */
-    public function compose(array $structuredIntent, Template $template, array $customVariables = []): string
+    public function compose(array $structuredIntent, Template $template, array $customVariables = [], ?string $rawIntent = null): string
     {
         $body = (string) $template->corpo_template;
-        $variables = $this->variables($structuredIntent, $customVariables);
+        $variables = $this->variables($structuredIntent, $customVariables, $rawIntent);
 
         try {
             $composed = $this->cleanUp(
@@ -80,14 +87,17 @@ class PromptComposer
      * @param  array<string, mixed>  $customVariables
      * @return array<string, string>
      */
-    private function variables(array $intent, array $customVariables = []): array
+    private function variables(array $intent, array $customVariables = [], ?string $rawIntent = null): array
     {
         $technologies = $this->stringList($intent['technologies'] ?? []);
         $constraints = $this->stringList($intent['constraints'] ?? []);
         $objective = $this->text($intent['objective'] ?? null);
+        $intencao = trim((string) $rawIntent) !== '' ? trim((string) $rawIntent) : $objective;
+        $briefing = $this->synthesizer->synthesize($intencao, $intent);
 
         return [
-            'user_input' => $objective,
+            'intencao' => $intencao,
+            'user_input' => $briefing,
             'objective' => $objective,
             'type' => $this->text($intent['type'] ?? null),
             'architecture' => $this->text($intent['architecture'] ?? null),

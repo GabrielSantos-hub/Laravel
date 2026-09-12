@@ -23,7 +23,7 @@ class AdminDashboardTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['role' => 'USU']))
             ->get(route('admin.dashboard'))
-            ->assertRedirect(route('login'));
+            ->assertForbidden();
     }
 
     public function test_admin_acessa_o_painel(): void

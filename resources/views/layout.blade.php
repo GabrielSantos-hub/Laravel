@@ -114,7 +114,7 @@
                         </a>
                     </div>
                     @auth
-                    @if (Auth::user()->role === 'ADM')
+                    @if (Auth::user()->isAdmin())
                     <div class="nav-menu-item" role="listitem">
                         <a href="{{ route('admin.dashboard') }}"
                            class="nav-link focus:ring-2 focus:ring-indigo-500 focus:outline-none"

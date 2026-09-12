@@ -26,8 +26,8 @@ class IntentAnalyzer
 {
     public const MIN_INPUT_LENGTH = 10;
 
-    /** Alinhado ao limite de `input_text` em GeneratePromptRequest. */
-    public const MAX_INPUT_LENGTH = 20000;
+    /** Alinhado ao limite de `intencao` em GeneratePromptRequest. */
+    public const MAX_INPUT_LENGTH = 1000;
 
     public const MAX_OBJECTIVE_LENGTH = 300;
 
@@ -64,6 +64,10 @@ class IntentAnalyzer
 
         if ($length < self::MIN_INPUT_LENGTH) {
             throw InvalidIntentException::tooShort($length, self::MIN_INPUT_LENGTH);
+        }
+
+        if (! (new IntentCoherenceChecker)->isCoherent($sanitized)) {
+            throw InvalidIntentException::unclear();
         }
 
         try {
