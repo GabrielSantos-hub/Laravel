@@ -29,6 +29,26 @@ Verificar: `Get-Service MySQL_Laragon`. Parar/iniciar: `net stop` /
 `net start MySQL_Laragon`. Remover (sem apagar o datadir):
 `net stop MySQL_Laragon` e depois `sc.exe delete MySQL_Laragon`.
 
+## 2026-10-02 — Três runtimes PHP e extensão gd
+
+O Apache do Laragon (httpd 2.4.66, `PHP/8.3.30`) carrega
+`C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini` (`PHPIniDir` em
+`C:\laragon\etc\apache2\mod_php.conf`). A tarefa `GUEASS_schedule` usa o
+mesmo `php.exe`. O `php` do terminal PATH é o XAMPP
+`C:\xampp\php\php.exe` (8.2.12, `C:\xampp\php\php.ini`) e **não** é o PHP
+do projeto. `extension=gd` já estava descomentada nos dois `php.ini`;
+nenhuma linha foi alterada e o Apache não precisou ser reiniciado. Upload
+de avatar via HTTP em `http://laravel.test/public` devolveu 200 com PNG
+reprocessado.
+
+## 2026-10-02 — CSP `style-src 'unsafe-inline'` mantido
+
+Há 87 atributos `style=""` em 20 blades da aplicação (94 se contar o
+`welcome.blade.php` de scaffold, removido na Fase 4). As páginas de erro
+ainda usam um bloco `<style>` em `resources/views/errors/layout.blade.php`.
+Mover tudo para classes/Vite sem regressão visual é esforço alto. A
+diretiva permanece; risco residual em `docs/seguranca-owasp.md`.
+
 ## 2026-10-02 — Fase 2: prompt injection e dados sensíveis
 
 Detecção de prompt injection centralizada no `InputSanityGuardrail` (fonte
@@ -54,4 +74,12 @@ Request ID em `X-Request-Id`. Tabela `audit_logs` somente inserção, tela
 admin somente leitura. Geração: persistência em try/catch, idempotência
 de 5 s, timeout do provedor com mensagem amigável. Stack do histórico
 deduz IDs do catálogo. Avatar reprocessado com GD; SVG recusado.
+
+## 2026-10-02 — Fase 4: fechamento
+
+Modo lean documentado (60 caracteres / 10 tokens; `LEAN_MAX_LINES=25` só
+como invariante do envelope). Gemini continua fail-closed. Scaffold
+`welcome.blade.php` e `ExampleTest` removidos; CRUDs de catálogo sem
+`HasMiddleware` duplicado. Páginas 403/404/419/429/500 com `request_id`.
+Levantamento final em `docs/levantamento-final.md`.
 
