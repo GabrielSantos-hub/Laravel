@@ -1,14 +1,35 @@
 # GUEASS
 
-Gerador de prompts de software (Laravel 12 / PHP 8.2). Ambiente alvo: execução
-local com MySQL 8, conforme a ERS.
+Gerador de prompts de software (Laravel 12 / PHP 8.2+). Ambiente alvo:
+execução local com MySQL 8, conforme a ERS.
 
 ## Requisitos
 
-- PHP 8.2+ (extensões: `pdo_mysql`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`, `gd`, `openssl`)
+- PHP **8.2+** com a extensão **`gd`** (avatar) e também `pdo_mysql`,
+  `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`, `openssl`
 - Composer
 - Node.js 20+ e npm
 - MySQL 8
+
+### Qual PHP este projeto usa
+
+Há **três** interpretadores no ambiente do autor. O PHP do **XAMPP não é
+o PHP do projeto**.
+
+| Uso | Binário | `php.ini` carregado | gd |
+| --- | --- | --- | --- |
+| Terminal PATH (`php`) | `C:\xampp\php\php.exe` (8.2.12, CLI) | `C:\xampp\php\php.ini` | sim (`extension=gd`) |
+| Apache do Laragon (httpd 2.4.66, `PHP/8.3.30`) | `C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php8apache2_4.dll` | `C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini` (`PHPIniDir` em `C:\laragon\etc\apache2\mod_php.conf`) | sim |
+| Tarefa `GUEASS_schedule` | `C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe` | o mesmo `php.ini` 8.3.30 | sim |
+
+Para artisan/testes alinhados ao Apache, use o `php.exe` 8.3.30 do Laragon
+explicitamente. Confira com `php -m` / `php -i` e procure `gd`.
+
+O virtual host `Laravel.test` do Laragon aponta `DocumentRoot` para a
+**raiz do repositório** (não `public/`). A aplicação responde em
+`http://laravel.test/public/…`. Corrigir o vhost para `public/` exige
+reiniciar o Apache do Laragon (menu do Laragon ou `httpd -k restart`) —
+não é feito automaticamente por este repositório.
 
 ## Configuração local
 
@@ -62,6 +83,8 @@ local com MySQL 8, conforme a ERS.
    php artisan storage:link
    ```
 
+   Nunca use `migrate:fresh`, `migrate:reset` nem `db:wipe` neste projeto.
+
    O seeder cria o catálogo (linguagens, arquiteturas, templates). Em
    local/testing também cria usuários de demonstração com senha vinda de
    `DEMO_ADMIN_PASSWORD` / `DEMO_USER_PASSWORD` ou aleatória (exibida uma
@@ -74,7 +97,8 @@ local com MySQL 8, conforme a ERS.
    php artisan serve
    ```
 
-   No Laragon, o virtual host do projeto substitui o `php artisan serve`.
+   No Laragon, o virtual host do projeto substitui o `php artisan serve`
+   (ver nota do `DocumentRoot` acima).
 
 ## Administrador inicial
 
@@ -83,7 +107,8 @@ php artisan gueass:create-admin
 ```
 
 O comando pede e-mail e senha (ou lê `ADMIN_EMAIL` / `ADMIN_PASSWORD`). A
-senha precisa ter pelo menos 8 caracteres, com letras e números.
+senha precisa ter pelo menos 8 caracteres, com letras e números. `role`
+não é mass-assignable: o comando grava `ADM` via `forceFill`.
 
 ## Testes
 
@@ -94,18 +119,53 @@ php artisan test
 ```
 
 Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
+Regras de negócio: `docs/regras-negocio.md`. Levantamento técnico:
+`docs/levantamento-final.md`.
 
 Os assets (Bootstrap, Font Awesome, Orbitron, Cropper.js e Chart.js) vêm
 do Vite, sem CDN. A CSP usa nonce nos scripts inline do tema.
 
-O gerador recusa prompt injection (jailbreak, revelação de system prompt,
-troca de papel) na intenção e nas variáveis, sempre, mesmo com
-`AI_PROVIDER=gemini`. Segredos reconhecíveis são substituídos por
-`[REDACTED:tipo]` antes do histórico e antes de qualquer provedor externo.
-Na tela do gerador há a opção de não salvar o prompt. No perfil: exportar
-o histórico em JSON e excluir a conta com confirmação de senha. O comando
-`php artisan gueass:prune-prompts` remove prompts mais antigos que
-`PROMPT_RETENTION_DAYS` (padrão 90).
+## Segurança
+
+Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
+
+- O gerador recusa prompt injection (jailbreak, revelação de system
+  prompt, troca de papel) na intenção e nas variáveis, sempre, mesmo com
+  `AI_PROVIDER=gemini`.
+- Segredos reconhecíveis viram `[REDACTED:tipo]` antes do histórico e de
+  qualquer provedor externo.
+- Na tela do gerador há a opção de não salvar o prompt. No perfil:
+  exportar o histórico em JSON e excluir a conta com confirmação de senha.
+- Cabeçalhos: CSP (`script-src` com nonce; `style-src` ainda inclui
+  `'unsafe-inline'` — ver limitações), `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`. HSTS
+  só em production com HTTPS.
+- Avatar: JPEG/PNG/WEBP, recusa SVG, reprocessa com **gd**.
+- Eventos de segurança em lista fechada (`SecurityLogger`); e-mails
+  mascarados; senha, token e conteúdo da intenção não entram no canal.
+
+### Como ler os logs
+
+- Aplicação: `storage/logs/laravel.log`.
+- Segurança (JSON, um arquivo rotativo): `storage/logs/security.log`
+  (Monolog `RotatingFileHandler`, `SECURITY_LOG_DAYS`, padrão 30). Cada
+  linha tem o evento (`login_failed`, `prompt_injection_detected`, …),
+  `request_id` no contexto compartilhado e e-mail já mascarado.
+- Auditoria administrativa (mutações de catálogo/usuários): tabela
+  `audit_logs`, tela `/admin/auditoria` (somente leitura).
+- Páginas de erro mostram «código de referência» = `X-Request-Id`.
+
+Não copie o conteúdo de `security.log` para issues públicas: ainda pode
+conter metadados de tamanho/categoria.
+
+### Política de retenção
+
+| Dado | Padrão | Onde |
+| --- | --- | --- |
+| Histórico de prompts | 90 dias | `PROMPT_RETENTION_DAYS` / `php artisan gueass:prune-prompts` |
+| Canal `security` | 30 dias (arquivos rotativos) | `SECURITY_LOG_DAYS` |
+| Sessões | 120 minutos | `SESSION_LIFETIME` |
+| Conta do usuário | até exclusão no perfil | `DELETE /perfil` |
 
 ## Agendamento no Windows (`gueass:prune-prompts`)
 
@@ -137,19 +197,38 @@ Remover:
 schtasks /Delete /TN "GUEASS_schedule" /F
 ```
 
-## Produção (HTTPS)
-
-O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em
-local (HTTP) isso fica desligado. Variáveis que exigem HTTPS também
-nascem desligadas:
-
-- `SESSION_SECURE_COOKIE=false` no exemplo; `true` só em production com HTTPS
-- `TRUSTED_PROXIES` vazio (não confiar em todos os proxies)
-- `APP_DEBUG=false` em production
-- `SESSION_ENCRYPT=true`, `SESSION_HTTP_ONLY=true`, `SESSION_SAME_SITE=lax`
-
 ## Variáveis de IA (opcional)
 
 - `AI_PROVIDER=null` — provedor offline (padrão local)
 - `AI_PROVIDER=gemini` — exige `GEMINI_API_KEY` (nunca commitar o valor);
-  envia só texto já redigido, com `GEMINI_TIMEOUT` e `GEMINI_MAX_PAYLOAD_BYTES`
+  envia só texto já redigido, com `GEMINI_TIMEOUT` (15), `GEMINI_TRIES`
+  (2) e `GEMINI_MAX_PAYLOAD_BYTES` (65536). Sem chave, timeout, JSON
+  inválido ou trecho suspeito: **fail-closed** (a geração é recusada).
+  Não há degradação silenciosa para o provedor `null`.
+
+Outras variáveis documentadas em `.env.example`: `PROMPT_RETENTION_DAYS`,
+`SECURITY_LOG_DAYS`, `SECURITY_LOG_STDERR`, `GENERATE_IDEMPOTENCY_SECONDS`,
+`TRUSTED_PROXIES` (vazio; nunca `*`), `SESSION_SECURE_COOKIE`.
+
+## Produção (HTTPS) — checklist
+
+O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em
+local (HTTP) isso fica desligado.
+
+- [ ] `APP_ENV=production` e `APP_DEBUG=false`
+- [ ] `APP_KEY` gerada e secreta
+- [ ] `SESSION_SECURE_COOKIE=true` (somente com HTTPS)
+- [ ] `SESSION_ENCRYPT=true`, `SESSION_HTTP_ONLY=true`, `SESSION_SAME_SITE=lax`
+- [ ] `TRUSTED_PROXIES` só com IPs reais do proxy; nunca `*`
+- [ ] PHP 8.2+ com `gd` no mesmo binário do servidor web
+- [ ] `DocumentRoot` do virtual host = diretório `public/`
+- [ ] `composer audit` e `npm audit` sem vulnerabilidades conhecidas
+- [ ] `php artisan migrate` (sem `fresh`/`wipe`); `storage:link`; `npm run build`
+- [ ] Administrador via `php artisan gueass:create-admin` (o seeder **não**
+      cria usuários em production)
+- [ ] `GEMINI_API_KEY` só se `AI_PROVIDER=gemini`; senão deixe `null`
+- [ ] Agendar `php artisan schedule:run` (no Windows, tarefa
+      `GUEASS_schedule` com o **mesmo** `php.exe` do servidor)
+- [ ] Backups do MySQL; retenção de `security.log` e de prompts conferida
+- [ ] HTTPS no proxy/servidor; HSTS é ligado pela aplicação só em
+      production com request segura
