@@ -22,8 +22,8 @@ class AuthSecurityTest extends TestCase
         $this->post('/register', [
             'name' => 'Hacker',
             'email' => 'hacker@example.com',
-            'password' => 'secret1',
-            'password_confirmation' => 'secret1',
+            'password' => 'Secret12',
+            'password_confirmation' => 'Secret12',
             'role' => 'ADM',
         ])->assertRedirect('/');
 

@@ -91,8 +91,8 @@
                     id="admin-reset-password"
                     class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     required
-                    minlength="6"
-                    placeholder="Mínimo 6 caracteres"
+                    minlength="8"
+                    placeholder="Mínimo 8 caracteres, letras e números"
                     autocomplete="new-password"
                 >
             </div>

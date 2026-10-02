@@ -54,7 +54,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="register-password" class="form-label text-muted small">Senha</label>
-                            <input type="password" name="password" id="register-password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                            <input type="password" name="password" id="register-password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required minlength="8" placeholder="Mínimo 8 caracteres, letras e números" autocomplete="new-password">
                         </div>
                         <div class="mb-3">
                             <label for="register-password-confirmation" class="form-label text-muted small">Confirmar Senha</label>

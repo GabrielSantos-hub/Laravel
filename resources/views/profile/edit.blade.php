@@ -47,6 +47,22 @@
                     <input type="text" name="name" id="name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required maxlength="255" value="{{ old('name', $user->name) }}">
                 </div>
 
+                <div class="mb-3">
+                    <label for="current_password" class="form-label text-muted">Senha atual</label>
+                    <input type="password" name="current_password" id="current_password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" autocomplete="current-password">
+                    <p class="small text-muted mt-2 mb-0">Obrigatória só se for trocar a senha.</p>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label text-muted">Nova senha</label>
+                    <input type="password" name="password" id="password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" minlength="8" placeholder="Mínimo 8 caracteres, letras e números" autocomplete="new-password">
+                </div>
+
+                <div class="mb-4">
+                    <label for="password_confirmation" class="form-label text-muted">Confirmar nova senha</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" autocomplete="new-password">
+                </div>
+
                 <div class="mb-4">
                     <label for="avatar-input" class="form-label text-muted">Foto de perfil</label>
                     <input type="file" id="avatar-input" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" accept="image/*">

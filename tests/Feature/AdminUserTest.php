@@ -64,13 +64,13 @@ class AdminUserTest extends TestCase
         $this->actingAs($admin)
             ->from(route('admin.users.index'))
             ->put(route('admin.users.password', $usuario), [
-                'password' => 'nova-provisoria',
-                'password_confirmation' => 'nova-provisoria',
+                'password' => 'NovaProv1',
+                'password_confirmation' => 'NovaProv1',
             ])
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionHas('status');
 
-        $this->assertTrue(Hash::check('nova-provisoria', $usuario->fresh()->password));
+        $this->assertTrue(Hash::check('NovaProv1', $usuario->fresh()->password));
         $this->assertFalse(Hash::check('senha-antiga', $usuario->fresh()->password));
     }
 
@@ -80,8 +80,8 @@ class AdminUserTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => 'USU']))
             ->put(route('admin.users.password', $alvo), [
-                'password' => 'nova-provisoria',
-                'password_confirmation' => 'nova-provisoria',
+                'password' => 'NovaProv1',
+                'password_confirmation' => 'NovaProv1',
             ])
             ->assertForbidden();
 

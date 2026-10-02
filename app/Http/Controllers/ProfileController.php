@@ -26,6 +26,10 @@ class ProfileController extends Controller
         $user = $request->user();
         $data = $request->safe()->only(['name']);
 
+        if (filled($request->input('password'))) {
+            $data['password'] = $request->input('password');
+        }
+
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $this->storeAvatar($user, $request->file('avatar'));
         }
