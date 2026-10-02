@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Language;
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -78,13 +79,24 @@ class LanguageController extends Controller implements HasMiddleware
 
     public function destroy($id)
     {
-        try {
-            $language = Language::findOrFail($id);
-            $language->delete();
-            return redirect()->route('languages.index')->with('sucesso', 'Linguagem removida!');
-        } catch (Exception $e) {
-            Log::error('Erro ao excluir linguagem: ' . $e->getMessage());
+        $language = Language::findOrFail($id);
+
+        if ($language->frameworks()->exists()) {
             return back()->withErrors('Não é possível excluir uma linguagem vinculada a um framework.');
         }
+
+        if ($language->templates()->exists()) {
+            return back()->withErrors('Não é possível excluir uma linguagem vinculada a um template.');
+        }
+
+        try {
+            $language->delete();
+        } catch (QueryException $e) {
+            Log::error('Erro ao excluir linguagem: '.$e->getMessage());
+
+            return back()->withErrors('Não foi possível excluir a linguagem.');
+        }
+
+        return redirect()->route('languages.index')->with('sucesso', 'Linguagem removida!');
     }
 }

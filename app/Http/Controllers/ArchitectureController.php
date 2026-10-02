@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Architecture;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -71,13 +72,20 @@ class ArchitectureController extends Controller implements HasMiddleware
 
     public function destroy($id)
     {
-        try {
-            $architecture = Architecture::findOrFail($id);
-            $architecture->delete();
-            return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura removida!');
-        } catch (Exception $e) {
-            Log::error('Erro ao excluir arquitetura: ' . $e->getMessage());
-            return back()->withErrors('Erro ao remover arquitetura.');
+        $architecture = Architecture::findOrFail($id);
+
+        if ($architecture->templates()->exists()) {
+            return back()->withErrors('Não é possível excluir uma arquitetura vinculada a um template.');
         }
+
+        try {
+            $architecture->delete();
+        } catch (QueryException $e) {
+            Log::error('Erro ao excluir arquitetura: '.$e->getMessage());
+
+            return back()->withErrors('Não foi possível excluir a arquitetura.');
+        }
+
+        return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura removida!');
     }
 }
