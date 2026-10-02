@@ -111,6 +111,14 @@
         <p class="error-code">@yield('code')</p>
         <h1>@yield('title')</h1>
         <p>@yield('message')</p>
+        @php
+            $ref = $requestId
+                ?? request()->attributes->get('request_id')
+                ?? request()->headers->get('X-Request-Id');
+        @endphp
+        @if (! empty($ref))
+            <p>código de referência: <code>{{ $ref }}</code></p>
+        @endif
         <div class="error-actions">
             <a class="primary" href="{{ url('/') }}">Voltar ao início</a>
             <a class="ghost" href="{{ url('/login') }}">Ir para o login</a>
