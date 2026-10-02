@@ -36,3 +36,12 @@ Detecção de prompt injection centralizada no `InputSanityGuardrail` (fonte
 dado delimitado. Segredos viram `[REDACTED:tipo]` antes do histórico e do
 Gemini. Retenção do histórico: `PROMPT_RETENTION_DAYS` (padrão 90).
 Provedor padrão continua `null` (offline).
+
+## 2026-10-02 — Corpus adversarial independente (2.B)
+
+Novo conjunto de 40 ataques de evasão e 40 pedidos legítimos, em arquivo
+próprio, sem reutilizar o corpus da Fase 2. Detector reforçado
+(paráfrase, duas frases, JSON `role:system`, hex/base64 como política).
+Taxa no conjunto novo: 40/40 bloqueados e 40/40 aceitos; o corpus
+original permaneceu sem falso positivo. Limitações residuais em
+`docs/seguranca-owasp.md`.

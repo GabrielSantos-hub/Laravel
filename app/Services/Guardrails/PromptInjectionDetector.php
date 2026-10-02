@@ -41,7 +41,8 @@ class PromptInjectionDetector
             }
         }
 
-        return $this->compactedCategory($normalized, $folded);
+        return $this->compoundSignals($normalized, $folded)
+            ?? $this->compactedCategory($normalized, $folded);
     }
 
     /**
@@ -64,13 +65,21 @@ class PromptInjectionDetector
         $map = [
             PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE => [
                 'ignoreprevious', 'ignoreallprevious', 'esquecatodas',
-                'disregardprevious', 'disregardall',
+                'disregardprevious', 'disregardall', 'discardthesystem',
+                'dropallsafety', 'dropallconstraints', 'paredeseguir',
+                'suasunicasinstruc', 'semasrestricoesoriginais',
+                'rewritelyourinstruct', 'rewriteyourinstruct',
             ],
             PromptInjectionPatterns::CATEGORY_ROLE_SWITCH => [
                 'youarenowdan', 'dansemrestric', 'doanythingnow',
+                'unfilteredassistant', 'nosafetyfilter', 'nocontentpolicy',
             ],
             PromptInjectionPatterns::CATEGORY_VERDICT_MANIPULATION => [
                 'retornevalidotrue', 'aproveestaentrada',
+            ],
+            PromptInjectionPatterns::CATEGORY_SYSTEM_PROMPT_REVEAL => [
+                'hiddenpreamble', 'blocodesistemaoculto',
+                'printeverythingabove',
             ],
         ];
 
@@ -80,6 +89,34 @@ class PromptInjectionDetector
                     return $category;
                 }
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ataques partidos em duas frases (esquecer o passado + seguir só isto)
+     * que isolados não casam um único regex.
+     */
+    private function compoundSignals(string $normalized, string $folded): ?string
+    {
+        $text = $normalized.' '.$folded;
+
+        $esquecePassado = preg_match(
+            '/\b(forget|esqueca|ignore|descarte|discard)\b.{0,80}\b(told|said|given|disseram|comeco|inicio|start|beginning|antes|anterior)\b/u',
+            $text
+        ) === 1;
+        $sigaSomente = preg_match(
+            '/\b(follow|siga|obede|prossiga)\b.{0,40}\b(only|apenas|somente)\b/u',
+            $text
+        ) === 1;
+
+        if ($esquecePassado && $sigaSomente) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
+        }
+
+        if (preg_match('/\bnao obede.{0,60}\b(antes|sistema|dono|instruc|regras)\b/u', $text) === 1) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
         }
 
         return null;
