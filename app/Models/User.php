@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -59,5 +60,10 @@ class User extends Authenticatable
         }
 
         return url('storage/'.$this->avatar);
+    }
+
+    public function prompts(): HasMany
+    {
+        return $this->hasMany(Prompt::class);
     }
 }

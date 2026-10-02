@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteAccountRequest;
 use App\Http\Requests\UpdateAvatarRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\User;
@@ -10,9 +11,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
 {
@@ -92,5 +95,50 @@ class ProfileController extends Controller
             $user->id.'-'.Str::uuid().'.'.$extensao,
             'public'
         );
+    }
+
+    public function exportHistory(): StreamedResponse
+    {
+        $user = request()->user();
+        $prompts = $user->prompts()
+            ->orderBy('id')
+            ->get(['id', 'input_text', 'output_text', 'is_useful', 'created_at', 'updated_at']);
+
+        $payload = [
+            'exported_at' => now()->toIso8601String(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'prompts' => $prompts,
+        ];
+
+        $filename = 'gueass-historico-'.$user->id.'.json';
+
+        return response()->streamDownload(function () use ($payload): void {
+            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        }, $filename, [
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ]);
+    }
+
+    public function destroy(DeleteAccountRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (filled($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->prompts()->delete();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        $user->delete();
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Sua conta e todos os seus dados foram excluídos.');
     }
 }

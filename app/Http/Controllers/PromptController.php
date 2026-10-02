@@ -10,6 +10,7 @@ use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
+use App\Services\Guardrails\SensitiveDataRedactor;
 use App\Services\PromptPipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class PromptController extends Controller
 
     public function __construct(
         protected PromptPipelineService $pipeline,
+        protected SensitiveDataRedactor $redactor,
     ) {}
 
     public function index(): View
@@ -60,8 +62,9 @@ class PromptController extends Controller
     public function generate(GeneratePromptRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
-        $intencao = $validated['intencao'];
-        $variaveis = $this->variaveisDinamicas($validated['variables'] ?? []);
+        $intencao = $this->redactor->redact($validated['intencao']);
+        $variaveis = $this->redactor->redactMap($this->variaveisDinamicas($validated['variables'] ?? []));
+        $naoSalvar = $request->boolean('nao_salvar_historico');
 
         try {
             $resultado = $this->pipeline->generate(
@@ -99,6 +102,23 @@ class PromptController extends Controller
             return back()->withErrors(['intencao' => self::GENERIC_FAILURE_MESSAGE]);
         }
 
+        $saida = $this->redactor->redact($resultado->prompt);
+
+        if ($naoSalvar) {
+            if ($request->expectsJson()) {
+                return response()->json(
+                    ['prompt_id' => null, 'saved' => false, 'prompt' => $saida] + $resultado->toArray(),
+                    201
+                );
+            }
+
+            return redirect()
+                ->route('home')
+                ->with('sucesso', 'Prompt gerado. Ele não foi salvo no histórico.')
+                ->with('last_output', $saida)
+                ->with('selected_template_id', $resultado->template->getKey());
+        }
+
         $prompt = Prompt::query()->create([
             'user_id' => Auth::id(),
             'template_id' => $resultado->template->getKey(),
@@ -106,12 +126,12 @@ class PromptController extends Controller
             'language_id' => $validated['language_id'] ?? null,
             'framework_id' => $validated['framework_id'] ?? null,
             'input_text' => $intencao,
-            'output_text' => $resultado->prompt,
+            'output_text' => $saida,
         ]);
 
         if ($request->expectsJson()) {
             return response()->json(
-                ['prompt_id' => $prompt->id] + $resultado->toArray(),
+                ['prompt_id' => $prompt->id, 'saved' => true, 'prompt' => $saida] + $resultado->toArray(),
                 201
             );
         }
@@ -119,7 +139,7 @@ class PromptController extends Controller
         return redirect()
             ->route('home')
             ->with('sucesso', 'Prompt gerado e salvo no histórico.')
-            ->with('last_output', $resultado->prompt)
+            ->with('last_output', $saida)
             ->with('last_prompt_id', $prompt->id)
             ->with('selected_template_id', $resultado->template->getKey());
     }

@@ -43,6 +43,12 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::post('/perfil/avatar', [ProfileController::class, 'updateAvatar'])
         ->middleware('throttle:10,1')
         ->name('profile.avatar');
+    Route::get('/perfil/exportar', [ProfileController::class, 'exportHistory'])
+        ->middleware('throttle:10,1')
+        ->name('profile.export');
+    Route::delete('/perfil', [ProfileController::class, 'destroy'])
+        ->middleware('throttle:5,1')
+        ->name('profile.destroy');
 
     Route::get('/', [PromptController::class, 'index'])->name('home');
     Route::post('/prompts/generate', [PromptController::class, 'generate'])

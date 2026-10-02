@@ -75,6 +75,34 @@
             </form>
         </div>
     </div>
+
+    <div class="card shadow-sm border-0 mt-4" style="border-radius: 8px;">
+        <div class="card-body p-4">
+            <h4 class="h5 mb-2">Meus dados</h4>
+            <p class="small text-muted mb-3">Exporte o histórico de prompts em JSON, só com os registros desta conta.</p>
+            <a href="{{ route('profile.export') }}" class="btn btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                Exportar meu histórico
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4 border-danger-subtle" style="border-radius: 8px;">
+        <div class="card-body p-4">
+            <h4 class="h5 mb-2 text-danger">Excluir minha conta e todos os meus dados</h4>
+            <p class="small text-muted mb-3">Remove o perfil, a foto e o histórico de prompts. Esta ação não pode ser desfeita.</p>
+            <form action="{{ route('profile.destroy') }}" method="POST" onsubmit="return confirm('Excluir a conta e todos os seus dados? Esta ação não pode ser desfeita.');">
+                @csrf
+                @method('DELETE')
+                <div class="mb-3">
+                    <label for="delete_current_password" class="form-label text-muted">Confirme a senha</label>
+                    <input type="password" name="current_password" id="delete_current_password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-outline-danger focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    Excluir minha conta e todos os meus dados
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div id="crop-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center" hidden>

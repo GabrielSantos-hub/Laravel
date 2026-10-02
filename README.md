@@ -98,6 +98,15 @@ Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
 Os assets (Bootstrap, Font Awesome, Orbitron, Cropper.js e Chart.js) vêm
 do Vite, sem CDN. A CSP usa nonce nos scripts inline do tema.
 
+O gerador recusa prompt injection (jailbreak, revelação de system prompt,
+troca de papel) na intenção e nas variáveis, sempre, mesmo com
+`AI_PROVIDER=gemini`. Segredos reconhecíveis são substituídos por
+`[REDACTED:tipo]` antes do histórico e antes de qualquer provedor externo.
+Na tela do gerador há a opção de não salvar o prompt. No perfil: exportar
+o histórico em JSON e excluir a conta com confirmação de senha. O comando
+`php artisan gueass:prune-prompts` remove prompts mais antigos que
+`PROMPT_RETENTION_DAYS` (padrão 90).
+
 ## Produção (HTTPS)
 
 O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em
@@ -112,4 +121,5 @@ nascem desligadas:
 ## Variáveis de IA (opcional)
 
 - `AI_PROVIDER=null` — provedor offline (padrão local)
-- `AI_PROVIDER=gemini` — exige `GEMINI_API_KEY` (nunca commitar o valor)
+- `AI_PROVIDER=gemini` — exige `GEMINI_API_KEY` (nunca commitar o valor);
+  envia só texto já redigido, com `GEMINI_TIMEOUT` e `GEMINI_MAX_PAYLOAD_BYTES`

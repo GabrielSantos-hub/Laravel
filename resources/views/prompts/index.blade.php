@@ -113,7 +113,17 @@
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
+            <div class="form-check d-inline-flex align-items-center gap-2 mb-3">
+                <input class="form-check-input focus:ring-2 focus:ring-indigo-500 focus:outline-none" type="checkbox"
+                    name="nao_salvar_historico" id="nao_salvar_historico" value="1"
+                    @checked(old('nao_salvar_historico'))>
+                <label class="form-check-label text-muted small" for="nao_salvar_historico">
+                    Não salvar este prompt no meu histórico
+                </label>
+            </div>
+            <div>
+                <button type="submit" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
+            </div>
         </div>
     </form>
 </div>

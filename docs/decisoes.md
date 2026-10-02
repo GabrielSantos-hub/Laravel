@@ -28,3 +28,11 @@ alterados.
 Verificar: `Get-Service MySQL_Laragon`. Parar/iniciar: `net stop` /
 `net start MySQL_Laragon`. Remover (sem apagar o datadir):
 `net stop MySQL_Laragon` e depois `sc.exe delete MySQL_Laragon`.
+
+## 2026-10-02 — Fase 2: prompt injection e dados sensíveis
+
+Detecção de prompt injection centralizada no `InputSanityGuardrail` (fonte
+única, independente do `AI_PROVIDER`). A intenção entra no envelope como
+dado delimitado. Segredos viram `[REDACTED:tipo]` antes do histórico e do
+Gemini. Retenção do histórico: `PROMPT_RETENTION_DAYS` (padrão 90).
+Provedor padrão continua `null` (offline).

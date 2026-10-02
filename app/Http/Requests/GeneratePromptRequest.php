@@ -34,6 +34,7 @@ class GeneratePromptRequest extends FormRequest
             'framework_id' => ['nullable', 'integer', 'exists:frameworks,id'],
             'variables' => ['nullable', 'array'],
             'variables.*' => ['nullable', 'string', 'max:2000'],
+            'nao_salvar_historico' => ['sometimes', 'boolean'],
         ];
     }
 
