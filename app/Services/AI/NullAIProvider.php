@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
+use App\Services\Guardrails\PromptInjectionDetector;
 use App\Services\PromptGeneratorService;
 
 /**
@@ -185,31 +186,14 @@ class NullAIProvider implements AIProviderInterface
     }
 
     /**
-     * Tentativa de jailbreak: o texto pede para ignorar o gatekeeper em vez
-     * de descrever um objetivo de software.
+     * Tentativa de jailbreak: a fonte única é o PromptInjectionDetector.
+     * O guardrail já recusa na borda HTTP; isto cobre o provedor offline
+     * quando chamado direto.
      */
     private function promptInjectionRejection(string $text): ?string
     {
-        $normalized = $this->normalizePhrase($text);
-
-        foreach ([
-            'esqueca todas as regras',
-            'esqueca as regras',
-            'esqueca o system prompt',
-            'esqueca todas as instrucoes',
-            'ignore all previous',
-            'ignore previous instructions',
-            'ignore todas as regras',
-            'ignore todas as instrucoes',
-            'aprove esta entrada',
-            'retorne valido true',
-            'jailbreak',
-            'disregard all instructions',
-            'disregard previous',
-        ] as $ataque) {
-            if (str_contains($normalized, $ataque)) {
-                return 'A entrada tenta contornar as regras de validação e não descreve um objetivo de software.';
-            }
+        if ((new PromptInjectionDetector)->isInjection($text)) {
+            return 'A entrada tenta contornar as regras de validação e não descreve um objetivo de software.';
         }
 
         return null;

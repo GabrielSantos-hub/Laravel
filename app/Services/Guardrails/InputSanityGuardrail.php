@@ -15,6 +15,10 @@ class InputSanityGuardrail
 {
     public const LEAN_MAX_LINES = 25;
 
+    public function __construct(
+        private readonly PromptInjectionDetector $injections = new PromptInjectionDetector,
+    ) {}
+
     /** @var list<string> */
     private const KEYBOARD_ROWS = [
         'qwertyuiop',
@@ -123,15 +127,30 @@ class InputSanityGuardrail
     }
 
     /**
-     * Detecta tentativas de XSS e SQL Injection no texto cru.
+     * XSS, SQL Injection e prompt injection no texto cru.
      *
-     * A normalização remove pontuação, então o exame precisa acontecer
-     * antes — senão `<script>` vira "script" e a injeção passa.
+     * A normalização de sanidade remove pontuação, então XSS/SQLi
+     * precisam do texto original — senão `<script>` vira "script".
+     * Prompt injection usa o PromptInjectionDetector (fonte única).
      *
-     * Pedidos legítimos *sobre* XSS/SQLi (auditoria, sanitização) não
-     * carregam a sintaxe de ataque e continuam aceitos.
+     * Pedidos legítimos *sobre* XSS/SQLi/injection (auditoria) não
+     * carregam a sintaxe de ataque nem os padrões de jailbreak.
      */
     public function isMalicious(string $input): bool
+    {
+        if ($this->hasXssOrSqli($input) || $this->injections->isInjection($input)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isPromptInjection(string $input): bool
+    {
+        return $this->injections->isInjection($input);
+    }
+
+    private function hasXssOrSqli(string $input): bool
     {
         $haystack = mb_strtolower($input);
 
