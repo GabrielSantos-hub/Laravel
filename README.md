@@ -84,6 +84,9 @@ php artisan test
 
 Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
 
+Os assets (Bootstrap, Font Awesome, Orbitron, Cropper.js e Chart.js) vêm
+do Vite, sem CDN. A CSP usa nonce nos scripts inline do tema.
+
 ## Produção (HTTPS)
 
 O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em

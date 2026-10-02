@@ -119,9 +119,10 @@ class AdminDashboardTest extends TestCase
         $resposta = $this->actingAs($this->admin())->get(route('admin.dashboard'));
 
         $resposta->assertOk();
-        $resposta->assertSee("indexAxis: 'y'", false);
+        $resposta->assertSee('id="admin-metricas"', false);
         $resposta->assertSee('id="grafico-satisfacao"', false);
         $resposta->assertSee('id="grafico-templates"', false);
+        $this->assertStringContainsString("indexAxis: 'y'", (string) file_get_contents(resource_path('js/admin-dashboard.js')));
     }
 
     public function test_o_menu_lateral_so_mostra_o_painel_para_o_admin(): void
