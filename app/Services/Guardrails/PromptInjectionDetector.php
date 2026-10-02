@@ -69,6 +69,9 @@ class PromptInjectionDetector
                 'dropallsafety', 'dropallconstraints', 'paredeseguir',
                 'suasunicasinstruc', 'semasrestricoesoriginais',
                 'rewritelyourinstruct', 'rewriteyourinstruct',
+                'disablethedeveloperbriefing',
+                'cancelthedeveloperbriefing', 'unboundmodel',
+                'unrestrictedcompletion', 'zeroguardrails',
             ],
             PromptInjectionPatterns::CATEGORY_ROLE_SWITCH => [
                 'youarenowdan', 'dansemrestric', 'doanythingnow',
@@ -76,10 +79,13 @@ class PromptInjectionDetector
             ],
             PromptInjectionPatterns::CATEGORY_VERDICT_MANIPULATION => [
                 'retornevalidotrue', 'aproveestaentrada',
+                'alwaysapprovetheuser', 'alwaysapprove',
+                'intencaocomoaprovadasempre',
             ],
             PromptInjectionPatterns::CATEGORY_SYSTEM_PROMPT_REVEAL => [
                 'hiddenpreamble', 'blocodesistemaoculto',
-                'printeverythingabove',
+                'printeverythingabove', 'concealeddeveloperchannel',
+                'concealeddeveloperbriefing',
             ],
         ];
 
@@ -116,6 +122,19 @@ class PromptInjectionDetector
         }
 
         if (preg_match('/\bnao obede.{0,60}\b(antes|sistema|dono|instruc|regras)\b/u', $text) === 1) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
+        }
+
+        $abandonaBriefing = preg_match(
+            '/\b(abandon|solte|revog).{0,40}\b(briefing|constituicao)\b/u',
+            $text
+        ) === 1;
+        $obedeçaSoIsto = preg_match(
+            '/\b(obede|execute|siga).{0,40}\b(exclusivamente|somente|so o que|apenas)\b/u',
+            $text
+        ) === 1;
+
+        if ($abandonaBriefing && $obedeçaSoIsto) {
             return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
         }
 

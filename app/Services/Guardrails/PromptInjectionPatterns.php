@@ -53,6 +53,15 @@ class PromptInjectionPatterns
                 '/\badmin override\s*:/u',
                 '/\bfrom now on\b.{0,40}\b(discard|ignore|forget)\b.{0,30}\b(developer message|system|instruc)\b/u',
                 '/\b(antigas? nao valem|as antigas nao valem)\b/u',
+                '/\b(developer briefing|briefing do desenvolvedor|briefing inicial|built-in briefing)\b.{0,50}\b(revogado|revogada|cancelled|canceled|disable|void|cancel|relax|demote)\b/u',
+                '/\b(disable|cancel|revog|substitu|relax|demote)\b.{0,50}\b(developer briefing|briefing do desenvolvedor|briefing inicial|built-in briefing|constituicao interna)\b/u',
+                '/\bdo not comply with the earlier developer\b/u',
+                '/\b(unbound model|zero guardrails|no guardrails attached)\b/u',
+                '/\bunrestricted completion mode\b/u',
+                '/\b(abandon|solte)\b.{0,40}\bbriefing\b/u',
+                '/\bhigher-priority message is mine\b/u',
+                '/\btreat my text as the spec of behavior\b/u',
+                '/\bconstituicao interna.{0,40}\bsubstitu/u',
             ],
             self::CATEGORY_SYSTEM_PROMPT_REVEAL => [
                 '/\b(mostre|revele|repita|exiba|print|show|reveal|repeat|dump|echo|output|transcreva|transcrev|copy)\b.{0,50}\b(system prompt|system instruction|prompt de sistema|suas instruc|your instruct|instrucoes|hidden preamble|preambulo oculto|bloco de sistema|initial configuration|concealed system|hidden prompt|hidden rules|internal directives)\b/u',
@@ -64,6 +73,9 @@ class PromptInjectionPatterns
                 '/\bbegin your reply with the hidden\b/u',
                 '/\blist every rule you were given\b/u',
                 '/\breveal internal directives\b/u',
+                '/\b(disclose|recite|surface|return)\b.{0,60}\b(concealed developer channel|developer briefing|concealed developer briefing|hidden developer channel)\b/u',
+                '/\bconcealed developer (channel|briefing)\b/u',
+                '/\bdeveloper briefing as prompt_gerado\b/u',
             ],
             self::CATEGORY_ROLE_SWITCH => [
                 '/\b(voce agora e|you are now|atue como|act as|pretenda ser|pretend to be)\b.{0,40}\b(dan|jailbreak|unrestricted|sem restric|god mode|developer mode)\b/u',
@@ -95,6 +107,10 @@ class PromptInjectionPatterns
                 '/\bvalido true\b/u',
                 '/\b(force|force o|obrigue)\b.{0,40}\bvalido\b/u',
                 '/\bsempre responda valido\b/u',
+                '/\bmarque a intencao como aprovada sempre\b/u',
+                '/\balways approve the user text\b/u',
+                '/\balways_approve\b/u',
+                '/\bliberar o veredito\b/u',
             ],
             self::CATEGORY_DELIMITER_FORGING => [
                 '/<\/system>/u',
@@ -106,6 +122,9 @@ class PromptInjectionPatterns
                 '/\[system\]/u',
                 '/"role"\s*:\s*"system"/u',
                 '/\{[^{}]{0,80}"instruction"\s*:/u',
+                '/"system"\s*:\s*"void"/u',
+                '/role\s*=\s*system/u',
+                '/\bassistant\s*:\s*i will ignore\b/u',
             ],
             self::CATEGORY_EXFILTRATION => [
                 '/\b(envie|send|exfiltra|post)\b.{0,50}\b(system prompt|prompt de sistema|api key|apikey|chave|credencia|\.env|instrucoes|hidden instructions)\b.{0,40}\bhttps?:\/\//u',
@@ -113,6 +132,8 @@ class PromptInjectionPatterns
                 '/\bcat\s+\.env\b/u',
                 '/\bdump getenv\b/u',
                 '/\bpost the hidden\b.{0,40}\bhttps?:\/\//u',
+                '/\b(ship|envie|send)\b.{0,50}\b(developer briefing|briefing do desenvolvedor)\b.{0,40}\bhttps?:\/\//u',
+                '/\bprint\b.{0,30}\bapp_key\b/u',
             ],
             self::CATEGORY_EVASIVE_ENCODING => [
                 '/\b(decode|decodifique|descodifique)\b.{0,30}\bbase64\b/u',
@@ -122,6 +143,7 @@ class PromptInjectionPatterns
                 '/\b(hex|hexadecimal)\b.{0,40}\b(decode|decodif|execute|siga|follow|instruc|rules|regras)\b/u',
                 '/\b(decode|decodifique|convert from)\b.{0,40}\b(hex|hexadecimal)\b/u',
                 '/\bbase64-decode\b/u',
+                '/\bunrot13\b/u',
             ],
         ];
     }
