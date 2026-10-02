@@ -26,14 +26,22 @@ local com MySQL 8, conforme a ERS.
    php artisan key:generate
    ```
 
-3. Crie o banco MySQL `gueass_db` e confira no `.env`:
+3. Suba o MySQL **do Laragon** (8.4.3). Neste computador a porta `3306` já
+   está ocupada por um MySQL do Windows; o `my.ini` do Laragon escuta em
+   **3308**. O `.env.example` continua com `3306` (padrão da ERS). No `.env`
+   local use a porta em que o Laragon realmente está:
+
+   ```text
+   C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe --defaults-file=C:\laragon\bin\mysql\mysql-8.4.3-winx64\my.ini
+   ```
+
+   Confira no `.env`:
 
    - `DB_CONNECTION=mysql`
    - `DB_HOST=127.0.0.1`
-   - `DB_PORT=3306`
+   - `DB_PORT=3308` (neste ambiente; o exemplo do repositório segue `3306`)
    - `DB_DATABASE=gueass_db`
-   - `DB_USERNAME=root`
-   - `DB_PASSWORD` vazio (ou a senha local, se houver)
+   - `DB_USERNAME` / `DB_PASSWORD` do usuário do projeto (não commitar)
 
 4. Rode as migrations, o catálogo inicial e o link de storage:
 
