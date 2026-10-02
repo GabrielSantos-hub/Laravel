@@ -33,5 +33,7 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="AI_PROVIDER" value="null"/>
         <env name="GEMINI_API_KEY" value=""/>
+        <env name="DEMO_ADMIN_PASSWORD" value="AdminTest1"/>
+        <env name="DEMO_USER_PASSWORD" value="UserTest1"/>
     </php>
 </phpunit>

@@ -51,8 +51,10 @@ local com MySQL 8, conforme a ERS.
    php artisan storage:link
    ```
 
-   O seeder cria o catálogo (linguagens, arquiteturas, templates) e usuários
-   de demonstração definidos em `database/seeders/DatabaseSeeder.php`.
+   O seeder cria o catálogo (linguagens, arquiteturas, templates). Em
+   local/testing também cria usuários de demonstração com senha vinda de
+   `DEMO_ADMIN_PASSWORD` / `DEMO_USER_PASSWORD` ou aleatória (exibida uma
+   vez no terminal). Em production o seeder **não** cria usuários.
 
 5. Compile os assets e suba o servidor:
 
@@ -62,6 +64,15 @@ local com MySQL 8, conforme a ERS.
    ```
 
    No Laragon, o virtual host do projeto substitui o `php artisan serve`.
+
+## Administrador inicial
+
+```bash
+php artisan gueass:create-admin
+```
+
+O comando pede e-mail e senha (ou lê `ADMIN_EMAIL` / `ADMIN_PASSWORD`). A
+senha precisa ter pelo menos 8 caracteres, com letras e números.
 
 ## Testes
 
