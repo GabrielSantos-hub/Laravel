@@ -354,6 +354,15 @@ class InputSanityGuardrail
     }
 
     /**
+     * Decide o modo lean. `LEAN_MAX_LINES` (25) NÃO entra nesta decisão;
+     * é invariante de `PromptBuilderService::assembleLean`.
+     *
+     * É lean quando o pedido já foi aceito E:
+     * - o texto cru tem no máximo 60 caracteres; E
+     * - há no máximo 10 tokens; E
+     * - nenhum marcador de detalhe rico (`RICH_DETAIL_MARKERS`); E
+     * - é diagnóstico / sem verbo de implementação, OU é implementação com ≤5 tokens.
+     *
      * @param  list<string>  $tokens
      */
     private function isLean(string $raw, string $normalized, array $tokens): bool

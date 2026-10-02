@@ -145,7 +145,7 @@ class PromptBuilderService
     {
         $pedido = $rawIntent !== '' ? $rawIntent : 'o problema informado';
 
-        return implode("\n", [
+        $envelope = implode("\n", [
             self::SECTION_ROLE,
             'Você é um Engenheiro de Software Sênior. Trate apenas o problema informado, sem inventar infraestrutura.',
             '',
@@ -164,6 +164,13 @@ class PromptBuilderService
             self::SECTION_VALIDATION,
             '- A resposta permanece fiel ao pedido curto e não inventa requisitos.',
         ]);
+
+        $linhas = substr_count($envelope, "\n") + 1;
+        if ($linhas > InputSanityGuardrail::LEAN_MAX_LINES) {
+            throw new PromptAssemblyException('Envelope lean excedeu o limite interno de linhas.');
+        }
+
+        return $envelope;
     }
 
     private function buildRoleAndContext(PromptBuildContext $context): string

@@ -307,6 +307,18 @@ class PromptBuilderServiceTest extends TestCase
         $this->assertTrue($role < $task && $task < $constraints && $constraints < $schema && $schema < $validation);
     }
 
+    public function test_envelope_lean_nunca_passa_de_vinte_e_cinco_linhas(): void
+    {
+        $prompt = $this->builder()->assemble('', [], null, 'erro 500 no login');
+        $linhas = substr_count($prompt, "\n") + 1;
+
+        $this->assertLessThanOrEqual(
+            \App\Services\Guardrails\InputSanityGuardrail::LEAN_MAX_LINES,
+            $linhas
+        );
+        $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $prompt);
+    }
+
     private function section(string $prompt, string $from, string $until): string
     {
         $start = strpos($prompt, $from);
