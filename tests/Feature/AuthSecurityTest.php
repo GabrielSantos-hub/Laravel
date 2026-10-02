@@ -50,4 +50,41 @@ class AuthSecurityTest extends TestCase
             'password' => 'errada',
         ])->assertStatus(429);
     }
+
+    public function test_login_tambem_e_limitado_por_email_e_ip(): void
+    {
+        $this->from('/login')->post('/login', [
+            'email' => 'outro@example.com',
+            'password' => 'errada',
+        ])->assertRedirect('/login')
+            ->assertSessionHasErrors([
+                'email' => 'As credenciais fornecidas não coincidem com os nossos registros.',
+            ]);
+
+        for ($tentativa = 1; $tentativa <= 4; $tentativa++) {
+            $this->from('/login')->post('/login', [
+                'email' => 'outro@example.com',
+                'password' => 'errada',
+            ])->assertRedirect('/login');
+        }
+
+        $this->from('/login')->post('/login', [
+            'email' => 'outro@example.com',
+            'password' => 'errada',
+        ])->assertStatus(429);
+    }
+
+    public function test_logout_exige_autenticacao(): void
+    {
+        $this->post('/logout')->assertRedirect(route('login'));
+    }
+
+    public function test_usuario_autenticado_consegue_sair(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post('/logout')
+            ->assertRedirect('/login');
+
+        $this->assertGuest();
+    }
 }
