@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAuditLogController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ArchitectureController;
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'password.changed', 'can:admin'])->group(function () 
         return redirect()->route('admin.dashboard');
     });
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/auditoria', [AdminAuditLogController::class, 'index'])->name('admin.audit.index');
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::put('/admin/users/{user}/password', [AdminUserController::class, 'resetPassword'])
         ->middleware('throttle:10,1')

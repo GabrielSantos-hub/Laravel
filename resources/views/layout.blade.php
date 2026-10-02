@@ -128,6 +128,15 @@
                             <span class="nav-label">Usuários</span>
                         </a>
                     </div>
+                    <div class="nav-menu-item" role="listitem">
+                        <a href="{{ route('admin.audit.index') }}"
+                           class="nav-link focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                           title="Auditoria"
+                           @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>
+                            <i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i>
+                            <span class="nav-label">Auditoria</span>
+                        </a>
+                    </div>
                     @endif
                     @endauth
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\Security\AdminAuditor;
 use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
@@ -27,7 +28,10 @@ class AdminUserController extends Controller
             'must_change_password' => true,
         ])->save();
 
-        // auditoria: admin_password_reset (Fase 3)
+        // auditoria: admin_password_reset
+        app(AdminAuditor::class)->record('admin_password_reset', $user, [
+            'target_user_id' => $user->id,
+        ]);
 
         return back()
             ->with('status', "Senha temporária gerada para {$user->name}. Ela será exibida uma única vez.")

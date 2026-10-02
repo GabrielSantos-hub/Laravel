@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Architecture;
+use App\Services\Security\AdminAuditor;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,8 @@ class ArchitectureController extends Controller implements HasMiddleware
     ]);
 
     try {
-        Architecture::create($validated);
+        $architecture = Architecture::create($validated);
+        app(AdminAuditor::class)->record('admin_architecture_created', $architecture, ['nome' => $architecture->nome]);
         return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura salva com sucesso!');
     } catch (Exception $e) {
         Log::error('Erro ao inserir arquitetura: ' . $e->getMessage());
@@ -63,6 +65,7 @@ class ArchitectureController extends Controller implements HasMiddleware
         try {
             $architecture = Architecture::findOrFail($id);
             $architecture->update($validated);
+            app(AdminAuditor::class)->record('admin_architecture_updated', $architecture, ['nome' => $architecture->nome]);
             return redirect()->route('architectures.index')->with('sucesso', 'Arquitetura atualizada!');
         } catch (Exception $e) {
             Log::error('Erro ao alterar arquitetura: ' . $e->getMessage());
@@ -79,7 +82,9 @@ class ArchitectureController extends Controller implements HasMiddleware
         }
 
         try {
+            $idAlvo = $architecture->id;
             $architecture->delete();
+            app(AdminAuditor::class)->record('admin_architecture_deleted', null, ['target_id' => $idAlvo]);
         } catch (QueryException $e) {
             Log::error('Erro ao excluir arquitetura: '.$e->getMessage());
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTemplateRequest;
 use App\Http\Requests\UpdateTemplateRequest;
 use App\Models\Template;
+use App\Services\Security\AdminAuditor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -47,7 +48,8 @@ class TemplateController extends Controller implements HasMiddleware
         $data['versao'] = '1';
     }
 
-    Template::query()->create($data);
+    $template = Template::query()->create($data);
+    app(AdminAuditor::class)->record('admin_template_created', $template, ['nome' => $template->nome]);
 
     return redirect()->route('templates.index')->with('sucesso', 'Template salvo.');
 }
@@ -67,12 +69,16 @@ class TemplateController extends Controller implements HasMiddleware
 
         $template->update($data);
 
+        app(AdminAuditor::class)->record('admin_template_updated', $template, ['nome' => $template->nome]);
+
         return redirect()->route('templates.index')->with('sucesso', 'Template atualizado.');
     }
 
     public function destroy(Template $template): RedirectResponse
     {
+        $id = $template->id;
         $template->delete();
+        app(AdminAuditor::class)->record('admin_template_deleted', null, ['target_id' => $id]);
         return redirect()->route('templates.index')->with('sucesso', 'Template removido.');
     }
 }   

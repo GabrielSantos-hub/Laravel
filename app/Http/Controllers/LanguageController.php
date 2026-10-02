@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Language;
+use App\Services\Security\AdminAuditor;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -40,7 +41,8 @@ class LanguageController extends Controller implements HasMiddleware
     ]);
 
     try {
-        Language::create($validated); 
+        $language = Language::create($validated);
+        app(AdminAuditor::class)->record('admin_language_created', $language, ['nome' => $language->nome]); 
         return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva com sucesso!');
     } catch (Exception $e) {
         Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
@@ -70,6 +72,7 @@ class LanguageController extends Controller implements HasMiddleware
 
         try {
             $language->update($validated);
+            app(AdminAuditor::class)->record('admin_language_updated', $language, ['nome' => $language->nome]);
             return redirect()->route('languages.index')->with('sucesso', 'Linguagem atualizada!');
         } catch (Exception $e) {
             Log::error('Erro ao alterar linguagem: ' . $e->getMessage());
@@ -90,7 +93,9 @@ class LanguageController extends Controller implements HasMiddleware
         }
 
         try {
+            $id = $language->id;
             $language->delete();
+            app(AdminAuditor::class)->record('admin_language_deleted', null, ['target_id' => $id]);
         } catch (QueryException $e) {
             Log::error('Erro ao excluir linguagem: '.$e->getMessage());
 
