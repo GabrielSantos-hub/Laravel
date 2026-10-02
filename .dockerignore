@@ -8,12 +8,17 @@
 .nova
 .zed
 
-# Variáveis de ambiente e segredos - NUNCA devem entrar na imagem
+# Variáveis de ambiente e segredos — NUNCA entram na imagem
 .env
 .env.*
-
-# Pode conter tokens de autenticação de pacotes privados
 auth.json
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+credentials.json
+storage/*.key
 
 # Dependências: reinstaladas dentro da imagem (composer install / npm ci)
 vendor
@@ -28,9 +33,9 @@ public/storage
 database/*.sqlite
 database/*.sqlite-journal
 
-# Logs, cache, sessões e views compiladas localmente — são recriados
-# dentro do container em runtime, não devem vir do host
-storage/logs/*.log
+# Logs, cache, sessões e views compiladas localmente — recriados no container
+storage/logs
+storage/logs/**
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/testing/*
@@ -38,7 +43,6 @@ storage/framework/views/*
 storage/app/public/*
 storage/app/private/*
 storage/pail
-storage/*.key
 bootstrap/cache/*.php
 
 # Testes e ferramentas de qualidade (não necessários na imagem de produção)
@@ -49,12 +53,10 @@ phpunit.xml
 .editorconfig
 .styleci.yml
 
-# Metadados do próprio Docker/documentação (não precisam existir dentro
-# da imagem)
+# Metadados do próprio Docker (não precisam existir dentro da imagem)
 Dockerfile
 .dockerignore
 docker-compose*.yml
-README.md
 
 # Diversos
 Homestead.json
