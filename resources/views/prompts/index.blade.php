@@ -122,14 +122,22 @@
                 </label>
             </div>
             <div>
-                <button type="submit" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
+                <button type="submit" id="btn-gerar-prompt" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
             </div>
         </div>
     </form>
 </div>
 
-<script>
+<script @if (! empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
     (function() {
+        const form = document.querySelector('form[action*="prompts/generate"]');
+        const gerar = document.getElementById('btn-gerar-prompt');
+        if (form && gerar) {
+            form.addEventListener('submit', function () {
+                gerar.disabled = true;
+            });
+        }
+
         const out = document.getElementById('output_text');
         const btn = document.getElementById('btn-copy-output');
         if (btn && out) {

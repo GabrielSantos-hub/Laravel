@@ -10,12 +10,15 @@ use App\Models\Framework;
 use App\Models\Language;
 use App\Models\Prompt;
 use App\Models\Template;
+use App\Services\CatalogHintResolver;
 use App\Services\Guardrails\SensitiveDataRedactor;
 use App\Services\PromptPipelineService;
+use App\Services\Security\SecurityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -28,6 +31,8 @@ class PromptController extends Controller
     public function __construct(
         protected PromptPipelineService $pipeline,
         protected SensitiveDataRedactor $redactor,
+        protected CatalogHintResolver $catalogHints,
+        protected SecurityLogger $security,
     ) {}
 
     public function index(): View
@@ -62,9 +67,32 @@ class PromptController extends Controller
     public function generate(GeneratePromptRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
-        $intencao = $this->redactor->redact($validated['intencao']);
+        $inspecao = $this->redactor->inspect($validated['intencao']);
+        $intencao = $inspecao['text'];
         $variaveis = $this->redactor->redactMap($this->variaveisDinamicas($validated['variables'] ?? []));
         $naoSalvar = $request->boolean('nao_salvar_historico');
+
+        if ($inspecao['types'] !== []) {
+            $this->security->log('sensitive_data_redacted', [
+                'types' => $inspecao['types'],
+                'counts' => $inspecao['counts'],
+            ]);
+        }
+
+        $idempotencyKey = sprintf(
+            'generate-idempotency:%d:%s',
+            Auth::id(),
+            hash('sha256', $intencao.'|'.($naoSalvar ? '1' : '0'))
+        );
+        $janela = max(1, (int) config('security.generate_idempotency_seconds', 5));
+
+        if (Cache::has($idempotencyKey)) {
+            $cached = Cache::get($idempotencyKey);
+
+            if (is_array($cached)) {
+                return $this->respostaGeracao($request, $cached);
+            }
+        }
 
         try {
             $resultado = $this->pipeline->generate(
@@ -103,45 +131,79 @@ class PromptController extends Controller
         }
 
         $saida = $this->redactor->redact($resultado->prompt);
+        $ids = $this->catalogHints->resolve(
+            [
+                'language_id' => $validated['language_id'] ?? null,
+                'framework_id' => $validated['framework_id'] ?? null,
+                'architecture_id' => $validated['architecture_id'] ?? null,
+            ],
+            $resultado->intent,
+            $intencao,
+        );
+
+        $payload = [
+            'saved' => false,
+            'prompt_id' => null,
+            'prompt' => $saida,
+            'selected_template_id' => $resultado->template->getKey(),
+            'flash' => $inspecao['types'] !== []
+                ? 'Dados sensíveis mascarados: '.implode(', ', $inspecao['types']).'.'
+                : null,
+        ] + $resultado->toArray();
 
         if ($naoSalvar) {
-            if ($request->expectsJson()) {
-                return response()->json(
-                    ['prompt_id' => null, 'saved' => false, 'prompt' => $saida] + $resultado->toArray(),
-                    201
-                );
-            }
+            $payload['flash'] = trim(($payload['flash'] ? $payload['flash'].' ' : '').'Prompt gerado. Ele não foi salvo no histórico.');
+            Cache::put($idempotencyKey, $payload, $janela);
 
-            return redirect()
-                ->route('home')
-                ->with('sucesso', 'Prompt gerado. Ele não foi salvo no histórico.')
-                ->with('last_output', $saida)
-                ->with('selected_template_id', $resultado->template->getKey());
+            return $this->respostaGeracao($request, $payload);
         }
 
-        $prompt = Prompt::query()->create([
-            'user_id' => Auth::id(),
-            'template_id' => $resultado->template->getKey(),
-            'architecture_id' => $validated['architecture_id'] ?? null,
-            'language_id' => $validated['language_id'] ?? null,
-            'framework_id' => $validated['framework_id'] ?? null,
-            'input_text' => $intencao,
-            'output_text' => $saida,
-        ]);
+        try {
+            $prompt = Prompt::query()->create([
+                'user_id' => Auth::id(),
+                'template_id' => $resultado->template->getKey(),
+                'architecture_id' => $ids['architecture_id'],
+                'language_id' => $ids['language_id'],
+                'framework_id' => $ids['framework_id'],
+                'input_text' => $intencao,
+                'output_text' => $saida,
+            ]);
+            $payload['saved'] = true;
+            $payload['prompt_id'] = $prompt->id;
+            $payload['flash'] = trim(($payload['flash'] ? $payload['flash'].' ' : '').'Prompt gerado e salvo no histórico.');
+        } catch (Throwable $e) {
+            $this->security->log('prompt_persist_failed', [
+                'type' => $e::class,
+            ]);
+            $payload['saved'] = false;
+            $payload['flash'] = trim(($payload['flash'] ? $payload['flash'].' ' : '').'Prompt gerado, mas não foi possível salvar no histórico.');
+        }
 
+        Cache::put($idempotencyKey, $payload, $janela);
+
+        return $this->respostaGeracao($request, $payload);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function respostaGeracao(Request $request, array $payload): RedirectResponse|JsonResponse
+    {
         if ($request->expectsJson()) {
-            return response()->json(
-                ['prompt_id' => $prompt->id, 'saved' => true, 'prompt' => $saida] + $resultado->toArray(),
-                201
-            );
+            return response()->json($payload, 201);
         }
 
-        return redirect()
+        $redirect = redirect()
             ->route('home')
-            ->with('sucesso', 'Prompt gerado e salvo no histórico.')
-            ->with('last_output', $saida)
-            ->with('last_prompt_id', $prompt->id)
-            ->with('selected_template_id', $resultado->template->getKey());
+            ->with('sucesso', $payload['flash'] ?? 'Prompt gerado.')
+            ->with('last_output', $payload['prompt'] ?? '')
+            ->with('selected_template_id', $payload['selected_template_id'] ?? null);
+
+        if (! empty($payload['prompt_id'])) {
+            $redirect->with('last_prompt_id', $payload['prompt_id']);
+        }
+
+        return $redirect;
     }
 
     private function template(mixed $id): ?Template
@@ -219,11 +281,16 @@ class PromptController extends Controller
      */
     private function autorizarDono(Prompt $prompt, string $acao): void
     {
-        abort_unless(
-            (int) $prompt->user_id === Auth::id(),
-            403,
-            "Você só pode {$acao} prompts do seu próprio histórico."
-        );
+        if ((int) $prompt->user_id === Auth::id()) {
+            return;
+        }
+
+        $this->security->log('authorization_denied', [
+            'status' => 403,
+            'action' => $acao,
+        ]);
+
+        abort(403, "Você só pode {$acao} prompts do seu próprio histórico.");
     }
 
     /**
