@@ -58,4 +58,22 @@ class ErrorPagesTest extends TestCase
         $this->assertStringNotContainsString('Stack trace', $pagina419);
         $this->assertStringNotContainsString('Stack trace', $pagina429);
     }
+
+    public function test_500_http_do_handler_tem_request_id_sem_vazar_detalhe(): void
+    {
+        config(['app.debug' => false]);
+
+        \Illuminate\Support\Facades\Route::middleware('web')->get('/__probe-500-gueass', function () {
+            throw new RuntimeException('SEGREDO_INTERNO_XYZ');
+        });
+
+        $this->get('/__probe-500-gueass')
+            ->assertStatus(500)
+            ->assertHeader('X-Request-Id')
+            ->assertSee('código de referência:', false)
+            ->assertSee('Algo deu errado', false)
+            ->assertDontSee('SEGREDO_INTERNO_XYZ', false)
+            ->assertDontSee('RuntimeException', false)
+            ->assertDontSee('Stack trace', false);
+    }
 }
