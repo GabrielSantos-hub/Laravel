@@ -84,6 +84,17 @@ php artisan test
 
 Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
 
+## Produção (HTTPS)
+
+O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em
+local (HTTP) isso fica desligado. Variáveis que exigem HTTPS também
+nascem desligadas:
+
+- `SESSION_SECURE_COOKIE=false` no exemplo; `true` só em production com HTTPS
+- `TRUSTED_PROXIES` vazio (não confiar em todos os proxies)
+- `APP_DEBUG=false` em production
+- `SESSION_ENCRYPT=true`, `SESSION_HTTP_ONLY=true`, `SESSION_SAME_SITE=lax`
+
 ## Variáveis de IA (opcional)
 
 - `AI_PROVIDER=null` — provedor offline (padrão local)

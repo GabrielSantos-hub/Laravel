@@ -25,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Em production o app assume HTTPS (cookies seguros, HSTS, URLs).
+        // Em local (HTTP / Laragon) o esquema não é forçado.
         if (app()->environment('production')) {
             URL::forceScheme('https');
         }
