@@ -88,6 +88,34 @@ class AdminDashboardTest extends TestCase
         );
     }
 
+    public function test_ranking_inclui_arquitetura_quando_o_id_foi_gravado(): void
+    {
+        $php = Language::query()->create(['nome' => 'PHP', 'slug' => 'php']);
+        $clean = \App\Models\Architecture::query()->create([
+            'nome' => 'Clean Architecture',
+            'descricao' => 'camadas',
+        ]);
+        $template = $this->template('CRUD');
+
+        Prompt::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'template_id' => $template->id,
+            'language_id' => $php->id,
+            'architecture_id' => $clean->id,
+            'input_text' => 'Criar um cadastro.',
+            'output_text' => 'Prompt gerado.',
+        ]);
+
+        $metricas = $this->actingAs($this->admin())
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->viewData('metricas');
+
+        $rotulos = array_column($metricas['stacks'], 'rotulo');
+        $this->assertContains('Clean Architecture', $rotulos);
+        $this->assertContains('PHP', $rotulos);
+    }
+
     public function test_sem_avaliacoes_o_indice_de_satisfacao_fica_indefinido(): void
     {
         $this->prompt($this->template('CRUD'), null, null, null);

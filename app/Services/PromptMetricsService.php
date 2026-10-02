@@ -86,6 +86,7 @@ class PromptMetricsService
         $stacks = array_merge(
             $this->catalogRanking('languages', 'language_id', 'linguagem'),
             $this->catalogRanking('frameworks', 'framework_id', 'framework'),
+            $this->catalogRanking('architectures', 'architecture_id', 'arquitetura'),
         );
 
         usort(
@@ -104,6 +105,7 @@ class PromptMetricsService
         $catalogos = [
             'languages' => 'language_id',
             'frameworks' => 'framework_id',
+            'architectures' => 'architecture_id',
         ];
 
         if (($catalogos[$tabela] ?? null) !== $coluna) {

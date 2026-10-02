@@ -65,8 +65,8 @@ class PromptControllerTest extends TestCase
         $prompt = Prompt::query()->sole();
         $this->assertSame($this->usuario->id, $prompt->user_id);
         $this->assertSame($template->id, $prompt->template_id);
-        $this->assertNull($prompt->architecture_id);
-        $this->assertNull($prompt->language_id);
+        $this->assertSame(Language::query()->where('slug', 'php')->value('id'), $prompt->language_id);
+        $this->assertSame(Architecture::query()->where('nome', 'Clean Architecture')->value('id'), $prompt->architecture_id);
     }
 
     public function test_cliente_json_recebe_o_prompt_e_a_intencao_interpretada(): void
@@ -101,7 +101,7 @@ class PromptControllerTest extends TestCase
 
         $prompt = Prompt::query()->sole();
         $this->assertSame($arquitetura->id, $prompt->architecture_id);
-        $this->assertNull($prompt->framework_id);
+        $this->assertSame(Framework::query()->where('slug', 'laravel')->value('id'), $prompt->framework_id);
     }
 
     // (b) Entrada inválida
@@ -486,15 +486,17 @@ class PromptControllerTest extends TestCase
     {
         $this->templateClassificado();
 
-        $intencao = ['user_input' => 'Criar uma API REST em Laravel com PHP.'];
-
         for ($tentativa = 1; $tentativa <= 10; $tentativa++) {
             $this->actingAs($this->usuario)
-                ->postJson(route('prompts.generate'), $intencao)
+                ->postJson(route('prompts.generate'), [
+                    'user_input' => "Criar uma API REST em Laravel com PHP. Recurso numero {$tentativa}.",
+                ])
                 ->assertCreated();
         }
 
-        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), $intencao);
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'user_input' => 'Criar uma API REST em Laravel com PHP. Recurso numero 11.',
+        ]);
 
         $resposta->assertStatus(429);
         $resposta->assertHeader('Retry-After');
@@ -676,7 +678,9 @@ class PromptControllerTest extends TestCase
         $this->actingAs($this->usuario)
             ->get(route('home'))
             ->assertOk()
-            ->assertDontSee('Este prompt foi útil?');
+            ->assertDontSee('Este prompt foi útil?')
+            ->assertSee('id="btn-gerar-prompt"', false)
+            ->assertSee("gerar.disabled = true", false);
     }
 
     public function test_erros_de_validacao_sao_exibidos_no_campo_correspondente(): void
