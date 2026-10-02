@@ -29,6 +29,13 @@ Route::view('/privacidade', 'privacy')->name('privacidade');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/senha-obrigatoria', [ProfileController::class, 'editForcedPassword'])->name('password.forced.edit');
+    Route::put('/senha-obrigatoria', [ProfileController::class, 'updateForcedPassword'])
+        ->middleware('throttle:10,1')
+        ->name('password.forced.update');
+});
+
+Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/perfil', [ProfileController::class, 'update'])
         ->middleware('throttle:20,1')
@@ -54,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('api.languages.frameworks');
 });
 
-Route::middleware(['auth', 'can:admin'])->group(function () {
+Route::middleware(['auth', 'password.changed', 'can:admin'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('admin.dashboard');
     });

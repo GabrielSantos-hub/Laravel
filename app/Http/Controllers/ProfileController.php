@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateAvatarRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,6 +21,27 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => auth()->user(),
         ]);
+    }
+
+    public function editForcedPassword(): View
+    {
+        return view('profile.forced-password');
+    }
+
+    public function updateForcedPassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'password' => PasswordRules::required(),
+        ]);
+
+        $request->user()->forceFill([
+            'password' => $validated['password'],
+            'must_change_password' => false,
+        ])->save();
+
+        // auditoria: forced_password_change (Fase 3)
+
+        return redirect()->route('home')->with('sucesso', 'Senha atualizada. Você já pode usar o sistema.');
     }
 
     public function update(UpdateProfileRequest $request): RedirectResponse

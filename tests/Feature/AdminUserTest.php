@@ -56,22 +56,24 @@ class AdminUserTest extends TestCase
             ->assertDontSee(route('admin.users.index'), false);
     }
 
-    public function test_admin_redefine_a_senha_provisoria(): void
+    public function test_admin_gera_senha_temporaria_exibida_uma_vez(): void
     {
         $admin = $this->admin();
         $usuario = User::factory()->create(['password' => 'senha-antiga']);
 
-        $this->actingAs($admin)
+        $resposta = $this->actingAs($admin)
             ->from(route('admin.users.index'))
-            ->put(route('admin.users.password', $usuario), [
-                'password' => 'NovaProv1',
-                'password_confirmation' => 'NovaProv1',
-            ])
-            ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHas('status');
+            ->put(route('admin.users.password', $usuario));
 
-        $this->assertTrue(Hash::check('NovaProv1', $usuario->fresh()->password));
+        $resposta->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status')
+            ->assertSessionHas('temporary_password');
+
+        $temporaria = session('temporary_password');
+        $this->assertIsString($temporaria);
+        $this->assertTrue(Hash::check($temporaria, $usuario->fresh()->password));
         $this->assertFalse(Hash::check('senha-antiga', $usuario->fresh()->password));
+        $this->assertTrue($usuario->fresh()->must_change_password);
     }
 
     public function test_usuario_comum_nao_redefine_senha(): void
@@ -79,30 +81,11 @@ class AdminUserTest extends TestCase
         $alvo = User::factory()->create(['password' => 'senha-antiga']);
 
         $this->actingAs(User::factory()->create(['role' => 'USU']))
-            ->put(route('admin.users.password', $alvo), [
-                'password' => 'NovaProv1',
-                'password_confirmation' => 'NovaProv1',
-            ])
+            ->put(route('admin.users.password', $alvo))
             ->assertForbidden();
 
         $this->assertTrue(Hash::check('senha-antiga', $alvo->fresh()->password));
-    }
-
-    public function test_senha_invalida_nao_e_salva(): void
-    {
-        $admin = $this->admin();
-        $usuario = User::factory()->create(['password' => 'senha-antiga']);
-
-        $this->actingAs($admin)
-            ->from(route('admin.users.index'))
-            ->put(route('admin.users.password', $usuario), [
-                'password' => '123',
-                'password_confirmation' => '123',
-            ])
-            ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHasErrors('password');
-
-        $this->assertTrue(Hash::check('senha-antiga', $usuario->fresh()->password));
+        $this->assertFalse($alvo->fresh()->must_change_password);
     }
 
     /**

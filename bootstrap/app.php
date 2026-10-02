@@ -2,6 +2,7 @@
 
 use App\Exceptions\InputUnprocessableException;
 use App\Http\Controllers\PromptController;
+use App\Http\Middleware\EnsurePasswordIsChanged;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -21,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo('/');
+        $middleware->alias([
+            'password.changed' => EnsurePasswordIsChanged::class,
+        ]);
 
         $trustedProxies = env('TRUSTED_PROXIES');
         if (is_string($trustedProxies) && $trustedProxies !== '' && $trustedProxies !== '*') {
