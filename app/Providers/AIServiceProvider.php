@@ -27,6 +27,7 @@ class AIServiceProvider extends ServiceProvider
             baseUrl: (string) config('services.gemini.base_url', GeminiAIProvider::DEFAULT_BASE_URL),
             timeout: (int) config('services.gemini.timeout', 15),
             tries: (int) config('services.gemini.tries', 2),
+            maxPayloadBytes: (int) config('services.gemini.max_payload_bytes', 65536),
         ));
 
         // A escolha de template é local (tags/categorias). O provedor de IA só

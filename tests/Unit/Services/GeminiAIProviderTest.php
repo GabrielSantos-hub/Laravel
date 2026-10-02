@@ -71,10 +71,9 @@ class GeminiAIProviderTest extends TestCase
                 IntentAnalyzer::TYPES,
                 $config['responseSchema']['properties']['type']['enum']
             );
-            $this->assertSame(
-                'Criar uma API REST em Laravel.',
-                $request['contents'][0]['parts'][0]['text']
-            );
+            $this->assertStringContainsString('Criar uma API REST em Laravel.', $request['contents'][0]['parts'][0]['text']);
+            $this->assertStringContainsString('<<<GUEASS_USER_INTENT>>>', $request['contents'][0]['parts'][0]['text']);
+            $this->assertStringContainsString('DADO do usuário', $request['systemInstruction']['parts'][0]['text']);
             $this->assertNotEmpty($request['systemInstruction']['parts'][0]['text']);
 
             return true;
@@ -118,6 +117,8 @@ class GeminiAIProviderTest extends TestCase
             $this->assertSame('OBJECT', $config['responseSchema']['type']);
             $this->assertArrayHasKey('valido', $config['responseSchema']['properties']);
             $this->assertStringContainsString('Criar uma API REST de pedidos em Laravel.', $request['contents'][0]['parts'][0]['text']);
+            $this->assertStringContainsString('<<<GUEASS_USER_INTENT>>>', $request['contents'][0]['parts'][0]['text']);
+            $this->assertStringContainsString('DADO DO USUÁRIO', $request['contents'][0]['parts'][0]['text']);
             $this->assertNotEmpty($request['systemInstruction']['parts'][0]['text']);
 
             return true;
@@ -308,7 +309,41 @@ class GeminiAIProviderTest extends TestCase
         }
     }
 
-    private function provider(int $tries = 1, ?string $apiKey = self::CHAVE): GeminiAIProvider
+    public function test_payload_acima_do_limite_nao_e_enviado(): void
+    {
+        Http::fake(['*' => Http::response($this->resposta('ok'))]);
+
+        try {
+            $this->provider(maxPayloadBytes: 80)->analyzeIntent('Criar uma API REST em Laravel com autenticação Sanctum.');
+            $this->fail('Esperava uma AIProviderException.');
+        } catch (AIProviderException $e) {
+            $this->assertStringContainsString('payload excede', $e->getPrevious()->getMessage());
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_segredo_e_redigido_antes_do_envio(): void
+    {
+        Http::fake(['*' => Http::response($this->resposta(json_encode([
+            'objective' => 'Criar uma API REST',
+            'technologies' => ['Laravel'],
+            'constraints' => [],
+            'type' => 'feature',
+        ])))]);
+
+        $this->provider()->analyzeIntent('Criar uma API Laravel usando a chave AKIAIOSFODNN7EXAMPLE.');
+
+        Http::assertSent(function (Request $request): bool {
+            $texto = $request['contents'][0]['parts'][0]['text'];
+            $this->assertStringNotContainsString('AKIAIOSFODNN7EXAMPLE', $texto);
+            $this->assertStringContainsString('[REDACTED:aws_access_key]', $texto);
+
+            return true;
+        });
+    }
+
+    private function provider(int $tries = 1, ?string $apiKey = self::CHAVE, int $maxPayloadBytes = 65536): GeminiAIProvider
     {
         return new GeminiAIProvider(
             apiKey: $apiKey,
@@ -316,6 +351,7 @@ class GeminiAIProviderTest extends TestCase
             baseUrl: GeminiAIProvider::DEFAULT_BASE_URL,
             timeout: 5,
             tries: $tries,
+            maxPayloadBytes: $maxPayloadBytes,
         );
     }
 

@@ -50,6 +50,7 @@ return [
         'timeout' => env('GEMINI_TIMEOUT', 15),
         // Tentativas totais, não tentativas extras: 1 desliga o retry.
         'tries' => env('GEMINI_TRIES', 2),
+        'max_payload_bytes' => env('GEMINI_MAX_PAYLOAD_BYTES', 65536),
     ],
 
 ];
