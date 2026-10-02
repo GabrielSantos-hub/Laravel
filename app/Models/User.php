@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\CannotRemoveLastAdminException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -51,6 +52,37 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'ADM';
+    }
+
+    public function isLastAdmin(): bool
+    {
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        return static::query()->where('role', 'ADM')->count() <= 1;
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (User $user): void {
+            if (! $user->isDirty('role')) {
+                return;
+            }
+
+            $eraAdmin = $user->getOriginal('role') === 'ADM';
+            $continuaAdmin = $user->role === 'ADM';
+
+            if ($eraAdmin && ! $continuaAdmin && static::query()->where('role', 'ADM')->count() <= 1) {
+                throw CannotRemoveLastAdminException::becauseLastAdmin();
+            }
+        });
+
+        static::deleting(function (User $user): void {
+            if ($user->isLastAdmin()) {
+                throw CannotRemoveLastAdminException::becauseLastAdmin();
+            }
+        });
     }
 
     public function avatarUrl(): ?string

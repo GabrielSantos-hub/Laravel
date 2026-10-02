@@ -89,6 +89,9 @@
     <div class="card shadow-sm border-0 mt-4 border-danger-subtle" style="border-radius: 8px;">
         <div class="card-body p-4">
             <h4 class="h5 mb-2 text-danger">Excluir minha conta e todos os meus dados</h4>
+            @if ($user->isLastAdmin())
+            <p class="small text-muted mb-0">Não é possível excluir a conta: você é o único administrador. Crie outro administrador antes de remover esta conta.</p>
+            @else
             <p class="small text-muted mb-3">Remove o perfil, a foto e o histórico de prompts. Esta ação não pode ser desfeita.</p>
             <form action="{{ route('profile.destroy') }}" method="POST" onsubmit="return confirm('Excluir a conta e todos os seus dados? Esta ação não pode ser desfeita.');">
                 @csrf
@@ -101,6 +104,7 @@
                     Excluir minha conta e todos os meus dados
                 </button>
             </form>
+            @endif
         </div>
     </div>
 </div>
