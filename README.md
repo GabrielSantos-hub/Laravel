@@ -26,13 +26,24 @@ local com MySQL 8, conforme a ERS.
    php artisan key:generate
    ```
 
-3. Suba o MySQL **do Laragon** (8.4.3). Neste computador a porta `3306` já
-   está ocupada por um MySQL do Windows; o `my.ini` do Laragon escuta em
-   **3308**. O `.env.example` continua com `3306` (padrão da ERS). No `.env`
-   local use a porta em que o Laragon realmente está:
+3. O MySQL **do Laragon** (8.4.3, porta **3308**, banco `gueass_db`) roda
+   como serviço Windows `MySQL_Laragon` (início automático). Não abra o
+   MySQL pelo Laragon: dois processos na 3308 conflitam. Os serviços
+   `MYSQL95` (3306) e `MySQL80` (3307) são de outros usos e não devem ser
+   alterados. O `.env.example` continua com `3306` (padrão da ERS); no
+   `.env` local use **3308**.
 
-   ```text
-   C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe --defaults-file=C:\laragon\bin\mysql\mysql-8.4.3-winx64\my.ini
+   ```powershell
+   Get-Service MySQL_Laragon
+   net start MySQL_Laragon
+   net stop MySQL_Laragon
+   ```
+
+   Para remover o serviço (não apaga o datadir `C:\laragon\data\mysql-8.4`):
+
+   ```powershell
+   net stop MySQL_Laragon
+   sc.exe delete MySQL_Laragon
    ```
 
    Confira no `.env`:

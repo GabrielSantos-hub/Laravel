@@ -14,6 +14,17 @@ A porta 3306 está ocupada pelo serviço Windows MYSQL95. O MySQL do Laragon
 (8.4.3, datadir `C:\laragon\data\mysql-8.4`) foi configurado em 3308 no
 `my.ini` (backup em `my.ini.bak-data`). O `.env` local usa 3308; o
 `.env.example` permanece em 3306, padrão da ERS. Os serviços MySQL80 e
-MYSQL95 do Windows não foram alterados. Para subir o servidor do Laragon:
+MYSQL95 do Windows não foram alterados.
 
-`C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe --defaults-file=C:\laragon\bin\mysql\mysql-8.4.3-winx64\my.ini`
+## 2026-10-02 — Serviço Windows MySQL_Laragon
+
+O `mysqld` do Laragon 8.4.3 passou a ser o serviço Windows `MySQL_Laragon`
+(exibição: “MySQL Laragon 8.4 (GUEASS)”), com `--defaults-file` no `my.ini`
+da porta 3308 e datadir `C:\laragon\data\mysql-8.4`. Início: automático
+atrasado (`delayed-auto`). O Laragon **não** deve iniciar o próprio MySQL,
+para não haver dois processos na 3308. MYSQL95 e MySQL80 não foram
+alterados.
+
+Verificar: `Get-Service MySQL_Laragon`. Parar/iniciar: `net stop` /
+`net start MySQL_Laragon`. Remover (sem apagar o datadir):
+`net stop MySQL_Laragon` e depois `sc.exe delete MySQL_Laragon`.
