@@ -8,19 +8,9 @@ use App\Models\Template;
 use App\Services\Security\AdminAuditor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class TemplateController extends Controller implements HasMiddleware
+class TemplateController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth', except: ['index']),
-            new Middleware('can:admin', except: ['index']),
-        ];
-    }
-
     public function index(): View
     {
         $templates = Template::query()->orderBy('nome')->get();

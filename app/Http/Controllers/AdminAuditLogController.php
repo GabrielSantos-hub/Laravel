@@ -15,6 +15,7 @@ class AdminAuditLogController extends Controller
         $to = $request->date('to');
 
         $logs = AuditLog::query()
+            ->with('user:id,name,email')
             ->when($action !== '', fn ($q) => $q->where('action', $action))
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))

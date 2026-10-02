@@ -9,19 +9,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class FrameworkController extends Controller implements HasMiddleware
+class FrameworkController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth', except: ['index']),
-            new Middleware('can:admin', except: ['index']),
-        ];
-    }
-
     public function index()
     {
         $frameworks = Framework::with('language')->get();

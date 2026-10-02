@@ -52,19 +52,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return $response;
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            $forbidden = $e instanceof AuthorizationException
-                || ($e instanceof HttpExceptionInterface && $e->getStatusCode() === 403);
-
-            if ($forbidden) {
-                app(SecurityLogger::class)->log('authorization_denied', [
-                    'status' => 403,
-                ]);
-            }
-
-            return null;
-        });
-
         $exceptions->reportable(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e): void {
             $route = request()->route()?->getName();
             if (in_array($route, ['login.attempt', 'login'], true) || request()->is('login')) {

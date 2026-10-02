@@ -8,19 +8,9 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class ArchitectureController extends Controller implements HasMiddleware
+class ArchitectureController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth', except: ['index']),
-            new Middleware('can:admin', except: ['index']),
-        ];
-    }
-
     public function index()
     {
         $architectures = Architecture::all(); 

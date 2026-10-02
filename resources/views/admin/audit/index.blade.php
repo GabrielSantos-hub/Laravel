@@ -48,7 +48,15 @@
                     <tr>
                         <td>{{ $log->created_at?->utc()->format('Y-m-d H:i:s') }}</td>
                         <td><code>{{ $log->action }}</code></td>
-                        <td>{{ $log->user_id ?? '—' }}</td>
+                        <td>
+                            @if ($log->user)
+                                {{ $log->user->name }}
+                                <span class="text-muted small">({{ \App\Services\Security\SecurityLogger::maskEmail($log->user->email) }})</span>
+                                <span class="text-muted small">#{{ $log->user_id }}</span>
+                            @else
+                                {{ $log->user_id ?? '—' }}
+                            @endif
+                        </td>
                         <td>{{ $log->target_id ? class_basename((string) $log->target_type).'#'.$log->target_id : '—' }}</td>
                         <td>{{ $log->ip }}</td>
                     </tr>
