@@ -107,6 +107,36 @@ o histórico em JSON e excluir a conta com confirmação de senha. O comando
 `php artisan gueass:prune-prompts` remove prompts mais antigos que
 `PROMPT_RETENTION_DAYS` (padrão 90).
 
+## Agendamento no Windows (`gueass:prune-prompts`)
+
+O Laravel agenda `gueass:prune-prompts` diariamente (`routes/console.php`).
+No Windows isso só corre se `php artisan schedule:run` for chamado com
+frequência. Tarefa `GUEASS_schedule` (a cada minuto, utilizador atual,
+sem senha armazenada, sem privilégio elevado):
+
+```powershell
+$php = "C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe"
+$wd  = "C:\laragon\www\Laravel"
+$action = New-ScheduledTaskAction -Execute $php -Argument "artisan schedule:run" -WorkingDirectory $wd
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration (New-TimeSpan -Days 3650)
+$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
+Register-ScheduledTask -TaskName "GUEASS_schedule" -Action $action -Trigger $trigger -Principal $principal
+```
+
+Verificar:
+
+```powershell
+schtasks /Query /TN "GUEASS_schedule" /V /FO LIST
+Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational -MaxEvents 20 |
+  Where-Object { $_.Message -like "*GUEASS_schedule*" }
+```
+
+Remover:
+
+```powershell
+schtasks /Delete /TN "GUEASS_schedule" /F
+```
+
 ## Produção (HTTPS)
 
 O `AppServiceProvider` força `https` só quando `APP_ENV=production`. Em
