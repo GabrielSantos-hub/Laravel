@@ -72,6 +72,18 @@ class GeneratePromptRequest extends FormRequest
             try {
                 $guardrail->assertSane($intencao);
             } catch (InputUnprocessableException $e) {
+                $logger = app(\App\Services\Security\SecurityLogger::class);
+                if ($guardrail->isPromptInjection($intencao)) {
+                    $logger->log('prompt_injection_detected', [
+                        'category' => $guardrail->injectionCategory($intencao),
+                        'length' => mb_strlen($intencao),
+                    ]);
+                } else {
+                    $logger->log('guardrail_rejected', [
+                        'category' => $guardrail->rejectionCategory($intencao),
+                        'length' => mb_strlen($intencao),
+                    ]);
+                }
                 $validator->errors()->add('intencao', $e->getMessage());
 
                 return;
@@ -87,8 +99,27 @@ class GeneratePromptRequest extends FormRequest
                 return;
             }
 
+            $logger = app(\App\Services\Security\SecurityLogger::class);
+
             foreach ($variaveis as $chave => $valor) {
-                if (is_string($valor) && $guardrail->isMalicious($valor)) {
+                if (! is_string($valor)) {
+                    continue;
+                }
+
+                if ($guardrail->isPromptInjection($valor)) {
+                    $logger->log('prompt_injection_detected', [
+                        'category' => $guardrail->injectionCategory($valor),
+                        'length' => mb_strlen($valor),
+                    ]);
+                    $validator->errors()->add(
+                        'variables.'.$chave,
+                        InputUnprocessableException::MESSAGE
+                    );
+                } elseif ($guardrail->isMalicious($valor)) {
+                    $logger->log('guardrail_rejected', [
+                        'category' => 'xss_sqli',
+                        'length' => mb_strlen($valor),
+                    ]);
                     $validator->errors()->add(
                         'variables.'.$chave,
                         InputUnprocessableException::MESSAGE

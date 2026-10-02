@@ -150,6 +150,24 @@ class InputSanityGuardrail
         return $this->injections->isInjection($input);
     }
 
+    public function injectionCategory(string $input): ?string
+    {
+        return $this->injections->detect($input);
+    }
+
+    public function rejectionCategory(string $input): string
+    {
+        if ($this->hasXssOrSqli($input)) {
+            return 'xss_sqli';
+        }
+
+        if ($this->injections->isInjection($input)) {
+            return $this->injections->detect($input) ?? 'prompt_injection';
+        }
+
+        return 'sanity';
+    }
+
     private function hasXssOrSqli(string $input): bool
     {
         $haystack = mb_strtolower($input);

@@ -20,7 +20,9 @@ use App\Services\AI\TemplateInterpolator;
 use App\Services\AI\TemplateSelector;
 use App\Services\Guardrails\InputSanityGuardrail;
 use App\Services\Guardrails\SensitiveDataRedactor;
+use App\Services\Security\SecurityLogger;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Client\ConnectionException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -116,12 +118,20 @@ class PromptGeneratorService
                 $variables,
             );
         } catch (AIProviderException|Throwable $e) {
+            $timeout = $this->looksLikeTimeout($e);
+            app(SecurityLogger::class)->log($timeout ? 'provider_timeout' : 'provider_error', [
+                'provider' => $this->provider->name(),
+            ]);
             $this->logger?->warning('Geração estruturada via IA falhou; recusando por fail-closed.', [
                 'exception' => $e->getMessage(),
                 'cause' => $e->getPrevious()?->getMessage() ?? $e->getMessage(),
             ]);
 
-            throw InvalidIntentException::unclear();
+            throw InvalidIntentException::unclear(
+                $timeout
+                    ? 'O provedor de IA demorou demais para responder. Tente novamente.'
+                    : null
+            );
         }
 
         $payload = $this->decodeStructuredResponse($rawAiResponse);
@@ -198,6 +208,27 @@ class PromptGeneratorService
             'motivo_rejeicao' => $valido ? null : ($motivo ?? self::UNCLEAR_MESSAGE),
             'prompt_gerado' => $valido ? $prompt : '',
         ];
+    }
+
+    private function looksLikeTimeout(Throwable $e): bool
+    {
+        $atual = $e;
+
+        while ($atual instanceof Throwable) {
+            if ($atual instanceof ConnectionException) {
+                return true;
+            }
+
+            $msg = strtolower($atual->getMessage());
+
+            if (str_contains($msg, 'timeout') || str_contains($msg, 'timed out') || str_contains($msg, 'cURL error 28')) {
+                return true;
+            }
+
+            $atual = $atual->getPrevious();
+        }
+
+        return false;
     }
 
     /**
