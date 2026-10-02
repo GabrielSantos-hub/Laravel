@@ -21,7 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\Security\SecurityLogger::class, function ($app) {
+            return new \App\Services\Security\SecurityLogger(
+                $app['log']->channel('security')
+            );
+        });
     }
 
     /**
@@ -42,6 +46,17 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('admin', fn (User $user): bool => $user->isAdmin());
+
+        Gate::after(function (?User $user, string $ability, mixed $result): void {
+            $negado = $result === false
+                || ($result instanceof \Illuminate\Auth\Access\Response && $result->denied());
+
+            if ($negado) {
+                app(\App\Services\Security\SecurityLogger::class)->log('authorization_denied', [
+                    'ability' => $ability,
+                ]);
+            }
+        });
 
         View::composer('layout', function ($view) {
        

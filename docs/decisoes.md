@@ -45,3 +45,13 @@ próprio, sem reutilizar o corpus da Fase 2. Detector reforçado
 Taxa no conjunto novo: 40/40 bloqueados e 40/40 aceitos; o corpus
 original permaneceu sem falso positivo. Limitações residuais em
 `docs/seguranca-owasp.md`.
+
+## 2026-10-02 — Fase 3: logs, auditoria e resiliência
+
+Canal `security` em JSON (30 dias, stderr opcional). `SecurityLogger` com
+lista fechada de eventos, e-mails mascarados e processador anti-CRLF.
+Request ID em `X-Request-Id`. Tabela `audit_logs` somente inserção, tela
+admin somente leitura. Geração: persistência em try/catch, idempotência
+de 5 s, timeout do provedor com mensagem amigável. Stack do histórico
+deduz IDs do catálogo. Avatar reprocessado com GD; SVG recusado.
+

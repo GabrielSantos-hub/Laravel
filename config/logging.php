@@ -1,6 +1,9 @@
 <?php
 
+use App\Logging\RedactingProcessor;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
@@ -125,6 +128,38 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'security' => [
+            'driver' => 'stack',
+            'channels' => array_values(array_filter([
+                'security-daily',
+                filter_var(env('SECURITY_LOG_STDERR', false), FILTER_VALIDATE_BOOL) ? 'security-stderr' : null,
+            ])),
+            'ignore_exceptions' => false,
+        ],
+
+        'security-daily' => [
+            'driver' => 'monolog',
+            'level' => 'info',
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => [
+                'filename' => storage_path('logs/security.log'),
+                'maxFiles' => (int) env('SECURITY_LOG_DAYS', 30),
+            ],
+            'formatter' => JsonFormatter::class,
+            'processors' => [RedactingProcessor::class, PsrLogMessageProcessor::class],
+        ],
+
+        'security-stderr' => [
+            'driver' => 'monolog',
+            'level' => 'info',
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => JsonFormatter::class,
+            'processors' => [RedactingProcessor::class, PsrLogMessageProcessor::class],
         ],
 
     ],
