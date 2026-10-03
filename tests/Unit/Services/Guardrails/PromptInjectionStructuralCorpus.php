@@ -3,13 +3,8 @@
 namespace Tests\Unit\Services\Guardrails;
 
 /**
- * Corpus CEGO da fase de entradas. Nenhum enunciado copia
- * PromptInjectionCorpusTest, PromptInjectionIndependentCorpus ou
- * PromptInjectionBlindCorpus.
- *
- * 15 ataques (override coloquial / estrutural) + 15 pedidos legítimos
- * que falam de "ignorar", "esquecer" ou "a partir de agora" em contexto
- * de software, sem dirigir o assistente.
+ * Corpus estrutural independente: 15 ataques + 15 pedidos que falam de
+ * "ignorar"/"esquecer" em contexto de software, sem dirigir o assistente.
  *
  * @phpstan-type Caso array{0: string}
  */

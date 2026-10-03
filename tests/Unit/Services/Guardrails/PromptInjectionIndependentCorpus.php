@@ -3,12 +3,7 @@
 namespace Tests\Unit\Services\Guardrails;
 
 /**
- * Corpus adversarial INDEPENDENTE da Fase 2.
- *
- * Nenhum enunciado aqui é cópia dos datasets `pedidos_legitimos` /
- * `ataques_injection` de PromptInjectionCorpusTest. Os ataques foram
- * desenhados para evadir o detector original (paráfrase, duas frases,
- * pedido de software com injeção embutida, PT/EN, JSON, lista, hex).
+ * Corpus independente: nenhum enunciado copia PromptInjectionCorpusTest.
  *
  * @phpstan-type Caso array{0: string, 1: string}
  */
