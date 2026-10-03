@@ -345,8 +345,11 @@ inline do tema.
 
 Páginas de erro (`resources/views/errors/`): 403 «Acesso negado», 404
 «Página não encontrada», 419 «Sessão expirada», 429 «Muitas tentativas»,
-500 «Algo deu errado»; layout compartilhado com «código de referência»
-=`request_id`. A 500 HTTP passa pelo handler (`ErrorPagesTest`).
+500 «Algo deu errado»; layout compartilhado, **sem** Vite/`app.css` (o
+CSS do app deslocava o cartão à direita). Cartão centrado
+(`.error-page-center` + `margin-inline: auto`) em desktop e mobile,
+tema claro/escuro via `localStorage` + nonce CSP. «código de referência»
+=`request_id` sanitizado. A 500 HTTP passa pelo handler (`ErrorPagesTest`).
 
 Cropper no perfil (`profile-crop.js`); Chart.js no dashboard.
 
@@ -374,9 +377,20 @@ Canal: `logging.php` `security` → `security-daily` JSON rotativo
 `RedactingProcessor` (chaves password/token/authorization/api_key/secret/
 cookie/gemini_api_key/app_key; strip CRLF; máscara de e-mail).
 
-`AssignRequestId`: aceita `X-Request-Id` se len ≤ **128**, senão UUID.
+`AssignRequestId`: aceita `X-Request-Id` só se casar
+`^[A-Za-z0-9._-]{8,128}$`; caso contrário gera UUID e **não** propaga o
+valor cru (nem para log nem para páginas de erro).
 
 `AvatarSanitizer::MAX_EDGE = 512`; MIME jpeg/png/webp; SVG recusado.
+
+Validação de entradas (fase entradas): `GeneratePromptRequest` faz trim,
+remove NUL, normaliza CRLF, recusa UTF-8 inválido, exige tipo string na
+intenção (aliases `user_input`/`input_text`; `intencao` prevalece),
+IDs `integer`+`exists`, variáveis com chave identificador e max 2000.
+Mensagens de formato são próprias; injection/XSS usam mensagem genérica.
+Inventário completo: `docs/matriz-tratamento-entradas.md`.
+Limiter `login-email-ip` ignora `email` não-string (evita 500).
+Filtros da auditoria (`action`, `from`, `to`, `page`) são validados.
 
 Sessão (`.env.example`): driver database, lifetime 120, encrypt true,
 http_only true, same_site lax, secure cookie false no local.
@@ -389,8 +403,13 @@ http_only true, same_site lax, secure cookie false no local.
   PHPUnit.
 - Suites: `tests/Unit`, `tests/Feature`.
 - DB: sqlite `:memory:` (`phpunit.xml`).
-- Corpora de injection: original, independente (2.B), cego (4.B).
+- Corpora de injection: original, independente (2.B), cego (4.B),
+  estrutural de entradas (`PromptInjectionStructuralCorpus`, 15+15).
+- Validação de entradas: `GeneratePromptRequest` (trim, NUL, UTF-8, tipo,
+  aliases, variáveis); matriz em `docs/matriz-tratamento-entradas.md`.
 - Linha de base da Fase 4 (antes desta fase): 659 testes / 2733 asserções.
+- Linha de base **pre-entradas** (`88a9694`): **665 testes / 2761 asserções**.
+- Após esta fase: ver `php artisan test` no relatório (não abaixo de 665).
 - Comando: `php artisan test` / `composer test`.
 
 ---
@@ -461,5 +480,6 @@ http_only true, same_site lax, secure cookie false no local.
 | Avatar | `app/Services/AvatarSanitizer.php` |
 | Models | `app/Models/{User,Prompt,Template,Language,Framework,Architecture,AuditLog}.php` |
 | Views | `resources/views/layout.blade.php`, `prompts/`, `admin/`, `errors/`, `profile/`, `auth/` |
-| Docs | `README.md`, `docs/regras-negocio.md`, `docs/seguranca-owasp.md`, `docs/decisoes.md`, `docs/baseline-testes.md`, este arquivo |
+| Docs | `README.md`, `docs/regras-negocio.md`, `docs/seguranca-owasp.md`, `docs/decisoes.md`, `docs/baseline-testes.md`, `docs/matriz-tratamento-entradas.md`, este arquivo |
 | Testes 4.B | `tests/Unit/Services/Guardrails/PromptInjectionBlindCorpus.php` |
+| Testes entradas | `RealWorldEntryCasesTest`, `InputEdgeCasesTest`, `InputSurfaceEdgeCasesTest`, `PromptInjectionStructuralCorpus` |
