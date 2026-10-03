@@ -85,8 +85,6 @@ penalidade de estilo 6, dica textual 1 (teto 3).
 
 - Histórico pessoal: `Prompt::user()` / `User::prompts()`; dono autorizado
   em `PromptController::autorizarDono`.
-- Exportação JSON: `ProfileController::exportHistory` →
-  `gueass-historico-{id}.json`.
 - Exclusão de conta: `DELETE /perfil` com confirmação de senha,
   `throttle:5,1`.
 - Retenção: `PROMPT_RETENTION_DAYS` padrão **90**;

@@ -135,7 +135,7 @@ Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
 - Segredos reconhecíveis viram `[REDACTED:tipo]` antes do histórico e de
   qualquer provedor externo.
 - Na tela do gerador há a opção de não salvar o prompt. No perfil:
-  exportar o histórico em JSON e excluir a conta com confirmação de senha.
+  excluir a conta com confirmação de senha.
 - Cabeçalhos: CSP (`script-src` com nonce; `style-src` ainda inclui
   `'unsafe-inline'` — ver limitações), `X-Content-Type-Options`,
   `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`. HSTS

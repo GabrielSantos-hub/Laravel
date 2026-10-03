@@ -29,7 +29,6 @@ class SecurityLogger
         'provider_timeout',
         'prompt_persist_failed',
         'account_deleted',
-        'data_exported',
         'avatar_rejected',
         'admin_language_created',
         'admin_language_updated',

@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfileController extends Controller
 {
@@ -116,36 +115,6 @@ class ProfileController extends Controller
         Storage::disk('public')->put($path, $png);
 
         return $path;
-    }
-
-    public function exportHistory(): StreamedResponse
-    {
-        $user = request()->user();
-        $prompts = $user->prompts()
-            ->orderBy('id')
-            ->get(['id', 'input_text', 'output_text', 'is_useful', 'created_at', 'updated_at']);
-
-        $payload = [
-            'exported_at' => now()->toIso8601String(),
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
-            'prompts' => $prompts,
-        ];
-
-        $filename = 'gueass-historico-'.$user->id.'.json';
-
-        app(\App\Services\Security\SecurityLogger::class)->log('data_exported', [
-            'prompt_count' => $prompts->count(),
-        ]);
-
-        return response()->streamDownload(function () use ($payload): void {
-            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-        }, $filename, [
-            'Content-Type' => 'application/json; charset=UTF-8',
-        ]);
     }
 
     public function destroy(DeleteAccountRequest $request): RedirectResponse

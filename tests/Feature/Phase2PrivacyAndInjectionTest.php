@@ -96,31 +96,6 @@ it('redige segredo antes de gravar o historico', function () {
         ->and($prompt->output_text)->not->toContain('AKIAIOSFODNN7EXAMPLE');
 });
 
-it('exporta somente o historico do proprio usuario', function () {
-    $outro = User::factory()->create();
-
-    Prompt::query()->create([
-        'user_id' => $this->usuario->id,
-        'input_text' => 'Meu pedido Laravel',
-        'output_text' => 'Meu envelope',
-    ]);
-    Prompt::query()->create([
-        'user_id' => $outro->id,
-        'input_text' => 'Pedido alheio',
-        'output_text' => 'Envelope alheio',
-    ]);
-
-    $resposta = $this->actingAs($this->usuario)->get(route('profile.export'));
-
-    $resposta->assertOk();
-    $resposta->assertHeader('content-disposition');
-    $json = $resposta->json();
-    expect($json['user']['id'])->toBe($this->usuario->id)
-        ->and($json['prompts'])->toHaveCount(1)
-        ->and($json['prompts'][0]['input_text'])->toBe('Meu pedido Laravel')
-        ->and(json_encode($json))->not->toContain('Pedido alheio');
-});
-
 it('exclui a conta e os prompts apos confirmar a senha', function () {
     Prompt::query()->create([
         'user_id' => $this->usuario->id,

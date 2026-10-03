@@ -76,16 +76,6 @@
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mt-4" style="border-radius: 8px;">
-        <div class="card-body p-4">
-            <h4 class="h5 mb-2">Meus dados</h4>
-            <p class="small text-muted mb-3">Exporte o histórico de prompts em JSON, só com os registros desta conta.</p>
-            <a href="{{ route('profile.export') }}" class="btn btn-outline-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                Exportar meu histórico
-            </a>
-        </div>
-    </div>
-
     <div class="card shadow-sm border-0 mt-4 border-danger-subtle" style="border-radius: 8px;">
         <div class="card-body p-4">
             <h4 class="h5 mb-2 text-danger">Excluir minha conta e todos os meus dados</h4>

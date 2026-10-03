@@ -65,7 +65,6 @@ Definidas em `routes/web.php`. Middleware global: `AssignRequestId`
 | GET | `/perfil` | `profile.edit` | | `ProfileController::edit` |
 | PUT | `/perfil` | `profile.update` | `throttle:20,1` | `ProfileController::update` |
 | POST | `/perfil/avatar` | `profile.avatar` | `throttle:10,1` | `ProfileController::updateAvatar` |
-| GET | `/perfil/exportar` | `profile.export` | `throttle:10,1` | `ProfileController::exportHistory` |
 | DELETE | `/perfil` | `profile.destroy` | `throttle:5,1` | `ProfileController::destroy` |
 | GET | `/` | `home` | | `PromptController::index` |
 | POST | `/prompts/generate` | `prompts.generate` | `throttle:10,1` | `PromptController::generate` |
@@ -363,12 +362,12 @@ Cropper no perfil (`profile-crop.js`); Chart.js no dashboard.
 DENY`; Referrer-Policy `strict-origin-when-cross-origin`; Permissions-Policy
 vazia para camera/mic/geo/payment/usb; HSTS production+HTTPS.
 
-`SecurityLogger::EVENTS` (30): `login_success`, `login_failed`,
+`SecurityLogger::EVENTS` (29): `login_success`, `login_failed`,
 `login_throttled`, `register`, `logout`, `password_changed`,
 `admin_password_reset`, `forced_password_change`, `authorization_denied`,
 `guardrail_rejected`, `prompt_injection_detected`,
 `sensitive_data_redacted`, `provider_error`, `provider_timeout`,
-`prompt_persist_failed`, `account_deleted`, `data_exported`,
+`prompt_persist_failed`, `account_deleted`,
 `avatar_rejected`, `admin_language_*`, `admin_framework_*`,
 `admin_architecture_*`, `admin_template_*` (created/updated/deleted).
 
@@ -436,7 +435,6 @@ http_only true, same_site lax, secure cookie false no local.
 | `audit_logs` + tela somente leitura (nome + e-mail mascarado + #id) | `AdminAuditor`, `AdminAuditLogController`, `resources/views/admin/audit/index.blade.php` |
 | `must_change_password` | migration `2026_10_02_030000_*`, `EnsurePasswordIsChanged` |
 | Opt-out de histórico | `nao_salvar_historico` em `GeneratePromptRequest` |
-| Exportar conta (JSON) | `ProfileController::exportHistory` |
 | Excluir conta | `ProfileController::destroy` |
 | Retenção de prompts | `PROMPT_RETENTION_DAYS` / `gueass:prune-prompts` |
 | Redator | `SensitiveDataRedactor` |
@@ -454,7 +452,7 @@ http_only true, same_site lax, secure cookie false no local.
 
 | Item da ERS | Status |
 | --- | --- |
-| Download do prompt em **Markdown** (`.md`) | **NÃO ENCONTRADO** — exportação só JSON (`gueass-historico-{id}.json`) |
+| Download do prompt em **Markdown** (`.md`) | **NÃO ENCONTRADO** — a exportação JSON do histórico foi removida |
 | Relatório administrativo **por período** (além dos filtros da auditoria) | **NÃO ENCONTRADO** — dashboard é agregado corrente; prune é por idade |
 | Categorização rica de intenção (taxonomia ERS / tags livres) | Parcial: `Template::bloco` A/B/C, `intent_type`, `TemplateSelector::CATEGORY_KEYWORDS`. Sem UI de “categorias” editáveis pelo usuário |
 | Atalhos de teclado de produtividade (ERS) | **NÃO ENCONTRADO** como suíte — só `Escape` para sidebar/modais (`resources/js/ui.js`) |
