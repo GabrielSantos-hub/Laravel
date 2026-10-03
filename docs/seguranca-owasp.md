@@ -8,11 +8,11 @@ teste quando existir. «Não tratado» traz justificativa.
 
 | Item | Controle | Arquivo / símbolo | Teste |
 | --- | --- | --- | --- |
-| A01 Broken Access Control | Gate `admin`; grupo `can:admin`; dono do prompt; último ADM protegido; `must_change_password` | `AppServiceProvider::boot` (`Gate::define('admin')`); `routes/web.php`; `PromptController::autorizarDono`; `User::isLastAdmin`; `EnsurePasswordIsChanged` | `AdminDashboardTest`, `LastAdminProtectionTest`, `ForcedPasswordChangeTest`, `Phase3SecurityObservabilityTest` |
+| A01 Broken Access Control | Gate `admin`; grupo `can:admin`; dono do prompt; limpar histórico só do logado; último ADM protegido; `must_change_password` | `AppServiceProvider::boot` (`Gate::define('admin')`); `routes/web.php`; `PromptController::autorizarDono` / `clearHistory`; `User::isLastAdmin`; `EnsurePasswordIsChanged` | `AdminDashboardTest`, `HistoryClearTest`, `LastAdminProtectionTest`, `ForcedPasswordChangeTest`, `Phase3SecurityObservabilityTest` |
 | A02 Cryptographic Failures | Senha hashed; sessão cifrada e HttpOnly; HTTPS forçado só em production | `User::casts` (`password` hashed); `.env.example` `SESSION_ENCRYPT` / `SESSION_HTTP_ONLY` / `SESSION_SECURE_COOKIE`; `AppServiceProvider` `URL::forceScheme` | `PasswordRules` / testes de auth existentes |
 | A03 Injection | Eloquent (SQL parametrizado); XSS/SQLi no guardrail; prompt injection independente do provedor; CSP `script-src` com nonce | `InputSanityGuardrail`; `PromptInjectionDetector`; `SecurityHeaders` | `InputSanityGuardrailTest`, corpora de injection, `SecurityHeadersTest` |
 | A04 Insecure Design | Fail-closed no Gemini; intenção como dado delimitado; lean para pedido curto; lista fechada de eventos de log | `config/ai.php`; `UserIntentFrame`; `InputSanityGuardrail::isLean`; `SecurityLogger::EVENTS` | `GeminiAIProviderTest`, `PromptBuilderServiceTest`, `Phase3SecurityObservabilityTest` |
-| A05 Security Misconfiguration | Cabeçalhos; `APP_DEBUG`; `TRUSTED_PROXIES` vazio; `DocumentRoot` do Laragon ainda é a raiz (risco local — ver limitações); HttpException 4xx/5xx nunca usa a tela de depuração | `SecurityHeaders`; `.env.example`; `FriendlyHttpRenderer`; `bootstrap/app.php` | `SecurityHeadersTest`, `ErrorPagesTest` |
+| A05 Security Misconfiguration | Cabeçalhos; `APP_DEBUG`; `TRUSTED_PROXIES` vazio; `.htaccess` na raiz nega dotfiles se o DocumentRoot for o repo; disco `local` sem `serve`; HttpException 4xx/5xx nunca usa a tela de depuração | `SecurityHeaders`; `.htaccess`; `config/filesystems.php`; `FriendlyHttpRenderer`; `bootstrap/app.php` | `SecurityHeadersTest`, `ErrorPagesTest`, `SecurityBatteryTest` |
 | A06 Vulnerable and Outdated Components | Auditoria de Composer/npm; assets via Vite (sem CDN) | `composer.lock`, `package-lock.json`, `vite.config.js` | `docs/baseline-testes.md`; `composer audit` / `npm audit` na verificação final |
 | A07 Identification and Authentication Failures | Throttle de login (5/min + 5/min e-mail\|IP); política de senha; reset admin com troca obrigatória | `routes/web.php`; `AppServiceProvider` `login-email-ip`; `PasswordRules`; `AdminUserController::resetPassword` | `RouteThrottleTest`, `ForcedPasswordChangeTest` |
 | A08 Software and Data Integrity Failures | Dependências lockfile; sem webhooks assinados de terceiros; JSON do LLM só aceito se `valido === true` | `PromptGeneratorService::decodeStructuredResponse` | `PromptGeneratorServiceTest`, `GeminiIntegrationTest` |
@@ -180,12 +180,25 @@ XSS/SQLi do `InputSanityGuardrail` **não** foram afrouxados. «Revisar
 código vulnerável a XSS» passa; um payload com `<script` ou `' OR 1=1`
 continua bloqueado.
 
+## Bateria única de segurança (rodada final)
+
+Tabela completa em `docs/testes-de-seguranca.md`. Correções desta rodada:
+`must_change_password` em JSON (403), `preg_*` fail-closed, disco `local`
+sem `serve`, `Cache-Control: no-store, private` em páginas autenticadas,
+`.htaccess` na raiz (403 em `.env` / `.git` / `composer.json` / `artisan`
+e rewrite para `public/`). Médio/baixo sem correção pequena ficam nas
+limitações. Não há afirmação de “100% seguro”.
+
 ## Outras limitações conhecidas
 
-- Virtual host Laragon `DocumentRoot` = raiz do repo: `composer.json` (e
-  potencialmente `.env` se o servidor o servir) ficam acessíveis em
-  `http://laravel.test/…`. Mitigação operacional: apontar para `public/`.
+- Virtual host Laragon `DocumentRoot` ainda é a raiz do repo. Defesa em
+  profundidade no repositório: `.htaccess` (403 + rewrite). O DocumentRoot
+  **correto** continua sendo `public/`.
+- CSP `style-src` ainda inclui `'unsafe-inline'` (ver secção acima).
+- Detector de injection é heurístico (paráfrase longa, multi-turno).
 - Recuperação self-service de senha **não tratada** (modal com e-mail de
   suporte).
 - `password_reset_tokens` e `email_verified_at` existem no schema e não
   são usados pelo fluxo de auth atual.
+- Corte de métricas não apaga prompts: só filtra leitura a partir de
+  `metrics_reset_at`.

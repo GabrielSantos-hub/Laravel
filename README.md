@@ -26,10 +26,10 @@ Para artisan/testes alinhados ao Apache, use o `php.exe` 8.3.30 do Laragon
 explicitamente. Confira com `php -m` / `php -i` e procure `gd`.
 
 O virtual host `Laravel.test` do Laragon aponta `DocumentRoot` para a
-**raiz do repositório** (não `public/`). A aplicação responde em
-`http://laravel.test/public/…`. Corrigir o vhost para `public/` exige
-reiniciar o Apache do Laragon (menu do Laragon ou `httpd -k restart`) —
-não é feito automaticamente por este repositório.
+**raiz do repositório** (não `public/`). Há `.htaccess` na raiz que nega
+dotfiles e arquivos sensíveis e reescreve para `public/`. O DocumentRoot
+**correto** continua sendo `public/`. Corrigir o vhost exige reiniciar o
+Apache do Laragon — não é feito automaticamente por este repositório.
 
 ## Configuração local
 
@@ -133,7 +133,8 @@ php artisan test
 
 Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
 Regras de negócio: `docs/regras-negocio.md`. Levantamento técnico:
-`docs/levantamento-final.md`.
+`docs/levantamento-final.md`. Bateria de segurança:
+`docs/testes-de-seguranca.md`. O código desta árvore está **congelado**.
 
 Os assets (Bootstrap, Font Awesome, Orbitron, Cropper.js e Chart.js) vêm
 do Vite, sem CDN. A CSP usa nonce nos scripts inline do tema.
@@ -147,8 +148,13 @@ Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
   `AI_PROVIDER=gemini`.
 - Segredos reconhecíveis viram `[REDACTED:tipo]` antes do histórico e de
   qualquer provedor externo.
-- Na tela do gerador há a opção de não salvar o prompt. No perfil:
-  excluir a conta com confirmação de senha.
+- Na tela do gerador há a opção de não salvar o prompt. No histórico da
+  barra lateral (e no gerador): «Limpar meu histórico» apaga só os
+  prompts do usuário logado, com confirmação. No perfil: excluir a conta
+  com confirmação de senha.
+- No painel admin, «Zerar métricas» não apaga prompts: corta a leitura
+  a partir de `metrics_reset_at`. «Considerar todo o histórico» remove
+  o corte.
 - Cabeçalhos: CSP (`script-src` com nonce; `style-src` ainda inclui
   `'unsafe-inline'` — ver limitações), `X-Content-Type-Options`,
   `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`. HSTS

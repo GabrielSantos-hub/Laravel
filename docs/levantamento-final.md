@@ -1,9 +1,10 @@
 # Levantamento técnico final — GUEASS
 
-Estado do código na branch `hardening/seguranca` após os ajustes finais.
-O código desta árvore fica **congelado**. Citações no formato `arquivo` →
-`símbolo`. O que não existe: **NÃO ENCONTRADO**. Nenhum segredo de `.env`
-é reproduzido aqui.
+Estado do código na branch `hardening/seguranca` após a **rodada final**
+(limpar histórico, corte de métricas, bateria de segurança, limpeza de
+código morto e de comentários). O código desta árvore fica **congelado**.
+Citações no formato `arquivo` → `símbolo`. O que não existe:
+**NÃO ENCONTRADO**. Nenhum segredo de `.env` é reproduzido aqui.
 
 ---
 
@@ -69,6 +70,7 @@ Definidas em `routes/web.php`. Middleware global: `AssignRequestId`
 | DELETE | `/perfil` | `profile.destroy` | `throttle:5,1` | `ProfileController::destroy` |
 | GET | `/` | `home` | | `PromptController::index` |
 | POST | `/prompts/generate` | `prompts.generate` | `throttle:10,1` | `PromptController::generate` |
+| DELETE | `/prompts/historico` | `prompts.history.clear` | `throttle:5,1` | `PromptController::clearHistory` |
 | GET | `/prompts/{prompt}` | `prompts.show` | | `PromptController::show` |
 | POST | `/prompts/{prompt}/feedback` | `prompts.feedback` | `throttle:20,1` | `PromptController::feedback` |
 | DELETE | `/prompts/{prompt}` | `prompts.destroy` | `throttle:20,1` | `PromptController::destroy` |
@@ -80,6 +82,8 @@ Definidas em `routes/web.php`. Middleware global: `AssignRequestId`
 | --- | --- | --- | --- | --- |
 | GET | `/admin` | — | | redirect `admin.dashboard` |
 | GET | `/admin/dashboard` | `admin.dashboard` | | `AdminDashboardController::index` |
+| POST | `/admin/metricas/corte` | `admin.metrics.reset` | `throttle:10,1` | `AdminDashboardController::resetMetrics` |
+| DELETE | `/admin/metricas/corte` | `admin.metrics.reset.clear` | `throttle:10,1` | `AdminDashboardController::clearMetricsReset` |
 | GET | `/admin/auditoria` | `admin.audit.index` | | `AdminAuditLogController::index` |
 | GET | `/admin/users` | `admin.users.index` | | `AdminUserController::index` |
 | PUT | `/admin/users/{user}/password` | `admin.users.password` | `throttle:10,1` | `AdminUserController::resetPassword` |
@@ -236,7 +240,8 @@ Pivots: `language_template`, `framework_template`, `architecture_template`
 — FKs `cascadeOnDelete`, unique do par.
 
 Dashboard: `PromptMetricsService::summary()` — total, úteis/não,
-satisfação %, top templates **5**, top stacks **8**. Chart.js em
+satisfação %, top templates **5**, top stacks **8**, filtrados por
+`created_at >= metrics_reset_at` quando o corte existe. Chart.js em
 `resources/js/admin-dashboard.js`.
 
 Pesos `TemplateSelector`: `WEIGHT_LANGUAGE=4`, `FRAMEWORK=3`,
@@ -391,6 +396,11 @@ tratada com debug ligado ainda pode mostrar a página de depuração.
 A avaliação Útil/Não útil (`partials/prompt-feedback.blade.php`) usa
 `<script>` com o nonce da requisição; sem `onclick` inline.
 
+«Limpar meu histórico» no painel da sidebar (e no gerador): diálogo
+acessível (foco preso, Esc fecha) e `fetch` JSON em `resources/js/ui.js`.
+Painel admin: «Métricas consideradas desde dd/mm/aaaa HH:MM», «Zerar
+métricas» e «Considerar todo o histórico».
+
 Política de privacidade (`/privacidade`): texto curto em português,
 alinhado ao código, sem prometer exportação; retenção lida de
 `config('privacy.prompt_retention_days')`.
@@ -407,13 +417,14 @@ Cropper no perfil (`profile-crop.js`); Chart.js no dashboard.
 DENY`; Referrer-Policy `strict-origin-when-cross-origin`; Permissions-Policy
 vazia para camera/mic/geo/payment/usb; HSTS production+HTTPS.
 
-`SecurityLogger::EVENTS` (29): `login_success`, `login_failed`,
+`SecurityLogger::EVENTS` (32): `login_success`, `login_failed`,
 `login_throttled`, `register`, `logout`, `password_changed`,
 `admin_password_reset`, `forced_password_change`, `authorization_denied`,
 `guardrail_rejected`, `prompt_injection_detected`,
 `sensitive_data_redacted`, `provider_error`, `provider_timeout`,
-`prompt_persist_failed`, `account_deleted`,
-`avatar_rejected`, `admin_language_*`, `admin_framework_*`,
+`prompt_persist_failed`, `account_deleted`, `history_cleared` (só a
+contagem), `avatar_rejected`, `admin_metrics_reset`,
+`admin_metrics_reset_cleared`, `admin_language_*`, `admin_framework_*`,
 `admin_architecture_*`, `admin_template_*` (created/updated/deleted).
 
 Canal: `logging.php` `security` → `security-daily` JSON rotativo
@@ -454,6 +465,10 @@ http_only true, same_site lax, secure cookie false no local.
 - Linha de base da Fase 4 (antes desta fase): 659 testes / 2733 asserções.
 - Linha de base **pre-entradas** (`88a9694`): **665 testes / 2761 asserções**.
 - Após esta fase: ver `php artisan test` no relatório (não abaixo de 665).
+- Rodada final: **774** testes / 4001 asserções (linha de base
+  `pre-rodada-final`: 742). Novos: `HistoryClearTest`, `MetricsResetTest`,
+  `SecurityBatteryTest`, `RegexReDoSTest`.
+- Bateria de segurança: `docs/testes-de-seguranca.md`.
 - Comando: `php artisan test` / `composer test`.
 
 ---
@@ -464,7 +479,7 @@ http_only true, same_site lax, secure cookie false no local.
 | --- | --- |
 | Porta MySQL | Exemplo 3306 (ERS); autor 3308 |
 | PHP CLI vs Apache | PATH = XAMPP 8.2.12; Apache/schedule = Laragon 8.3.30 |
-| Vhost `DocumentRoot` | Raiz do repo, não `public/` — arquivos como `composer.json` ficam HTTP 200 |
+| Vhost `DocumentRoot` | Raiz do repo, não `public/`. Defesa no repo: `.htaccess` na raiz (403 em dotfiles/sensíveis + rewrite para `public/`). O DocumentRoot correto continua sendo `public/` |
 | `email_verified_at` / `password_reset_tokens` | Colunas existem; fluxo **NÃO ENCONTRADO** |
 | `inspire` | Comando scaffold ainda em `routes/console.php` |
 | Migrations no-op | `add_user_id_to_prompts`, `add_role_to_users` vazias |
@@ -490,6 +505,8 @@ http_only true, same_site lax, secure cookie false no local.
 | Idempotência 5 s | `config/security.php` |
 | Avatar GD / anti-SVG | `AvatarSanitizer` |
 | Proteção do último ADM | `User::booted` |
+| Limpar meu histórico (só do dono) | `PromptController::clearHistory`, `prompts.history.clear` |
+| Corte de métricas sem apagar prompts | `AppSetting` / `app_settings.metrics_reset_at`, `PromptMetricsService` |
 | Páginas 4xx/5xx/405 amigáveis | `FriendlyHttpRenderer`, `resources/views/errors/*` |
 | Catálogo v3.1 (15/32/16/26) | `LanguageSeeder`, `ArchitectureSeeder`, `TemplateSeeder` |
 | Política de privacidade simples | `resources/views/privacy.blade.php` |
@@ -525,7 +542,7 @@ http_only true, same_site lax, secure cookie false no local.
 | IA | `app/Services/AI/*`, `app/Services/AI/Providers/GeminiAIProvider.php`, `config/ai.php`, `config/services.php` |
 | Segurança | `app/Services/Security/SecurityLogger.php`, `AdminAuditor.php`, `app/Logging/RedactingProcessor.php`, `app/Http/Middleware/SecurityHeaders.php`, `AssignRequestId.php`, `app/Exceptions/FriendlyHttpRenderer.php` |
 | Avatar | `app/Services/AvatarSanitizer.php` |
-| Models | `app/Models/{User,Prompt,Template,Language,Framework,Architecture,AuditLog}.php` |
+| Models | `app/Models/{User,Prompt,Template,Language,Framework,Architecture,AuditLog,AppSetting}.php` |
 | Views | `resources/views/layout.blade.php`, `prompts/`, `admin/`, `errors/`, `profile/`, `auth/` |
 | Docs | `README.md`, `docs/regras-negocio.md`, `docs/seguranca-owasp.md`, `docs/decisoes.md`, `docs/baseline-testes.md`, `docs/matriz-tratamento-entradas.md`, este arquivo |
 | Testes 4.B | `tests/Unit/Services/Guardrails/PromptInjectionBlindCorpus.php` |

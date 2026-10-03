@@ -96,6 +96,20 @@ Levantamento final em `docs/levantamento-final.md`.
   exportação; retenção lida de `config()`.
 - **Catálogo ampliado** (15 linguagens, 32 frameworks, 16 arquiteturas,
   26 templates ativos). Seeders idempotentes por slug/nome.
-- **Código congelado** após estes ajustes: sem novas funcionalidades
+
+## 2026-10-03 — Rodada final (código congelado)
+
+- **Limpar meu histórico** apaga só os prompts do usuário autenticado.
+  IDs no corpo são ignorados. Evento `history_cleared` com a contagem,
+  nunca o conteúdo.
+- **Zerar métricas** não apaga dados: grava `metrics_reset_at` em
+  `app_settings`. O painel filtra `created_at >=` o corte e mostra
+  «Métricas consideradas desde». «Considerar todo o histórico» remove
+  o corte (`admin_metrics_reset` / `admin_metrics_reset_cleared`).
+- **Bateria de segurança única** (12 categorias) em
+  `docs/testes-de-seguranca.md`; uma segunda passada só no que falhou.
+- **Código morto** documentado em `docs/limpeza-codigo-morto.md`.
+  Comentários excessivos removidos (prova `php -w` idêntica).
+- **Código congelado** após esta rodada: sem novas funcionalidades
   nesta árvore.
 
