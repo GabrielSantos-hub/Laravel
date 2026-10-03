@@ -22,3 +22,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# Documentação técnica fica fora do repositório
+/docs/
