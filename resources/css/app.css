@@ -94,8 +94,7 @@ body {
     min-height: 100vh;
 }
 
-/* A fonte display fica restrita à marca e aos títulos principais de página.
-   Do h4 para baixo — nomes de card, títulos de gráfico — vale a fonte do corpo. */
+/* Orbitron só na marca e em h1–h3; h4+ usa a fonte do corpo. */
 h1, h2, h3,
 .display-1, .display-2, .display-3, .display-4,
 .brand-text {
@@ -674,8 +673,7 @@ html.high-contrast .prompt-feedback-btn.is-active {
     color: var(--gueass-text-muted);
 }
 
-/* Depois do voto a confirmação toma o lugar da pergunta: as duas juntas não
-   cabem na coluna estreita do prompt gerado. */
+/* Depois do voto some a pergunta: as duas juntas não cabem na coluna. */
 .prompt-feedback.is-answered .prompt-feedback-label {
     display: none;
 }
@@ -684,8 +682,6 @@ html.high-contrast .prompt-feedback-btn.is-active {
     max-width: 1100px;
     margin: 0 auto;
 }
-
-/* Cartão de autenticação no layout de visitante. */
 
 .auth-card {
     background-color: var(--gueass-surface);
@@ -779,8 +775,7 @@ html.high-contrast .auth-submit {
     margin: 0;
 }
 
-/* Nome de template ou de stack não cabe no corpo numérico do card: vira texto
-   normal, que quebra por palavra em vez de esticar a caixa. */
+/* Nome longo de template/stack quebra por palavra em vez de esticar o card. */
 .metric-card-value.is-text {
     font-size: 1.05rem;
     line-height: 1.35;
@@ -899,8 +894,7 @@ html.high-contrast .chart-card {
     color: #ffffff;
 }
 
-/* Botão secundário do catálogo: mesma aparência para "Editar" (admin) e
-   "Selecionar" (usuário comum). */
+/* Mesma aparência para "Editar" (admin) e "Selecionar" (usuário). */
 .btn-catalog-secondary {
     background: color-mix(in srgb, var(--gueass-accent) 12%, var(--gueass-surface));
     color: var(--gueass-accent);
