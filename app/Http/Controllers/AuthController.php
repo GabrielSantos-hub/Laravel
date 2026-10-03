@@ -51,6 +51,8 @@ class AuthController extends Controller
             'password' => PasswordRules::required(),
         ]);
 
+        $validated['name'] = trim($validated['name']);
+
         $user = User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],

@@ -25,8 +25,8 @@ class ArchitectureController extends Controller
     public function store(Request $request)
 {
     $validated = $request->validate([
-        'nome' => 'required|max:100|unique:architectures,nome',
-        'descricao' => 'required'
+        'nome' => 'required|string|max:100|unique:architectures,nome',
+        'descricao' => 'required|string|max:5000',
     ]);
 
     try {
@@ -48,8 +48,8 @@ class ArchitectureController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'nome' => 'required|max:100',
-            'descricao' => 'required'
+            'nome' => 'required|string|max:100',
+            'descricao' => 'required|string|max:5000',
         ]);
 
         try {

@@ -28,8 +28,8 @@ class FrameworkController extends Controller
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:100|unique:frameworks,nome',
-            'slug' => 'required|string|max:100|unique:frameworks,slug',
-            'language_id' => 'required|exists:languages,id',
+            'slug' => 'required|string|max:100|alpha_dash|unique:frameworks,slug',
+            'language_id' => 'required|integer|exists:languages,id',
         ]);
 
         try {
@@ -55,8 +55,8 @@ class FrameworkController extends Controller
 
         $validated = $request->validate([
             'nome' => 'required|string|max:100',
-            'slug' => ['required', 'string', 'max:100', Rule::unique('frameworks', 'slug')->ignore($framework->id)],
-            'language_id' => 'required|exists:languages,id',
+            'slug' => ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('frameworks', 'slug')->ignore($framework->id)],
+            'language_id' => 'required|integer|exists:languages,id',
         ]);
 
         try {

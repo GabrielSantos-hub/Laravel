@@ -26,8 +26,8 @@ class LanguageController extends Controller
     public function store(Request $request)
 {
     $validated = $request->validate([
-        'nome' => 'required|max:100|unique:languages,nome',
-        'slug' => 'required|max:100|unique:languages,slug'
+        'nome' => 'required|string|max:100|unique:languages,nome',
+        'slug' => 'required|string|max:100|alpha_dash|unique:languages,slug',
     ]);
 
     try {
@@ -56,8 +56,8 @@ class LanguageController extends Controller
         $language = Language::findOrFail($id);
 
         $validated = $request->validate([
-            'nome' => 'required|max:100',
-            'slug' => 'required|max:100|unique:languages,slug,' . $language->id
+            'nome' => 'required|string|max:100',
+            'slug' => 'required|string|max:100|alpha_dash|unique:languages,slug,'.$language->id,
         ]);
 
         try {

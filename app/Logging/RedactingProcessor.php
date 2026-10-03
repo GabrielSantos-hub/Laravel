@@ -49,7 +49,7 @@ class RedactingProcessor implements ProcessorInterface
             }
 
             if (is_string($value)) {
-                $clean[$key] = $this->maskEmails($this->stripCrlf($value));
+                $clean[$key] = $this->maskSecrets($this->maskEmails($this->stripCrlf($value)));
                 continue;
             }
 
@@ -71,5 +71,10 @@ class RedactingProcessor implements ProcessorInterface
             static fn (array $m): string => SecurityLogger::maskEmail($m[0]),
             $value
         ) ?? $value;
+    }
+
+    private function maskSecrets(string $value): string
+    {
+        return preg_replace('/\bAKIA[0-9A-Z]{16}\b/', '[REDACTED:aws_access_key]', $value) ?? $value;
     }
 }

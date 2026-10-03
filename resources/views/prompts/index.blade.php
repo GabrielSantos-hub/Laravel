@@ -90,6 +90,7 @@
                 <textarea name="intencao" id="intencao" class="form-control bg-light h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('intencao') is-invalid @enderror" rows="12" required
                     minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
                     maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
+                    @error('intencao') autofocus aria-invalid="true" @enderror
                     placeholder="Descreva o que você precisa gerar ou construir…">{{ old('intencao', old('user_input')) }}</textarea>
                 @error('intencao')
                 <div class="invalid-feedback">{{ $message }}</div>

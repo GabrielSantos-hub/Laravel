@@ -10,9 +10,16 @@ class AdminAuditLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $action = $request->string('action')->trim()->toString();
-        $from = $request->date('from');
-        $to = $request->date('to');
+        $validated = $request->validate([
+            'action' => ['nullable', 'string', 'max:64', 'alpha_dash'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $action = trim((string) ($validated['action'] ?? ''));
+        $from = isset($validated['from']) ? $request->date('from') : null;
+        $to = isset($validated['to']) ? $request->date('to') : null;
 
         $logs = AuditLog::query()
             ->with('user:id,name,email')

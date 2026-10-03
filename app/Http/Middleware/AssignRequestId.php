@@ -10,10 +10,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AssignRequestId
 {
+    public static function isValid(mixed $value): bool
+    {
+        return is_string($value)
+            && $value !== ''
+            && strlen($value) <= 128
+            && preg_match('/^[A-Za-z0-9._-]{8,128}$/', $value) === 1;
+    }
+
     public function handle(Request $request, Closure $next): Response
     {
         $incoming = $request->headers->get('X-Request-Id');
-        $id = is_string($incoming) && $incoming !== '' && strlen($incoming) <= 128
+        $id = self::isValid($incoming)
             ? $incoming
             : (string) Str::uuid();
 
