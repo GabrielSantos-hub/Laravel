@@ -80,7 +80,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($e instanceof HttpExceptionInterface) {
-                return FriendlyHttpRenderer::response($request, $e->getStatusCode(), $id);
+                return FriendlyHttpRenderer::response($request, $e->getStatusCode(), $id, $e->getHeaders());
             }
 
             if (! $request->expectsJson()) {

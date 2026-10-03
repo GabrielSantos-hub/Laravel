@@ -21,13 +21,17 @@ class FriendlyHttpRenderer
         return 405;
     }
 
-    public static function response(Request $request, int $status, ?string $requestId = null): Response
+    /**
+     * @param  array<string, mixed>  $headers
+     */
+    public static function response(Request $request, int $status, ?string $requestId = null, array $headers = []): Response
     {
         $status = self::clamp($status);
         $message = self::message($status);
+        $headers = self::withoutAllow($headers);
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => $message], $status);
+            return response()->json(['message' => $message], $status, $headers);
         }
 
         $view = self::view($status);
@@ -37,7 +41,22 @@ class FriendlyHttpRenderer
                 ?? $request->attributes->get('request_id')
                 ?? $request->headers->get('X-Request-Id'),
             'status' => $status,
-        ], $status);
+        ], $status, $headers);
+    }
+
+    /**
+     * @param  array<string, mixed>  $headers
+     * @return array<string, mixed>
+     */
+    private static function withoutAllow(array $headers): array
+    {
+        foreach (array_keys($headers) as $name) {
+            if (strcasecmp((string) $name, 'Allow') === 0) {
+                unset($headers[$name]);
+            }
+        }
+
+        return $headers;
     }
 
     public static function message(int $status): string

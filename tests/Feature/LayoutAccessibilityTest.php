@@ -84,11 +84,12 @@ class LayoutAccessibilityTest extends TestCase
 
         $resposta->assertOk();
         $resposta->assertViewIs('privacy');
-        $resposta->assertSee('Aviso de Privacidade e Termos Acadêmicos', false);
-        $resposta->assertSee('Trabalho de Conclusão de Curso', false);
-        $resposta->assertSee('localStorage', false);
+        $resposta->assertSee('Política de Privacidade', false);
+        $resposta->assertSee('projeto acadêmico', false);
         $resposta->assertSee('Voltar ao Início', false);
-        $resposta->assertSee('não são compartilhadas, vendidas', false);
+        $resposta->assertSee('Não salvar este prompt no meu histórico', false);
+        $resposta->assertSee('suportegueass@gmail.com', false);
+        $resposta->assertDontSee('Exportar meu histórico', false);
     }
 
     public function test_listagens_usam_grid_responsivo_em_cards(): void
