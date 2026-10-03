@@ -9,20 +9,13 @@ use App\Models\Template;
 use Illuminate\Database\Seeder;
 
 /**
- * Biblioteca oficial de templates GUEASS v3.1.
- *
- * Os corpos usam `{chave}` e `{% if chave %}...{% endif %}` — a mesma sintaxe
- * do TemplateInterpolator. `intent_type` alimenta o seletor; `is_generic`
- * marca o fallback quando nenhum template específico pontua.
+ * Biblioteca v3.1: `{chave}` / `{% if %}` do interpolator; `is_generic` é fallback.
  */
 class TemplateSeeder extends Seeder
 {
     public function run(): void
     {
         $templates = [
-            // ==========================================
-            // TEMPLATES DE CRIAÇÃO / IMPLEMENTAÇÃO
-            // ==========================================
             [
                 'name' => 'Role-Play & Restrição Absoluta (A1)',
                 'slug' => 'roleplay-restricao-absoluta',
@@ -258,9 +251,6 @@ Retorne APENAS o código com sintaxe destacada. Sem textos explicativos, sem int
 EOT,
             ],
 
-            // ==========================================
-            // NOVOS TEMPLATES: ANÁLISE / INSPEÇÃO (ETAPA 0)
-            // ==========================================
             [
                 'name' => 'Análise Estrutural & Code Review (C1)',
                 'slug' => 'analise-estrutural-code-review',
@@ -344,9 +334,6 @@ Forneça:
 EOT,
             ],
 
-            // ==========================================
-            // NOVOS TEMPLATES: INSPIRAÇÃO COMUNIDADE
-            // ==========================================
             [
                 'name' => 'C4 Model & System Design (D1)',
                 'slug' => 'c4-model-system-design',
@@ -387,9 +374,6 @@ Crie a especificação completa do contrato dessa API:
 EOT,
             ],
 
-            // ==========================================
-            // TEMPLATES DE QUALIDADE / ENTREGA (v3.1)
-            // ==========================================
             [
                 'name' => 'Geração de Testes AAA/TDD (C5)',
                 'slug' => 'geracao-testes-aaa-tdd',
@@ -571,9 +555,6 @@ Escreva:
 EOT,
             ],
 
-            // ==========================================
-            // TEMPLATE CORINGA / FALLBACK OBRIGATÓRIO
-            // ==========================================
             [
                 'name' => 'Desenvolvimento Geral & Assistente de Prompt (Fallback)',
                 'slug' => 'desenvolvimento-geral-fallback',
@@ -616,9 +597,7 @@ EOT,
             );
         }
 
-        // A biblioteca oficial substitui os templates artesanais das etapas
-        // anteriores: desativa o que não está no catálogo v3.1 para não competir
-        // na pontuação do seletor.
+        // Desativa templates fora do catálogo v3.1 para não competir no seletor.
         Template::query()
             ->where(function ($query) use ($slugsOficiais) {
                 $query->whereNull('slug')->orWhereNotIn('slug', $slugsOficiais);
@@ -643,8 +622,7 @@ EOT,
         $dotnet = Framework::query()->where('nome', '.NET')->first();
         $clean = Architecture::query()->where('nome', 'Clean Architecture')->first();
 
-        // O Roleplay não pode monopolizar PHP/Laravel: isso fazia toda
-        // intenção válida cair no Template #1 por pontuação de stack.
+        // Sem PHP/Laravel no Roleplay: senão toda intenção válida cai no #1.
         $roleplay = Template::query()->where('slug', 'roleplay-restricao-absoluta')->first();
         if ($roleplay) {
             $roleplay->languages()->sync([]);
