@@ -175,8 +175,7 @@ class GeminiAIProvider implements AIProviderInterface
             ->asJson()
             ->connectTimeout(min(5, $this->timeout))
             ->timeout($this->timeout)
-            // throw: false devolve a resposta com erro em vez de estourar, para
-            // a mensagem final poder citar o status e o motivo da API.
+            // throw: false: a mensagem final cita status e motivo da API.
             ->retry(max(1, $this->tries), 250, $this->shouldRetry(), throw: false);
     }
 

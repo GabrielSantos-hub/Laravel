@@ -99,11 +99,8 @@ class PromptComposer
     }
 
     /**
-     * Achata a intenção estruturada no mapa de variáveis que o template usa.
-     *
-     * As chaves derivadas da intenção são as de TemplateInterpolator::
-     * RESERVED_VARIABLES e têm precedência sobre as dinâmicas: um template não
-     * consegue redefinir {user_input} através de um campo da tela.
+     * Chaves de TemplateInterpolator::RESERVED_VARIABLES vencem as dinâmicas,
+     * para um campo da tela não redefinir {user_input}.
      *
      * @param  array<string, mixed>  $intent
      * @param  array<string, mixed>  $customVariables
@@ -124,11 +121,8 @@ class PromptComposer
             'type' => $this->text($intent['type'] ?? null),
             'architecture' => $this->text($intent['architecture'] ?? null),
             'technologies' => implode(', ', $technologies),
-            // A intenção traz uma lista plana de tecnologias, sem separar o que
-            // é linguagem do que é framework. Para manter compatibilidade com
-            // os templates atuais, o primeiro item alimenta {language} e o
-            // segundo {framework}; templates que precisam de precisão devem
-            // usar {technologies}.
+            // Lista plana: o 1º item vira {language} e o 2º {framework}.
+            // Templates que precisam de precisão devem usar {technologies}.
             'language' => $technologies[0] ?? '',
             'framework' => $technologies[1] ?? '',
             'constraints' => implode("\n", array_map(

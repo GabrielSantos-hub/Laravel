@@ -109,12 +109,8 @@ class PromptInjectionDetector
     }
 
     /**
-     * Instrução dirigida ao assistente para abandonar o contexto anterior,
-     * mesmo sem as palavras «regras» / «system prompt».
-     *
-     * Não casa prosa sobre o domínio (ignorar alerta, anular job, deixar
-     * de lado um checklist) — exige objeto de «o que te disseram» /
-     * contexto anterior ou marcador temporal + verbo de descarte.
+     * Override sem «regras»/«system prompt»: exige «o que te disseram» ou reset temporal.
+     * Não casa prosa de domínio (ignorar alerta, anular job).
      */
     private function structuralInstructionOverride(string $normalized, string $folded): ?string
     {

@@ -127,14 +127,8 @@ class InputSanityGuardrail
     }
 
     /**
-     * XSS, SQL Injection e prompt injection no texto cru.
-     *
-     * A normalização de sanidade remove pontuação, então XSS/SQLi
-     * precisam do texto original — senão `<script>` vira "script".
-     * Prompt injection usa o PromptInjectionDetector (fonte única).
-     *
-     * Pedidos legítimos *sobre* XSS/SQLi/injection (auditoria) não
-     * carregam a sintaxe de ataque nem os padrões de jailbreak.
+     * XSS/SQLi no texto cru: a normalização apaga pontuação (`<script>` → "script").
+     * Pedido *sobre* ataque sem a sintaxe não casa.
      */
     public function isMalicious(string $input): bool
     {
@@ -355,14 +349,8 @@ class InputSanityGuardrail
     }
 
     /**
-     * Decide o modo lean. `LEAN_MAX_LINES` (25) NÃO entra nesta decisão;
-     * é invariante de `PromptBuilderService::assembleLean`.
-     *
-     * É lean quando o pedido já foi aceito E:
-     * - o texto cru tem no máximo 60 caracteres; E
-     * - há no máximo 10 tokens; E
-     * - nenhum marcador de detalhe rico (`RICH_DETAIL_MARKERS`); E
-     * - é diagnóstico / sem verbo de implementação, OU é implementação com ≤5 tokens.
+     * Lean: ≤60 chars, ≤10 tokens, sem detalhe rico; diagnóstico ou implementação ≤5 tokens.
+     * `LEAN_MAX_LINES` não entra aqui — é invariante de assembleLean.
      *
      * @param  list<string>  $tokens
      */

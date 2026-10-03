@@ -7,10 +7,6 @@ use App\Services\Security\AdminAuditor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-/**
- * Painel de métricas do administrador. O acesso é garantido pelo grupo
- * `auth` + `can:admin` das rotas.
- */
 class AdminDashboardController extends Controller
 {
     public function __construct(

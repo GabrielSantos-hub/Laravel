@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Language extends Model
 {
-    // Informa qual tabela este model gerencia
     protected $table = 'languages';
 
     protected $fillable = [
@@ -17,7 +16,7 @@ class Language extends Model
 
     public function frameworks()
     {
-        return $this->hasMany(Framework::class, 'language_id');  // Uma linguagem tem vários frameworks
+        return $this->hasMany(Framework::class, 'language_id');
     }
 
     public function templates(): BelongsToMany

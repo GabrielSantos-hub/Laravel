@@ -44,7 +44,6 @@ class ProfileController extends Controller
             'must_change_password' => false,
         ])->save();
 
-        // auditoria: forced_password_change
         app(\App\Services\Security\SecurityLogger::class)->log('forced_password_change');
 
         return redirect()->route('home')->with('sucesso', 'Senha atualizada. Você já pode usar o sistema.');

@@ -16,9 +16,6 @@ use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->singleton(\App\Services\Security\SecurityLogger::class, function ($app) {
@@ -28,9 +25,6 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         // Em production o app assume HTTPS (cookies seguros, HSTS, URLs).
@@ -60,7 +54,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layout', function ($view) {
-       
             $prompts = Auth::check()
                 ? Prompt::query()->where('user_id', Auth::id())->latest()->limit(30)->get()
                 : collect();
