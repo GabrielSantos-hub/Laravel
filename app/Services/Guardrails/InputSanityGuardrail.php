@@ -203,7 +203,8 @@ class InputSanityGuardrail
             '/load_file\s*\(/i',
             '/into\s+(out|dump)file\b/i',
         ] as $pattern) {
-            if (preg_match($pattern, $haystack) === 1) {
+            $hit = preg_match($pattern, $haystack);
+            if ($hit === false || $hit === 1) {
                 return true;
             }
         }

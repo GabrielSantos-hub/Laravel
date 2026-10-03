@@ -34,7 +34,11 @@ class PromptInjectionDetector
 
             foreach ($patterns as $pattern) {
                 foreach ($haystacks as $haystack) {
-                    if (preg_match($pattern, $haystack) === 1) {
+                    $hit = preg_match($pattern, $haystack);
+                    if ($hit === false) {
+                        return PromptInjectionPatterns::CATEGORY_EVASIVE_ENCODING;
+                    }
+                    if ($hit === 1) {
                         return $category;
                     }
                 }
