@@ -4,12 +4,34 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ErrorPagesTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * @return array<string, array{0: int, 1: string}>
+     */
+    public static function httpExceptionsProvider(): array
+    {
+        return [
+            '400' => [400, 'Pedido inválido'],
+            '401' => [401, 'Entrada necessária'],
+            '403' => [403, 'Acesso negado'],
+            '404' => [404, 'Página não encontrada'],
+            '405' => [405, 'Esta ação não está disponível por este endereço'],
+            '419' => [419, 'Sessão expirada'],
+            '422' => [422, 'Dados não processados'],
+            '429' => [429, 'Muitas tentativas'],
+            '500' => [500, 'Algo deu errado'],
+            '503' => [503, 'Serviço indisponível'],
+        ];
+    }
 
     public function test_404_usa_a_pagina_amigavel_do_gueass(): void
     {
@@ -90,5 +112,127 @@ class ErrorPagesTest extends TestCase
             ->assertDontSee('SEGREDO_INTERNO_XYZ', false)
             ->assertDontSee('RuntimeException', false)
             ->assertDontSee('Stack trace', false);
+    }
+
+    #[DataProvider('httpExceptionsProvider')]
+    public function test_http_exception_4xx_e_5xx_tem_request_id_sem_trace_mesmo_com_debug(int $status, string $titulo): void
+    {
+        config(['app.debug' => true]);
+
+        Route::middleware('web')->get('/__probe-http-'.$status, function () use ($status) {
+            throw new HttpException($status, 'SEGREDO_INTERNO_XYZ');
+        });
+
+        $this->get('/__probe-http-'.$status)
+            ->assertStatus($status)
+            ->assertHeader('X-Request-Id')
+            ->assertSee($titulo, false)
+            ->assertSee('código de referência:', false)
+            ->assertDontSee('SEGREDO_INTERNO_XYZ', false)
+            ->assertDontSee('Stack trace', false)
+            ->assertDontSee('Whoops', false)
+            ->assertDontSee('Allow:', false);
+    }
+
+    public function test_fallback_4xx_e_5xx_reaproveitam_o_layout(): void
+    {
+        Route::middleware('web')->get('/__probe-418', function () {
+            abort(418);
+        });
+        Route::middleware('web')->get('/__probe-502', function () {
+            abort(502);
+        });
+
+        $this->get('/__probe-418')
+            ->assertStatus(418)
+            ->assertSee('Pedido não concluído', false)
+            ->assertSee('418', false)
+            ->assertSee('código de referência:', false)
+            ->assertDontSee('Stack trace', false);
+
+        $this->get('/__probe-502')
+            ->assertStatus(502)
+            ->assertSee('Algo deu errado', false)
+            ->assertSee('502', false)
+            ->assertDontSee('Stack trace', false);
+    }
+
+    public function test_422_html_usa_pagina_amigavel(): void
+    {
+        Route::middleware('web')->post('/__probe-422-html', function () {
+            abort(422);
+        });
+
+        $this->post('/__probe-422-html')
+            ->assertStatus(422)
+            ->assertHeader('X-Request-Id')
+            ->assertSee('Dados não processados', false)
+            ->assertDontSee('Stack trace', false);
+    }
+
+    public function test_405_get_em_rota_so_de_escrita_vira_404(): void
+    {
+        $this->get('/architectures/xtpt')
+            ->assertNotFound()
+            ->assertHeader('X-Request-Id')
+            ->assertSee('Página não encontrada', false)
+            ->assertDontSee('Supported methods', false)
+            ->assertDontSee('Allow:', false)
+            ->assertDontSee('PUT', false)
+            ->assertDontSee('Stack trace', false);
+    }
+
+    public function test_405_post_em_rota_so_de_leitura_usa_pagina_amigavel(): void
+    {
+        $this->post('/privacidade')
+            ->assertStatus(405)
+            ->assertHeader('X-Request-Id')
+            ->assertSee('Esta ação não está disponível por este endereço', false)
+            ->assertDontSee('Supported methods', false)
+            ->assertDontSee('GET', false)
+            ->assertDontSee('HEAD', false)
+            ->assertDontSee('Allow:', false)
+            ->assertDontSee('Stack trace', false);
+    }
+
+    public function test_json_de_erro_http_nao_leva_stack_nem_metodos(): void
+    {
+        $this->postJson('/privacidade')
+            ->assertStatus(405)
+            ->assertHeader('X-Request-Id')
+            ->assertExactJson(['message' => 'Esta ação não está disponível por este endereço.'])
+            ->assertDontSee('Supported methods', false);
+
+        $this->getJson('/architectures/xtpt')
+            ->assertNotFound()
+            ->assertExactJson(['message' => 'O endereço que você tentou abrir não existe ou foi movido.']);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function rotasInexistentesProvider(): array
+    {
+        return [
+            'architectures' => ['/architectures/xtpt'],
+            'frameworks' => ['/frameworks/abc'],
+            'templates' => ['/templates/9999'],
+            'admin' => ['/admin/xyz'],
+            'prompts' => ['/prompts/9999'],
+        ];
+    }
+
+    #[DataProvider('rotasInexistentesProvider')]
+    public function test_rotas_reais_inexistentes_respondem_404_amigavel(string $uri): void
+    {
+        $usuario = User::factory()->create(['role' => 'ADM']);
+
+        $this->actingAs($usuario)
+            ->get($uri)
+            ->assertNotFound()
+            ->assertHeader('X-Request-Id')
+            ->assertSee('Página não encontrada', false)
+            ->assertDontSee('Stack trace', false)
+            ->assertDontSee('Supported methods', false);
     }
 }
