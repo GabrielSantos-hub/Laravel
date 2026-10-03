@@ -153,9 +153,11 @@
                             data-modal-open="clear-history-modal"
                             aria-controls="clear-history-modal"
                             aria-haspopup="dialog"
+                            aria-label="Limpar meu histórico"
+                            title="Limpar meu histórico"
                             @if (($recentPrompts ?? collect())->isEmpty()) hidden @endif
                         >
-                            Limpar meu histórico
+                            <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
                         </button>
                         @endauth
                     </div>

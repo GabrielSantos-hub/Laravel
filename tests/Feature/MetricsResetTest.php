@@ -136,7 +136,10 @@ it('o painel mostra a data de corte e o botao de restaurar', function () {
     $html = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->getContent();
 
     expect($html)->toContain('Métricas consideradas desde')
-        ->and($html)->toContain('Zerar métricas')
+        ->and($html)->toContain('aria-label="Zerar métricas"')
+        ->and($html)->toContain('title="Zerar métricas"')
+        ->and($html)->toContain('fa-arrows-rotate')
+        ->and($html)->toContain('aria-hidden="true"')
         ->and($html)->toContain('Considerar todo o histórico')
         ->and($html)->not->toContain('onclick=');
 });

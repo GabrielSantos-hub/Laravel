@@ -14,12 +14,14 @@
         <div class="d-flex flex-wrap gap-2">
             <button
                 type="button"
-                class="btn-catalog btn-catalog-delete focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="btn-catalog btn-catalog-delete btn-catalog-icon focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 data-modal-open="reset-metrics-modal"
                 aria-controls="reset-metrics-modal"
                 aria-haspopup="dialog"
+                aria-label="Zerar métricas"
+                title="Zerar métricas"
             >
-                Zerar métricas
+                <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
             </button>
             @if ($metricas['metrics_reset_at'])
                 <button

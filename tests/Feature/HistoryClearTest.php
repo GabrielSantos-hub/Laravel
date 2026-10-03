@@ -114,7 +114,10 @@ it('a pagina renderiza o dialogo com csrf e sem onclick', function () {
 
     $html = $this->actingAs($dono)->get(route('home'))->assertOk()->getContent();
 
-    expect($html)->toContain('Limpar meu histórico')
+    expect($html)->toContain('aria-label="Limpar meu histórico"')
+        ->and($html)->toContain('title="Limpar meu histórico"')
+        ->and($html)->toContain('fa-arrows-rotate')
+        ->and($html)->toContain('aria-hidden="true"')
         ->and($html)->toContain('Isto apagará todos os seus prompts e não pode ser desfeito.')
         ->and($html)->toContain('name="_token"')
         ->and($html)->toContain('id="clear-history-modal"')

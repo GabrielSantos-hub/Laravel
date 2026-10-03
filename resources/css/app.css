@@ -414,25 +414,33 @@ html.high-contrast .skip-link {
 
 .sidebar-history-clear {
     appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 40px;
+    min-height: 40px;
     margin: 0;
     padding: 0;
     border: 0;
+    border-radius: 0.5rem;
     background: transparent;
-    color: var(--gueass-text-muted);
-    font-size: 0.72rem;
-    line-height: 1.3;
-    text-align: right;
+    color: var(--gueass-text);
+    font-size: 1rem;
+    line-height: 1;
     cursor: pointer;
 }
 
 .sidebar-history-clear:hover,
 .sidebar-history-clear:focus-visible {
     color: var(--gueass-accent);
-    text-decoration: underline;
+    background: color-mix(in srgb, var(--gueass-accent) 12%, transparent);
+    text-decoration: none;
 }
 
 html.dark .sidebar-history-clear {
-    color: var(--gueass-text-muted);
+    color: var(--gueass-text);
 }
 
 .chat-link {
@@ -917,6 +925,26 @@ html.high-contrast .chart-card {
     color: #b91c1c;
 }
 
+.btn-catalog-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+html.dark .btn-catalog-icon.btn-catalog-delete {
+    color: var(--gueass-danger);
+    border-color: color-mix(in srgb, var(--gueass-danger) 50%, transparent);
+}
+
+html.dark .btn-catalog-icon.btn-catalog-delete:hover {
+    background: color-mix(in srgb, var(--gueass-danger) 16%, var(--gueass-surface));
+    color: var(--gueass-danger);
+}
+
 .user-menu {
     position: absolute;
     right: 0;
@@ -1288,7 +1316,8 @@ html.high-contrast h4, html.high-contrast h5, html.high-contrast h6 {
 html.high-contrast .btn,
 html.high-contrast a.btn,
 html.high-contrast .btn-catalog,
-html.high-contrast .icon-btn {
+html.high-contrast .icon-btn,
+html.high-contrast .sidebar-history-clear {
     background: #ffff00 !important;
     color: #000 !important;
     border: 2px solid #fff !important;

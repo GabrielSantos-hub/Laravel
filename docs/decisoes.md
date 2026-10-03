@@ -113,3 +113,14 @@ Levantamento final em `docs/levantamento-final.md`.
 - **Código congelado** após esta rodada: sem novas funcionalidades
   nesta árvore.
 
+## 2026-10-03 — Ícones nos botões de limpeza
+
+- Os gatilhos «Limpar meu histórico» e «Zerar métricas» passaram a
+  ícone `fa-arrows-rotate` (Font Awesome já self-hosted via Vite). O
+  texto original ficou em `aria-label` e `title` (leitor de tela e
+  tooltip). O ícone sozinho não executa a ação: a confirmação em
+  diálogo permanece obrigatória, com os mesmos textos e o mesmo fluxo.
+- Motivo: reduzir ruído visual na sidebar e no painel de métricas sem
+  perder o nome da ação nem o passo de confirmação. «Considerar todo o
+  histórico» continua com rótulo de texto.
+
