@@ -1,10 +1,4 @@
-{{--
-    Avaliação de qualidade do prompt gerado.
-
-    Espera:
-      $promptId  id do prompt no histórico
-      $isUseful  voto já registrado (true, false ou null)
---}}
+{{-- Espera $promptId e $isUseful (true, false ou null). --}}
 <div class="prompt-feedback @if ($isUseful !== null) is-answered @endif" data-prompt-feedback data-url="{{ route('prompts.feedback', $promptId) }}" role="group" aria-label="Este prompt foi útil?">
     <span class="prompt-feedback-label">Este prompt foi útil?</span>
     <button type="button"
