@@ -41,7 +41,8 @@ class PromptInjectionDetector
             }
         }
 
-        return $this->compoundSignals($normalized, $folded)
+        return $this->structuralInstructionOverride($normalized, $folded)
+            ?? $this->compoundSignals($normalized, $folded)
             ?? $this->compactedCategory($normalized, $folded);
     }
 
@@ -72,6 +73,9 @@ class PromptInjectionDetector
                 'disablethedeveloperbriefing',
                 'cancelthedeveloperbriefing', 'unboundmodel',
                 'unrestrictedcompletion', 'zeroguardrails',
+                'desconsideretudooquete', 'esquecooquete',
+                'ignoratudoquevieram', 'deixadeladooquevoce',
+                'nadadoquetepassaram', 'forgetwhattheytold',
             ],
             PromptInjectionPatterns::CATEGORY_ROLE_SWITCH => [
                 'youarenowdan', 'dansemrestric', 'doanythingnow',
@@ -95,6 +99,39 @@ class PromptInjectionDetector
                     return $category;
                 }
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Instrução dirigida ao assistente para abandonar o contexto anterior,
+     * mesmo sem as palavras «regras» / «system prompt».
+     *
+     * Não casa prosa sobre o domínio (ignorar alerta, anular job, deixar
+     * de lado um checklist) — exige objeto de «o que te disseram» /
+     * contexto anterior ou marcador temporal + verbo de descarte.
+     */
+    private function structuralInstructionOverride(string $normalized, string $folded): ?string
+    {
+        $text = $normalized.' '.$folded;
+
+        $verbs = '(?:desconsidere|desconsidera|desconsiderar|esqueca|esquece|esquecer|ignore|ignora|ignorar|descarte|descarta|descartar|disregard|forget|abandone|abandona|abandonar|anule|anula|anular)';
+        $setAside = '(?:(?:deixe|deixa|deixar)\s+de\s+lado|set\s+aside)';
+        $prevTalk = '(?:tudo\s+(?:o\s+)?que\s+te\s+(?:disseram|falaram|passaram|contaram|ensinaram|deram)|o\s+que\s+te\s+(?:disseram|falaram|passaram|contaram|ensinaram|deram)|tudo\s+que\s+(?:vieram\s+te\s+dizer|te\s+vieram\s+dizer)|what\s+they\s+(?:told|said|passed|gave)\s+you|whatever\s+they\s+said|what\s+you\s+were\s+(?:told|given|taught)|everything\s+you\s+were\s+given|all\s+they\s+passed\s+you)';
+        $prevContext = '(?:contexto\s+anterior|instruc(?:oes)?\s+anteriores|o\s+que\s+voce\s+sabe|previous\s+context|prior\s+context|o\s+que\s+veio\s+antes)';
+        $reset = '(?:antes\s+disso|antes\s+de\s+tudo|daqui\s+pr[ae]\s+frente|daqui\s+para\s+frente|a\s+partir\s+de\s+agora|from\s+now\s+on|from\s+here\s+on|going\s+forward)';
+
+        if (preg_match('/(?:'.$verbs.'|'.$setAside.')\b.{0,80}\b(?:'.$prevTalk.'|'.$prevContext.')/u', $text) === 1) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
+        }
+
+        if (preg_match('/(?:'.$prevTalk.')\b.{0,40}\b(?:vale|valem|conta|contam|serve|servem|counts?)\b/u', $text) === 1) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
+        }
+
+        if (preg_match('/(?:'.$reset.')\b.{0,80}\b(?:nada\s+do\s+que|none\s+of\s+what|(?:'.$verbs.'|'.$setAside.')\b.{0,40}\b(?:tudo|all|everything|contexto|previous|prior|o\s+que|what\s+they|what\s+you))/u', $text) === 1) {
+            return PromptInjectionPatterns::CATEGORY_INSTRUCTION_OVERRIDE;
         }
 
         return null;
