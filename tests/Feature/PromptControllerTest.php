@@ -671,6 +671,18 @@ class PromptControllerTest extends TestCase
         $resposta->assertOk();
         $resposta->assertSee('Este prompt foi útil?');
         $resposta->assertSee(route('prompts.feedback', Prompt::query()->sole()), false);
+        $this->assertFeedbackScriptUsaNonceSemHandlerInline($resposta);
+    }
+
+    public function test_a_tela_do_prompt_usa_script_de_avaliacao_com_nonce_e_sem_handler_inline(): void
+    {
+        $prompt = $this->prompt($this->usuario);
+
+        $resposta = $this->actingAs($this->usuario)->get(route('prompts.show', $prompt));
+
+        $resposta->assertOk();
+        $resposta->assertSee('Este prompt foi útil?', false);
+        $this->assertFeedbackScriptUsaNonceSemHandlerInline($resposta);
     }
 
     public function test_a_tela_de_geracao_nao_mostra_avaliacao_sem_prompt_gerado(): void
@@ -696,6 +708,20 @@ class PromptControllerTest extends TestCase
         $resposta->assertSee('Revise os campos destacados abaixo.');
         $resposta->assertSee('invalid-feedback', false);
         $resposta->assertSee('Descreva sua intenção com mais detalhes', false);
+    }
+
+    private function assertFeedbackScriptUsaNonceSemHandlerInline($resposta): void
+    {
+        $csp = (string) $resposta->headers->get('Content-Security-Policy');
+        $this->assertSame(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", $csp, $matches));
+        $nonce = $matches[1];
+
+        $html = $resposta->getContent();
+        $this->assertDoesNotMatchRegularExpression('/\sonclick\s*=/i', $html);
+        $this->assertMatchesRegularExpression(
+            '/<script[^>]*\snonce="'.preg_quote($nonce, '/').'"[^>]*>[\s\S]*data-prompt-feedback/',
+            $html
+        );
     }
 
     private function iaRejeitaIntencao(): void
