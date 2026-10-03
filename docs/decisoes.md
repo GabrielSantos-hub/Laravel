@@ -83,3 +83,19 @@ como invariante do envelope). Gemini continua fail-closed. Scaffold
 `HasMiddleware` duplicado. Páginas 403/404/419/429/500 com `request_id`.
 Levantamento final em `docs/levantamento-final.md`.
 
+## 2026-10-03 — Ajustes finais e congelamento
+
+- **Exportação do histórico removida** (`GET /perfil/exportar`, evento
+  `data_exported`, botão do perfil). A exclusão de conta permanece.
+- **Auditoria mantida.** A tela explica que registra quem, o quê, quando
+  e de qual IP, para alterações de catálogos e redefinições de senha.
+- **Página 404 mantida** para endereço inexistente e para GET/HEAD em
+  URI que só aceita escrita (não revela a rota). 405 amigável para os
+  demais métodos não permitidos.
+- **Política de privacidade simplificada**, factual, sem prometer
+  exportação; retenção lida de `config()`.
+- **Catálogo ampliado** (15 linguagens, 32 frameworks, 16 arquiteturas,
+  26 templates ativos). Seeders idempotentes por slug/nome.
+- **Código congelado** após estes ajustes: sem novas funcionalidades
+  nesta árvore.
+

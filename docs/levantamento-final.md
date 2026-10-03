@@ -1,8 +1,9 @@
 # Levantamento técnico final — GUEASS
 
-Estado do código na branch `hardening/seguranca` após a Fase 4. Citações
-no formato `arquivo` → `símbolo`. O que não existe: **NÃO ENCONTRADO**.
-Nenhum segredo de `.env` é reproduzido aqui.
+Estado do código na branch `hardening/seguranca` após os ajustes finais.
+O código desta árvore fica **congelado**. Citações no formato `arquivo` →
+`símbolo`. O que não existe: **NÃO ENCONTRADO**. Nenhum segredo de `.env`
+é reproduzido aqui.
 
 ---
 
@@ -247,6 +248,36 @@ Pesos `TemplateSelector`: `WEIGHT_LANGUAGE=4`, `FRAMEWORK=3`,
 …), analysis, security (`owasp`, `xss`, `jwt`, …), feature (`crud`,
 `modulo`, …).
 
+### Catálogo povoado (MySQL real, seeders idempotentes)
+
+Contagens após `php artisan db:seed --class=LanguageSeeder`,
+`ArchitectureSeeder` e `TemplateSeeder` (segunda passagem não duplicou
+nem apagou usuários):
+
+| Recurso | Ativos |
+| --- | ---: |
+| Linguagens | 15 |
+| Frameworks | 32 |
+| Arquiteturas | 16 |
+| Templates ativos | 26 |
+
+Templates novos (v3.1), nome e bloco:
+
+| Nome | Bloco | Slug |
+| --- | --- | --- |
+| Geração de Testes AAA/TDD (C5) | C | `geracao-testes-aaa-tdd` |
+| Refatoração Segura (B7) | B | `refatoracao-segura` |
+| Revisão de Segurança OWASP (C6) | C | `revisao-seguranca-owasp` |
+| Depuração por Erro e Stack Trace (C7) | C | `depuracao-stack-trace` |
+| Otimização de Performance (C8) | C | `otimizacao-performance` |
+| User Stories com BDD/Gherkin (B8) | B | `user-stories-bdd-gherkin` |
+| Pipeline de CI/CD (B9) | B | `pipeline-ci-cd` |
+| Migração de Versão de Framework (B10) | B | `migracao-versao-framework` |
+| Mensagens de Commit e Changelog (C9) | C | `mensagens-commit-changelog` |
+
+A lista oficial do `TemplateSeeder` inclui estes slugs e os 17 anteriores;
+o que não está na lista é desativado. Exportação do histórico: **removida**.
+
 ---
 
 ## 6. Banco de dados (estado FINAL)
@@ -345,13 +376,24 @@ em `resources/js/ui.js`). Accent `#5b4ce6`, fonte Orbitron. Sidebar: últimos
 **30** prompts (`AppServiceProvider` View composer). CSP nonce nos scripts
 inline do tema.
 
-Páginas de erro (`resources/views/errors/`): 403 «Acesso negado», 404
-«Página não encontrada», 419 «Sessão expirada», 429 «Muitas tentativas»,
-500 «Algo deu errado»; layout compartilhado, **sem** Vite/`app.css` (o
-CSS do app deslocava o cartão à direita). Cartão centrado
-(`.error-page-center` + `margin-inline: auto`) em desktop e mobile,
-tema claro/escuro via `localStorage` + nonce CSP. «código de referência»
-=`request_id` sanitizado. A 500 HTTP passa pelo handler (`ErrorPagesTest`).
+Páginas de erro (`resources/views/errors/`): 400, 401, 403, 404, 405
+(«Esta ação não está disponível por este endereço»), 419, 422, 429, 500,
+503; fallbacks `4xx.blade.php` e `5xx.blade.php`. Layout compartilhado,
+**sem** Vite/`app.css`. GET/HEAD em URI só de escrita
+(`/architectures/{id}`, `/frameworks/{id}`, `/templates/{id}`) responde
+**404** (não revela a rota). Outro método não permitido: **405** sem
+header `Allow` e sem lista de métodos. `HttpException` 4xx/5xx nunca
+mostra a tela de depuração, mesmo com `APP_DEBUG=true`. Exceção não
+tratada com debug ligado ainda pode mostrar a página de depuração.
+`FriendlyHttpRenderer` + `ErrorPagesTest`. «código de referência» =
+`request_id`.
+
+A avaliação Útil/Não útil (`partials/prompt-feedback.blade.php`) usa
+`<script>` com o nonce da requisição; sem `onclick` inline.
+
+Política de privacidade (`/privacidade`): texto curto em português,
+alinhado ao código, sem prometer exportação; retenção lida de
+`config('privacy.prompt_retention_days')`.
 
 Cropper no perfil (`profile-crop.js`); Chart.js no dashboard.
 
@@ -435,7 +477,7 @@ http_only true, same_site lax, secure cookie false no local.
 
 | Funcionalidade | Onde |
 | --- | --- |
-| `audit_logs` + tela somente leitura (nome + e-mail mascarado + #id) | `AdminAuditor`, `AdminAuditLogController`, `resources/views/admin/audit/index.blade.php` |
+| `audit_logs` + tela somente leitura (quem, o quê, quando, IP; catálogo e reset de senha) | `AdminAuditor`, `AdminAuditLogController`, `resources/views/admin/audit/index.blade.php` |
 | `must_change_password` | migration `2026_10_02_030000_*`, `EnsurePasswordIsChanged` |
 | Opt-out de histórico | `nao_salvar_historico` em `GeneratePromptRequest` |
 | Excluir conta | `ProfileController::destroy` |
@@ -448,6 +490,10 @@ http_only true, same_site lax, secure cookie false no local.
 | Idempotência 5 s | `config/security.php` |
 | Avatar GD / anti-SVG | `AvatarSanitizer` |
 | Proteção do último ADM | `User::booted` |
+| Páginas 4xx/5xx/405 amigáveis | `FriendlyHttpRenderer`, `resources/views/errors/*` |
+| Catálogo v3.1 (15/32/16/26) | `LanguageSeeder`, `ArchitectureSeeder`, `TemplateSeeder` |
+| Política de privacidade simples | `resources/views/privacy.blade.php` |
+| Exportação do histórico | **REMOVIDA** |
 
 ---
 
@@ -477,7 +523,7 @@ http_only true, same_site lax, secure cookie false no local.
 | Geração | `app/Http/Controllers/PromptController.php`, `app/Services/PromptPipelineService.php`, `app/Services/PromptGeneratorService.php`, `app/Services/PromptBuilderService.php` |
 | Guardrails | `app/Services/Guardrails/InputSanityGuardrail.php`, `PromptInjectionDetector.php`, `PromptInjectionPatterns.php`, `SensitiveDataRedactor.php`, `UserIntentFrame.php` |
 | IA | `app/Services/AI/*`, `app/Services/AI/Providers/GeminiAIProvider.php`, `config/ai.php`, `config/services.php` |
-| Segurança | `app/Services/Security/SecurityLogger.php`, `AdminAuditor.php`, `app/Logging/RedactingProcessor.php`, `app/Http/Middleware/SecurityHeaders.php`, `AssignRequestId.php` |
+| Segurança | `app/Services/Security/SecurityLogger.php`, `AdminAuditor.php`, `app/Logging/RedactingProcessor.php`, `app/Http/Middleware/SecurityHeaders.php`, `AssignRequestId.php`, `app/Exceptions/FriendlyHttpRenderer.php` |
 | Avatar | `app/Services/AvatarSanitizer.php` |
 | Models | `app/Models/{User,Prompt,Template,Language,Framework,Architecture,AuditLog}.php` |
 | Views | `resources/views/layout.blade.php`, `prompts/`, `admin/`, `errors/`, `profile/`, `auth/` |

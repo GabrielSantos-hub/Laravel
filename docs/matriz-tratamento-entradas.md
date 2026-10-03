@@ -48,6 +48,9 @@ Marcas: **SEM TESTE** (nenhum teste HTTP/unitário cobre o campo);
 | GET `/admin/auditoria` | `from`, `to` query | `nullable`, `date`; `to` ≥ `from` | Carbon | — | value | 422 (não 500) | sim | — | `InputSurfaceEdgeCasesTest` |
 | GET `/admin/auditoria` | `page` query | `nullable`, `integer`, `min:1` | paginate 20 | — | links | 422 se não inteiro | sim | — | **FRACA** (page inválida SEM TESTE dedicado) |
 | GET `/api/languages/{language}/frameworks` | `language` route param | implicit binding | JSON dos frameworks | auth | JSON | 404 | n/a | — | `InputSurfaceEdgeCasesTest` |
+| GET `/architectures/{id}`, `/frameworks/{id}`, `/templates/{id}` | método GET/HEAD | resource sem `show` | `FriendlyHttpRenderer` trata MethodNotAllowed como **404** | — | página 404 | 404 amigável (não lista métodos) | n/a | — | `ErrorPagesTest` |
+| POST (e outros) em rota só GET (ex. `/privacidade`) | método HTTP | MethodNotAllowed | 405 sem header `Allow` | — | página 405 | «Esta ação não está disponível por este endereço.» | n/a | — | `ErrorPagesTest` |
+| GET `/privacidade` | — | pública | texto lido de `config('privacy.prompt_retention_days')` | — | Blade | — | n/a | — | `Phase2PrivacyAndInjectionTest` |
 | header `X-Request-Id` | header (qualquer rota) | `AssignRequestId::isValid`: `[A-Za-z0-9._-]{8,128}` | inválido → UUID novo; **não** propaga o cru | — | páginas de erro usam só `request_id` sanitizado | — | n/a | contexto `request_id` | `InputEdgeCasesTest`, `ErrorPagesTest` |
 | cookie sessão | cookie | EncryptCookies, HttpOnly | — | — | — | 419 se CSRF | n/a | — | `ErrorPagesTest` (419) **FRACA** |
 | query strings genéricas | não listadas | ignoradas se não validadas | — | — | — | — | — | — | **SEM TESTE** para chaves arbitrárias |
@@ -61,3 +64,6 @@ Marcas: **SEM TESTE** (nenhum teste HTTP/unitário cobre o campo);
 - HTML: volta ao formulário, texto preservado (exceto segredo), `autofocus`
   no campo `intencao`, classe `is-invalid`.
 - JSON: sempre `422` com `{message, errors.campo[]}`. Nunca stack trace.
+
+Erros HTTP (`FriendlyHttpRenderer`): JSON `{message}` estável, sem stack
+e sem métodos suportados. GET/HEAD em URI só de escrita = 404.

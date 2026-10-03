@@ -85,10 +85,23 @@ não é feito automaticamente por este repositório.
 
    Nunca use `migrate:fresh`, `migrate:reset` nem `db:wipe` neste projeto.
 
-   O seeder cria o catálogo (linguagens, arquiteturas, templates). Em
-   local/testing também cria usuários de demonstração com senha vinda de
-   `DEMO_ADMIN_PASSWORD` / `DEMO_USER_PASSWORD` ou aleatória (exibida uma
-   vez no terminal). Em production o seeder **não** cria usuários.
+   Para **só** povoar ou atualizar o catálogo (idempotente, não apaga
+   usuários):
+
+   ```bash
+   php artisan db:seed --class=LanguageSeeder
+   php artisan db:seed --class=ArchitectureSeeder
+   php artisan db:seed --class=TemplateSeeder
+   ```
+
+   Contagens atuais: 15 linguagens, 32 frameworks, 16 arquiteturas, 26
+   templates ativos. `php artisan db:seed` completo também cria usuários
+   de demonstração em local/testing (`DEMO_ADMIN_PASSWORD` /
+   `DEMO_USER_PASSWORD` ou senha aleatória, exibida uma vez). Em
+   production o seeder **não** cria usuários.
+
+   Em demonstrações, defina `APP_DEBUG=false` no `.env` local. Não altere
+   o `.env` por script; o valor fica com quem opera a máquina.
 
 5. Compile os assets e suba o servidor:
 
