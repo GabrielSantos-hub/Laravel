@@ -148,13 +148,19 @@ it('o comando prune remove so prompts antigos e loga a contagem', function () {
         ->and(Prompt::query()->whereKey($antigo->id)->exists())->toBeFalse();
 });
 
-it('a pagina de privacidade descreve retencao e redacao', function () {
+it('a pagina de privacidade descreve retencao e exclusao sem prometer exportacao', function () {
+    config(['privacy.prompt_retention_days' => 90]);
+
     $resposta = $this->get(route('privacidade'));
 
     $resposta->assertOk();
+    $resposta->assertSee('projeto acadêmico', false);
     $resposta->assertSee('Não salvar este prompt no meu histórico', false);
-    $resposta->assertSee('[REDACTED:tipo]', false);
-    $resposta->assertSee('gueass:prune-prompts', false);
-    $resposta->assertSee('exportar os próprios prompts', false);
-    $resposta->assertSee('AI_PROVIDER=null', false);
+    $resposta->assertSee('90 dias', false);
+    $resposta->assertSee('PROMPT_RETENTION_DAYS', false);
+    $resposta->assertSee('Excluir minha conta', false);
+    $resposta->assertSee('suportegueass@gmail.com', false);
+    $resposta->assertSee('Por padrão isso não está ligado', false);
+    $resposta->assertDontSee('exportar os próprios prompts', false);
+    $resposta->assertDontSee('Exportar meu histórico', false);
 });

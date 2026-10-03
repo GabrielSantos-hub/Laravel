@@ -158,6 +158,11 @@ Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
 Não copie o conteúdo de `security.log` para issues públicas: ainda pode
 conter metadados de tamanho/categoria.
 
+A política de privacidade em `/privacidade` descreve o que o código faz:
+dados da conta, histórico com segredos já mascarados, retenção configurável,
+exclusão pelo perfil e o fato de o provedor externo de IA ficar desligado
+por padrão. Não há exportação do histórico.
+
 ### Política de retenção
 
 | Dado | Padrão | Onde |
