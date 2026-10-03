@@ -332,6 +332,9 @@ id; user_id nullable FK **nullOnDelete**; action(64); target_type(191)
 nullable; target_id nullable; ip(45); metadata json; created_at
 (sem `updated_at`). Model recusa update/delete.
 
+A tela `/admin/auditoria` é somente leitura e mostra quem fez o quê,
+quando e de qual IP, para alterações de catálogos e redefinições de senha.
+
 ---
 
 ## 7. Interface

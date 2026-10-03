@@ -151,8 +151,9 @@ Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
   (Monolog `RotatingFileHandler`, `SECURITY_LOG_DAYS`, padrão 30). Cada
   linha tem o evento (`login_failed`, `prompt_injection_detected`, …),
   `request_id` no contexto compartilhado e e-mail já mascarado.
-- Auditoria administrativa (mutações de catálogo/usuários): tabela
-  `audit_logs`, tela `/admin/auditoria` (somente leitura).
+- Auditoria administrativa: tabela `audit_logs`, tela `/admin/auditoria`
+  (somente leitura). Registra quem fez o quê, quando e de qual IP, nas
+  alterações de catálogos e nas redefinições de senha.
 - Páginas de erro mostram «código de referência» = `X-Request-Id`.
 
 Não copie o conteúdo de `security.log` para issues públicas: ainda pode

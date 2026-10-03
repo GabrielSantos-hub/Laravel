@@ -146,6 +146,7 @@ it('grava auditoria ao criar linguagem e a tela lista o evento', function () {
     $this->actingAs($admin)
         ->get(route('admin.audit.index', ['action' => 'admin_language_created']))
         ->assertOk()
+        ->assertSee('Registra quem fez o quê, quando e de qual IP', false)
         ->assertSee('admin_language_created', false)
         ->assertSee($admin->name, false)
         ->assertSee(\App\Services\Security\SecurityLogger::maskEmail($admin->email), false)

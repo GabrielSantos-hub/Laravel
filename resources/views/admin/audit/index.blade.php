@@ -5,7 +5,10 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
         <div>
             <h3 class="mb-1">Auditoria</h3>
-            <p class="text-muted small mb-0">Somente leitura. Mutações administrativas registradas sem dados sensíveis.</p>
+            <p class="text-muted small mb-0">
+                Registra quem fez o quê, quando e de qual IP, nas alterações de
+                catálogos e nas redefinições de senha. Somente leitura.
+            </p>
         </div>
     </div>
 
