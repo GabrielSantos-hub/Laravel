@@ -26,6 +26,7 @@ class LanguageSeeder extends Seeder
                 'Laravel' => 'laravel',
                 'Symfony' => 'symfony',
                 'Livewire' => 'livewire',
+                'CodeIgniter' => 'codeigniter',
             ],
         ],
         'JavaScript' => [
@@ -34,6 +35,9 @@ class LanguageSeeder extends Seeder
                 'React' => 'react',
                 'Vue.js' => 'vue-js',
                 'Node.js' => 'node-js',
+                'Express' => 'express',
+                'Svelte' => 'svelte',
+                'Nuxt' => 'nuxt',
             ],
         ],
         'TypeScript' => [
@@ -41,6 +45,8 @@ class LanguageSeeder extends Seeder
             'frameworks' => [
                 'Angular' => 'angular',
                 'NestJS' => 'nestjs',
+                'Next.js' => 'next-js',
+                'Express com TypeScript' => 'express-typescript',
             ],
         ],
         'Python' => [
@@ -48,22 +54,74 @@ class LanguageSeeder extends Seeder
             'frameworks' => [
                 'Django' => 'django',
                 'FastAPI' => 'fastapi',
+                'Flask' => 'flask',
             ],
         ],
         'Java' => [
             'slug' => 'java',
             'frameworks' => [
                 'Spring' => 'spring',
+                'Quarkus' => 'quarkus',
             ],
         ],
         'C#' => [
             'slug' => 'csharp',
             'frameworks' => [
                 '.NET' => 'dotnet',
+                'Blazor' => 'blazor',
             ],
         ],
         'Go' => [
             'slug' => 'golang',
+            'frameworks' => [
+                'Gin' => 'gin',
+                'Fiber' => 'fiber',
+            ],
+        ],
+        'Kotlin' => [
+            'slug' => 'kotlin',
+            'frameworks' => [
+                'Ktor' => 'ktor',
+                'Jetpack Compose' => 'jetpack-compose',
+            ],
+        ],
+        'Swift' => [
+            'slug' => 'swift',
+            'frameworks' => [
+                'SwiftUI' => 'swiftui',
+                'Vapor' => 'vapor',
+            ],
+        ],
+        'Rust' => [
+            'slug' => 'rust',
+            'frameworks' => [
+                'Axum' => 'axum',
+                'Actix Web' => 'actix-web',
+            ],
+        ],
+        'Ruby' => [
+            'slug' => 'ruby',
+            'frameworks' => [
+                'Ruby on Rails' => 'ruby-on-rails',
+                'Sinatra' => 'sinatra',
+            ],
+        ],
+        'Dart' => [
+            'slug' => 'dart',
+            'frameworks' => [
+                'Flutter' => 'flutter',
+            ],
+        ],
+        'SQL' => [
+            'slug' => 'sql',
+            'frameworks' => [],
+        ],
+        'C++' => [
+            'slug' => 'cpp',
+            'frameworks' => [],
+        ],
+        'C' => [
+            'slug' => 'c',
             'frameworks' => [],
         ],
     ];

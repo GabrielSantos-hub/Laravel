@@ -9,7 +9,7 @@ use App\Models\Template;
 use Illuminate\Database\Seeder;
 
 /**
- * Biblioteca oficial de templates GUEASS v3.0.
+ * Biblioteca oficial de templates GUEASS v3.1.
  *
  * Os corpos usam `{chave}` e `{% if chave %}...{% endif %}` — a mesma sintaxe
  * do TemplateInterpolator. `intent_type` alimenta o seletor; `is_generic`
@@ -388,6 +388,190 @@ EOT,
             ],
 
             // ==========================================
+            // TEMPLATES DE QUALIDADE / ENTREGA (v3.1)
+            // ==========================================
+            [
+                'name' => 'Geração de Testes AAA/TDD (C5)',
+                'slug' => 'geracao-testes-aaa-tdd',
+                'description' => 'Gera testes unitários e de integração no padrão AAA/TDD.',
+                'intent_type' => 'test',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um Engenheiro de Qualidade{% if language %} especializado em {language}{% endif %}{% if framework %} com {framework}{% endif %}.
+
+Pedido:
+{user_input}
+
+Escreva testes unitários e de integração seguindo AAA (Arrange, Act, Assert) e TDD:
+1. Liste os casos (feliz, borda, falha) antes do código.
+2. Cubra o comportamento pedido, não a implementação interna.
+3. Use o runner e as convenções da stack{% if framework %} ({framework}){% endif %}.
+4. Sem placeholders vazios; cada teste precisa de setup, ação e asserção.
+EOT,
+            ],
+            [
+                'name' => 'Refatoração Segura (B7)',
+                'slug' => 'refatoracao-segura',
+                'description' => 'Refatora preservando o comportamento, com plano em passos.',
+                'intent_type' => 'refactor',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um Tech Lead responsável por refatoração segura{% if language %} em {language}{% endif %}{% if framework %} com {framework}{% endif %}.
+
+Escopo:
+{user_input}
+
+Preserve o comportamento observável. Entregue:
+1. Diagnóstico do que muda e do que não pode mudar.
+2. Plano incremental em passos pequenos e reversíveis.
+3. Código refatorado só depois do plano.
+4. Como validar (testes ou checagens) que nada quebrou.
+EOT,
+            ],
+            [
+                'name' => 'Revisão de Segurança OWASP (C6)',
+                'slug' => 'revisao-seguranca-owasp',
+                'description' => 'Revisa um trecho ou funcionalidade contra o OWASP Top 10.',
+                'intent_type' => 'security',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um revisor de segurança de aplicação{% if language %} focado em {language}{% endif %}{% if framework %} e {framework}{% endif %}.
+
+Alvo da revisão:
+{user_input}
+
+Analise o trecho ou a funcionalidade à luz do OWASP Top 10:
+1. Liste achados com risco (alto/médio/baixo) e a categoria OWASP.
+2. Explique o impacto em linguagem direta, sem jargão vazio.
+3. Mostre a correção do trecho mais crítico.
+4. Indique o que ainda precisa de teste manual.
+EOT,
+            ],
+            [
+                'name' => 'Depuração por Erro e Stack Trace (C7)',
+                'slug' => 'depuracao-stack-trace',
+                'description' => 'Depura a partir de um erro, log ou stack trace.',
+                'intent_type' => 'bugfix',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um engenheiro de suporte a produção{% if language %} em {language}{% endif %}{% if framework %} com {framework}{% endif %}.
+
+Erro ou stack trace:
+{user_input}
+
+Depure de forma objetiva:
+1. Hipótese principal (uma frase).
+2. Onde o fluxo quebrou (arquivo, camada, chamada).
+3. Causa mais provável e o que descartar.
+4. Correção mínima e como reproduzir o teste que evita a regressão.
+EOT,
+            ],
+            [
+                'name' => 'Otimização de Performance (C8)',
+                'slug' => 'otimizacao-performance',
+                'description' => 'Ataca consultas SQL lentas e gargalos de desempenho.',
+                'intent_type' => 'analysis',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um engenheiro de performance{% if language %} em {language}{% endif %}{% if framework %} com {framework}{% endif %}.
+
+Gargalo descrito:
+{user_input}
+
+Entregue:
+1. Onde está o custo (consulta SQL, N+1, I/O, CPU, rede).
+2. Consulta ou trecho original versus a versão otimizada.
+3. Índices, cache ou mudança de algoritmo quando fizer sentido.
+4. Como medir antes e depois (tempo, linhas lidas, memória).
+EOT,
+            ],
+            [
+                'name' => 'User Stories com BDD/Gherkin (B8)',
+                'slug' => 'user-stories-bdd-gherkin',
+                'description' => 'Escreve user stories com critérios de aceite em Gherkin.',
+                'intent_type' => 'documentation',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um analista de requisitos{% if language %} em projetos {language}{% endif %}.
+
+Pedido:
+{user_input}
+
+Escreva user stories com critérios de aceite em BDD/Gherkin:
+1. História no formato "Como… quero… para…".
+2. Cenários Given/When/Then (feliz, borda e falha).
+3. Regras de negócio explícitas, sem implementação.
+4. Lista curta do que fica de fora desta entrega.
+EOT,
+            ],
+            [
+                'name' => 'Pipeline de CI/CD (B9)',
+                'slug' => 'pipeline-ci-cd',
+                'description' => 'Desenha um pipeline de integração e entrega contínuas.',
+                'intent_type' => 'feature',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um engenheiro de plataforma{% if language %} com {language}{% endif %}{% if framework %} e {framework}{% endif %}.
+
+Pedido:
+{user_input}
+
+Desenhe o pipeline de CI/CD:
+1. Etapas: checkout, dependências, lint, testes, build, deploy.
+2. Segredos e ambientes (dev, homologação, produção) sem valores reais.
+3. Exemplo de arquivo de pipeline da stack pedida.
+4. Falhas que devem quebrar o build e o que pode ser só aviso.
+EOT,
+            ],
+            [
+                'name' => 'Migração de Versão de Framework (B10)',
+                'slug' => 'migracao-versao-framework',
+                'description' => 'Planeja migração ou atualização de versão de framework.',
+                'intent_type' => 'refactor',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um engenheiro de modernização{% if language %} em {language}{% endif %}{% if framework %} especialista em {framework}{% endif %}.
+
+Pedido de migração:
+{user_input}
+
+Planeje a atualização de versão:
+1. O que quebra (APIs removidas, pacotes, config).
+2. Ordem dos passos (dependências → código → testes → deploy).
+3. Como manter o sistema no ar entre as etapas.
+4. Checklist de regressão depois da virada.
+EOT,
+            ],
+            [
+                'name' => 'Mensagens de Commit e Changelog (C9)',
+                'slug' => 'mensagens-commit-changelog',
+                'description' => 'Redige commits e changelog no padrão Conventional Commits.',
+                'intent_type' => 'documentation',
+                'is_active' => true,
+                'is_generic' => false,
+                'body' => <<<'EOT'
+Você é um mantenedor de repositório{% if language %} em projetos {language}{% endif %}.
+
+Mudanças descritas:
+{user_input}
+
+Escreva:
+1. Mensagens de commit no padrão Conventional Commits (feat, fix, docs, refactor, test, chore).
+2. Um bloco de changelog (Added / Changed / Fixed) pronto para colar.
+3. Um assunto curto e um corpo que explica o porquê, não só o quê.
+4. Sem inventar arquivos ou tickets que o pedido não citou.
+EOT,
+            ],
+
+            // ==========================================
             // TEMPLATE CORINGA / FALLBACK OBRIGATÓRIO
             // ==========================================
             [
@@ -427,13 +611,13 @@ EOT,
                     'bloco' => $this->resolverBloco($data['name']),
                     'is_active' => $data['is_active'],
                     'is_generic' => $data['is_generic'],
-                    'versao' => '3.0',
+                    'versao' => $data['versao'] ?? '3.1',
                 ]
             );
         }
 
         // A biblioteca oficial substitui os templates artesanais das etapas
-        // anteriores: desativa o que não está no catálogo v3 para não competir
+        // anteriores: desativa o que não está no catálogo v3.1 para não competir
         // na pontuação do seletor.
         Template::query()
             ->where(function ($query) use ($slugsOficiais) {
