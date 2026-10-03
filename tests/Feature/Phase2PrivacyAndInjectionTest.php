@@ -86,14 +86,15 @@ it('nao grava historico quando o usuario pede para nao salvar', function () {
 
 it('redige segredo antes de gravar o historico', function () {
     $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
-        'intencao' => 'Criar uma API Laravel usando a chave AKIAIOSFODNN7EXAMPLE.',
+        'intencao' => 'Criar uma API Laravel usando a chave '.\Tests\Support\SecretFixtures::awsAccessKey().'.',
     ]);
 
     $resposta->assertCreated();
     $prompt = Prompt::query()->sole();
+    $chave = \Tests\Support\SecretFixtures::awsAccessKey();
     expect($prompt->input_text)->toContain('[REDACTED:aws_access_key]')
-        ->and($prompt->input_text)->not->toContain('AKIAIOSFODNN7EXAMPLE')
-        ->and($prompt->output_text)->not->toContain('AKIAIOSFODNN7EXAMPLE');
+        ->and($prompt->input_text)->not->toContain($chave)
+        ->and($prompt->output_text)->not->toContain($chave);
 });
 
 it('exclui a conta e os prompts apos confirmar a senha', function () {

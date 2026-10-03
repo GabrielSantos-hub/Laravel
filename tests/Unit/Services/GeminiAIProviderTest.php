@@ -9,6 +9,7 @@ use App\Services\AI\Providers\GeminiAIProvider;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\SecretFixtures;
 use Tests\TestCase;
 
 class GeminiAIProviderTest extends TestCase
@@ -332,11 +333,12 @@ class GeminiAIProviderTest extends TestCase
             'type' => 'feature',
         ])))]);
 
-        $this->provider()->analyzeIntent('Criar uma API Laravel usando a chave AKIAIOSFODNN7EXAMPLE.');
+        $chave = SecretFixtures::awsAccessKey();
+        $this->provider()->analyzeIntent("Criar uma API Laravel usando a chave {$chave}.");
 
-        Http::assertSent(function (Request $request): bool {
+        Http::assertSent(function (Request $request) use ($chave): bool {
             $texto = $request['contents'][0]['parts'][0]['text'];
-            $this->assertStringNotContainsString('AKIAIOSFODNN7EXAMPLE', $texto);
+            $this->assertStringNotContainsString($chave, $texto);
             $this->assertStringContainsString('[REDACTED:aws_access_key]', $texto);
 
             return true;

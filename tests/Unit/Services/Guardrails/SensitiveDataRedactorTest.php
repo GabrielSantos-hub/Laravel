@@ -1,18 +1,20 @@
 <?php
 
 use App\Services\Guardrails\SensitiveDataRedactor;
+use Tests\Support\SecretFixtures;
 
 $redactor = new SensitiveDataRedactor;
 
 it('substitui chave aws', function () use ($redactor) {
-    $saida = $redactor->redact('Usar a chave AKIAIOSFODNN7EXAMPLE no SDK.');
+    $chave = SecretFixtures::awsAccessKey();
+    $saida = $redactor->redact("Usar a chave {$chave} no SDK.");
 
     expect($saida)->toContain('[REDACTED:aws_access_key]')
-        ->and($saida)->not->toContain('AKIAIOSFODNN7EXAMPLE');
+        ->and($saida)->not->toContain($chave);
 });
 
 it('substitui token github ghp', function () use ($redactor) {
-    $token = 'ghp_abcdefghijklmnopqrstuvwxyz0123456789';
+    $token = SecretFixtures::githubClassic();
     $saida = $redactor->redact("Token {$token} no CI.");
 
     expect($saida)->toContain('[REDACTED:github_token]')
@@ -20,7 +22,7 @@ it('substitui token github ghp', function () use ($redactor) {
 });
 
 it('substitui token github_pat', function () use ($redactor) {
-    $token = 'github_pat_11AAAAAAA01234567890_abcdefghij';
+    $token = SecretFixtures::githubFineGrained();
     $saida = $redactor->redact("PAT {$token} no deploy.");
 
     expect($saida)->toContain('[REDACTED:github_token]')
@@ -28,7 +30,7 @@ it('substitui token github_pat', function () use ($redactor) {
 });
 
 it('substitui chave sk', function () use ($redactor) {
-    $chave = 'sk-abcdefghijklmnopqrstuvwxyz012345';
+    $chave = SecretFixtures::openaiKey();
     $saida = $redactor->redact("Chave {$chave} no cliente.");
 
     expect($saida)->toContain('[REDACTED:openai_key]')
@@ -36,7 +38,7 @@ it('substitui chave sk', function () use ($redactor) {
 });
 
 it('substitui google api key', function () use ($redactor) {
-    $chave = 'AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe';
+    $chave = SecretFixtures::googleApiKey();
     $saida = $redactor->redact("Gemini {$chave}.");
 
     expect($saida)->toContain('[REDACTED:google_api_key]')
@@ -44,7 +46,7 @@ it('substitui google api key', function () use ($redactor) {
 });
 
 it('substitui slack token', function () use ($redactor) {
-    $token = 'xox'.'b-'.'1234567890-abcdefghijklmnopqrstuv';
+    $token = SecretFixtures::slackBot();
     $saida = $redactor->redact("Slack {$token}.");
 
     expect($saida)->toContain('[REDACTED:slack_token]')
@@ -52,15 +54,15 @@ it('substitui slack token', function () use ($redactor) {
 });
 
 it('substitui jwt', function () use ($redactor) {
-    $jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4ifQ.signaturetokenxx';
+    $jwt = SecretFixtures::jwt();
     $saida = $redactor->redact("Bearer jwt {$jwt}");
 
     expect($saida)->toContain('[REDACTED:jwt]')
-        ->and($saida)->not->toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
+        ->and($saida)->not->toContain(SecretFixtures::jwtHeader());
 });
 
 it('substitui bloco private key', function () use ($redactor) {
-    $pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0Z3CC0w=\n-----END RSA PRIVATE KEY-----";
+    $pem = SecretFixtures::rsaPrivateKey();
     $saida = $redactor->redact("Chave:\n{$pem}");
 
     expect($saida)->toContain('[REDACTED:private_key]')
@@ -131,9 +133,10 @@ it('nao altera pedido sem segredo', function () use ($redactor) {
 });
 
 it('redige mapa de variaveis', function () use ($redactor) {
+    $chave = SecretFixtures::awsAccessKey();
     $mapa = $redactor->redactMap([
         'NOME' => 'Cliente',
-        'CHAVE' => 'AKIAIOSFODNN7EXAMPLE',
+        'CHAVE' => $chave,
     ]);
 
     expect($mapa['NOME'])->toBe('Cliente')
@@ -141,10 +144,11 @@ it('redige mapa de variaveis', function () use ($redactor) {
 });
 
 it('inspect lista os tipos mascarados sem o valor', function () use ($redactor) {
-    $relatorio = $redactor->inspect('Chave AKIAIOSFODNN7EXAMPLE e e-mail  ana@ex.com ');
+    $chave = SecretFixtures::awsAccessKey();
+    $relatorio = $redactor->inspect("Chave {$chave} e e-mail  ana@ex.com ");
 
     expect($relatorio['types'])->toContain('aws_access_key')
         ->and($relatorio['types'])->toContain('email')
-        ->and($relatorio['text'])->not->toContain('AKIAIOSFODNN7EXAMPLE')
+        ->and($relatorio['text'])->not->toContain($chave)
         ->and($relatorio['text'])->not->toContain('ana@ex.com');
 });
