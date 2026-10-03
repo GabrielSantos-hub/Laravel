@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Security\SecurityLogger;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAvatarRequest extends FormRequest
@@ -32,5 +33,24 @@ class UpdateAvatarRequest extends FormRequest
             'avatar.mimes' => 'Use JPG, PNG ou WEBP.',
             'avatar.max' => 'A foto pode ter no máximo 2 MB.',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $arquivo = $this->file('avatar');
+
+            if (! $arquivo) {
+                return;
+            }
+
+            $marca = strtolower($arquivo->getClientOriginalExtension().' '.$arquivo->getMimeType());
+
+            if (str_contains($marca, 'svg')) {
+                app(SecurityLogger::class)->log('avatar_rejected', [
+                    'reason' => 'svg',
+                ]);
+            }
+        });
     }
 }

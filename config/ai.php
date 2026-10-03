@@ -26,8 +26,8 @@ return [
     | Mapa de driver => classe. Novos provedores (OpenAI, Anthropic, Ollama...)
     | só precisam implementar AIProviderInterface e ser listados aqui.
     |
-    | O driver "gemini" exige GEMINI_API_KEY. Sem ela o provedor falha de
-    | propósito e o pipeline degrada para o "null", registrando um warning.
+    | O driver "gemini" exige GEMINI_API_KEY. Sem ela, ou se a chamada falhar,
+    | o pipeline recusa a geração (fail-closed). Não degrada para "null".
     |
     */
 

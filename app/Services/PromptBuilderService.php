@@ -6,6 +6,7 @@ use App\Exceptions\InputUnprocessableException;
 use App\Exceptions\PromptAssemblyException;
 use App\Models\Template;
 use App\Services\Guardrails\InputSanityGuardrail;
+use App\Services\Guardrails\UserIntentFrame;
 
 /**
  * Pipeline de montagem do prompt final entregue ao usuário.
@@ -31,6 +32,7 @@ class PromptBuilderService
         'Não produza placeholders, TODOs ou trechos incompletos do tipo "implementar depois".',
         'Não exponha segredos, credenciais, chaves de API ou dados sensíveis.',
         'Não ignore falhas de validação, autenticação ou autorização.',
+        UserIntentFrame::RULE,
         'Não entregue prosa genérica no lugar do artefato pedido pelo esquema de saída.',
         'Não cole o texto cru do pedido entre aspas nem o rotule como bloco estático.',
     ];
@@ -143,13 +145,13 @@ class PromptBuilderService
     {
         $pedido = $rawIntent !== '' ? $rawIntent : 'o problema informado';
 
-        return implode("\n", [
+        $envelope = implode("\n", [
             self::SECTION_ROLE,
             'Você é um Engenheiro de Software Sênior. Trate apenas o problema informado, sem inventar infraestrutura.',
             '',
             self::SECTION_TASK,
             'Pedido específico:',
-            $pedido,
+            UserIntentFrame::wrap($pedido),
             '',
             self::SECTION_CONSTRAINTS,
             '- Não invente filas, buckets, contratos de API ou serviços que o pedido não citou.',
@@ -162,6 +164,13 @@ class PromptBuilderService
             self::SECTION_VALIDATION,
             '- A resposta permanece fiel ao pedido curto e não inventa requisitos.',
         ]);
+
+        $linhas = substr_count($envelope, "\n") + 1;
+        if ($linhas > InputSanityGuardrail::LEAN_MAX_LINES) {
+            throw new PromptAssemblyException('Envelope lean excedeu o limite interno de linhas.');
+        }
+
+        return $envelope;
     }
 
     private function buildRoleAndContext(PromptBuildContext $context): string
@@ -188,7 +197,7 @@ class PromptBuilderService
         $partes = [self::SECTION_TASK];
 
         if ($rawIntent !== '') {
-            $partes[] = "Pedido específico:\n{$rawIntent}";
+            $partes[] = "Pedido específico:\n".UserIntentFrame::wrap($rawIntent);
         }
 
         if ($this->isUsefulFraming($framing, $rawIntent)) {

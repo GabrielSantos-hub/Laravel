@@ -4,23 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Framework;
 use App\Models\Language;
+use App\Services\Security\AdminAuditor;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class FrameworkController extends Controller implements HasMiddleware
+class FrameworkController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth', except: ['index']),
-            new Middleware('can:admin', except: ['index']),
-        ];
-    }
-
     public function index()
     {
         $frameworks = Framework::with('language')->get();
@@ -37,12 +28,13 @@ class FrameworkController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:100|unique:frameworks,nome',
-            'slug' => 'required|string|max:100|unique:frameworks,slug',
-            'language_id' => 'required|exists:languages,id',
+            'slug' => 'required|string|max:100|alpha_dash|unique:frameworks,slug',
+            'language_id' => 'required|integer|exists:languages,id',
         ]);
 
         try {
-            Framework::create($validated);
+            $framework = Framework::create($validated);
+            app(AdminAuditor::class)->record('admin_framework_created', $framework, ['nome' => $framework->nome]);
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework cadastrado com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao inserir framework: ' . $e->getMessage());
@@ -63,12 +55,13 @@ class FrameworkController extends Controller implements HasMiddleware
 
         $validated = $request->validate([
             'nome' => 'required|string|max:100',
-            'slug' => ['required', 'string', 'max:100', Rule::unique('frameworks', 'slug')->ignore($framework->id)],
-            'language_id' => 'required|exists:languages,id',
+            'slug' => ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('frameworks', 'slug')->ignore($framework->id)],
+            'language_id' => 'required|integer|exists:languages,id',
         ]);
 
         try {
             $framework->update($validated);
+            app(AdminAuditor::class)->record('admin_framework_updated', $framework, ['nome' => $framework->nome]);
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework atualizado com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao editar framework: ' . $e->getMessage());
@@ -81,6 +74,7 @@ class FrameworkController extends Controller implements HasMiddleware
         try {
             $framework = Framework::findOrFail($id);
             $framework->delete();
+            app(AdminAuditor::class)->record('admin_framework_deleted', null, ['target_id' => (int) $id]);
             return redirect()->route('frameworks.index')->with('sucesso', 'Framework excluído com sucesso!');
         } catch (Exception $e) {
             Log::error('Erro ao excluir framework: ' . $e->getMessage());

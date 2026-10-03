@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +20,10 @@ class DatabaseSeeder extends Seeder
      * Todo o seed usa updateOrCreate/firstOrCreate, então `php artisan db:seed`
      * pode ser executado quantas vezes for necessário sem duplicar registros
      * nem estourar as chaves únicas de `users.email` e dos slugs.
+     *
+     * Em production o catálogo pode ser carregado, mas usuários de
+     * demonstração NÃO são criados. O admin inicial sai de
+     * `php artisan gueass:create-admin`.
      */
     public function run(): void
     {
@@ -26,21 +33,61 @@ class DatabaseSeeder extends Seeder
             TemplateSeeder::class,
         ]);
 
-        $admin = User::query()->firstOrCreate(
-            ['email' => 'admin@email.com'],
-            [
-                'name' => 'Administrador',
-                'password' => Hash::make('2133@JJ#Asfd'),
-            ]
-        );
-        $admin->forceFill(['role' => 'ADM'])->save();
+        if (app()->environment('production')) {
+            return;
+        }
 
-        User::query()->firstOrCreate(
-            ['email' => 'usuario@email.com'],
+        $this->seedDemoUser(
+            env('DEMO_ADMIN_EMAIL', 'admin@email.com'),
+            'Administrador',
+            'ADM',
+            env('DEMO_ADMIN_PASSWORD'),
+            'administrador de demonstração'
+        );
+
+        $this->seedDemoUser(
+            env('DEMO_USER_EMAIL', 'usuario@email.com'),
+            'Usuario Teste',
+            'USU',
+            env('DEMO_USER_PASSWORD'),
+            'usuário de demonstração'
+        );
+    }
+
+    private function seedDemoUser(
+        string $email,
+        string $name,
+        string $role,
+        ?string $password,
+        string $label
+    ): void {
+        $plain = filled($password) ? $password : Str::password(16);
+
+        try {
+            Validator::make(
+                [
+                    'password' => $plain,
+                    'password_confirmation' => $plain,
+                ],
+                ['password' => PasswordRules::required()]
+            )->validate();
+        } catch (ValidationException $e) {
+            throw new \RuntimeException(
+                "A senha do {$label} não atende à política (mínimo 8 caracteres, letras e números)."
+            );
+        }
+
+        $user = User::query()->firstOrCreate(
+            ['email' => $email],
             [
-                'name' => 'Usuario Teste',
-                'password' => Hash::make('user123'),
+                'name' => $name,
+                'password' => $plain,
             ]
         );
+        $user->forceFill(['role' => $role])->save();
+
+        if (! filled($password)) {
+            $this->command?->info("Senha do {$label} ({$email}), exibida uma única vez: {$plain}");
+        }
     }
 }

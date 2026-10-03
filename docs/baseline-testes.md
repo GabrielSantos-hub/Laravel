@@ -1,7 +1,8 @@
 # Linha de base de testes — Fase 0 (hardening)
 
 Registro do estado da suíte **antes** das fases 1–4. Gerado em 2026-10-02
-na branch `hardening/seguranca`.
+na branch `hardening/seguranca`. Ambiente alvo: execução local (PHP 8.2,
+MySQL 8 na aplicação; SQLite `:memory:` apenas na suíte).
 
 ## Ambiente
 
@@ -20,11 +21,11 @@ Comando: `php artisan test`
 | Momento | Resultado | Asserções | Duração |
 | --- | --- | --- | --- |
 | Antes das alterações da Fase 0 | 381 passed, 0 failed | 1901 | 25,22 s |
-| Depois do endurecimento Docker + updates de auditoria | 381 passed, 0 failed | 1901 | 7,94 s |
+| Depois das atualizações de auditoria de dependências | 381 passed, 0 failed | 1901 | 7,94 s |
 
 Nenhum teste existente foi removido ou enfraquecido. A Fase 0 não adicionou
-casos Pest novos: as mudanças são de infraestrutura (Docker/Nginx) e de
-dependências, sem alteração de comportamento da aplicação.
+casos Pest novos: as mudanças retidas são só de dependências, sem alteração
+de comportamento da aplicação.
 
 ## Cobertura
 

@@ -65,8 +65,8 @@ class PromptControllerTest extends TestCase
         $prompt = Prompt::query()->sole();
         $this->assertSame($this->usuario->id, $prompt->user_id);
         $this->assertSame($template->id, $prompt->template_id);
-        $this->assertNull($prompt->architecture_id);
-        $this->assertNull($prompt->language_id);
+        $this->assertSame(Language::query()->where('slug', 'php')->value('id'), $prompt->language_id);
+        $this->assertSame(Architecture::query()->where('nome', 'Clean Architecture')->value('id'), $prompt->architecture_id);
     }
 
     public function test_cliente_json_recebe_o_prompt_e_a_intencao_interpretada(): void
@@ -101,7 +101,7 @@ class PromptControllerTest extends TestCase
 
         $prompt = Prompt::query()->sole();
         $this->assertSame($arquitetura->id, $prompt->architecture_id);
-        $this->assertNull($prompt->framework_id);
+        $this->assertSame(Framework::query()->where('slug', 'laravel')->value('id'), $prompt->framework_id);
     }
 
     // (b) Entrada inválida
@@ -486,15 +486,17 @@ class PromptControllerTest extends TestCase
     {
         $this->templateClassificado();
 
-        $intencao = ['user_input' => 'Criar uma API REST em Laravel com PHP.'];
-
         for ($tentativa = 1; $tentativa <= 10; $tentativa++) {
             $this->actingAs($this->usuario)
-                ->postJson(route('prompts.generate'), $intencao)
+                ->postJson(route('prompts.generate'), [
+                    'user_input' => "Criar uma API REST em Laravel com PHP. Recurso numero {$tentativa}.",
+                ])
                 ->assertCreated();
         }
 
-        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), $intencao);
+        $resposta = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), [
+            'user_input' => 'Criar uma API REST em Laravel com PHP. Recurso numero 11.',
+        ]);
 
         $resposta->assertStatus(429);
         $resposta->assertHeader('Retry-After');
@@ -669,6 +671,18 @@ class PromptControllerTest extends TestCase
         $resposta->assertOk();
         $resposta->assertSee('Este prompt foi útil?');
         $resposta->assertSee(route('prompts.feedback', Prompt::query()->sole()), false);
+        $this->assertFeedbackScriptUsaNonceSemHandlerInline($resposta);
+    }
+
+    public function test_a_tela_do_prompt_usa_script_de_avaliacao_com_nonce_e_sem_handler_inline(): void
+    {
+        $prompt = $this->prompt($this->usuario);
+
+        $resposta = $this->actingAs($this->usuario)->get(route('prompts.show', $prompt));
+
+        $resposta->assertOk();
+        $resposta->assertSee('Este prompt foi útil?', false);
+        $this->assertFeedbackScriptUsaNonceSemHandlerInline($resposta);
     }
 
     public function test_a_tela_de_geracao_nao_mostra_avaliacao_sem_prompt_gerado(): void
@@ -676,7 +690,9 @@ class PromptControllerTest extends TestCase
         $this->actingAs($this->usuario)
             ->get(route('home'))
             ->assertOk()
-            ->assertDontSee('Este prompt foi útil?');
+            ->assertDontSee('Este prompt foi útil?')
+            ->assertSee('id="btn-gerar-prompt"', false)
+            ->assertSee("gerar.disabled = true", false);
     }
 
     public function test_erros_de_validacao_sao_exibidos_no_campo_correspondente(): void
@@ -692,6 +708,20 @@ class PromptControllerTest extends TestCase
         $resposta->assertSee('Revise os campos destacados abaixo.');
         $resposta->assertSee('invalid-feedback', false);
         $resposta->assertSee('Descreva sua intenção com mais detalhes', false);
+    }
+
+    private function assertFeedbackScriptUsaNonceSemHandlerInline($resposta): void
+    {
+        $csp = (string) $resposta->headers->get('Content-Security-Policy');
+        $this->assertSame(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", $csp, $matches));
+        $nonce = $matches[1];
+
+        $html = $resposta->getContent();
+        $this->assertDoesNotMatchRegularExpression('/\sonclick\s*=/i', $html);
+        $this->assertMatchesRegularExpression(
+            '/<script[^>]*\snonce="'.preg_quote($nonce, '/').'"[^>]*>[\s\S]*data-prompt-feedback/',
+            $html
+        );
     }
 
     private function iaRejeitaIntencao(): void

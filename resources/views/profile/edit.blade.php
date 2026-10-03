@@ -47,6 +47,22 @@
                     <input type="text" name="name" id="name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required maxlength="255" value="{{ old('name', $user->name) }}">
                 </div>
 
+                <div class="mb-3">
+                    <label for="current_password" class="form-label text-muted">Senha atual</label>
+                    <input type="password" name="current_password" id="current_password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" autocomplete="current-password">
+                    <p class="small text-muted mt-2 mb-0">Obrigatória só se for trocar a senha.</p>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label text-muted">Nova senha</label>
+                    <input type="password" name="password" id="password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" minlength="8" placeholder="Mínimo 8 caracteres, letras e números" autocomplete="new-password">
+                </div>
+
+                <div class="mb-4">
+                    <label for="password_confirmation" class="form-label text-muted">Confirmar nova senha</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" autocomplete="new-password">
+                </div>
+
                 <div class="mb-4">
                     <label for="avatar-input" class="form-label text-muted">Foto de perfil</label>
                     <input type="file" id="avatar-input" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" accept="image/*">
@@ -57,6 +73,28 @@
                     Salvar perfil
                 </button>
             </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4 border-danger-subtle" style="border-radius: 8px;">
+        <div class="card-body p-4">
+            <h4 class="h5 mb-2 text-danger">Excluir minha conta e todos os meus dados</h4>
+            @if ($user->isLastAdmin())
+            <p class="small text-muted mb-0">Não é possível excluir a conta: você é o único administrador. Crie outro administrador antes de remover esta conta.</p>
+            @else
+            <p class="small text-muted mb-3">Remove o perfil, a foto e o histórico de prompts. Esta ação não pode ser desfeita.</p>
+            <form action="{{ route('profile.destroy') }}" method="POST" onsubmit="return confirm('Excluir a conta e todos os seus dados? Esta ação não pode ser desfeita.');">
+                @csrf
+                @method('DELETE')
+                <div class="mb-3">
+                    <label for="delete_current_password" class="form-label text-muted">Confirme a senha</label>
+                    <input type="password" name="current_password" id="delete_current_password" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-outline-danger focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    Excluir minha conta e todos os meus dados
+                </button>
+            </form>
+            @endif
         </div>
     </div>
 </div>
@@ -84,188 +122,9 @@
         </div>
     </div>
 </div>
+<div id="profile-crop" hidden data-upload-url="{{ route('profile.avatar') }}"></div>
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-@endpush
-
-@push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-<script>
-    (function () {
-        const input = document.getElementById('avatar-input');
-        const modal = document.getElementById('crop-modal');
-        const image = document.getElementById('crop-image');
-        const saveBtn = document.getElementById('crop-save');
-        const statusEl = document.getElementById('crop-modal-status');
-        const feedback = document.getElementById('avatar-feedback');
-        const uploadUrl = @json(route('profile.avatar'), JSON_UNESCAPED_SLASHES);
-        const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-
-        let cropper = null;
-        let objectUrl = null;
-
-        function mostrarFeedback(mensagem, tipo) {
-            if (!feedback) {
-                return;
-            }
-            feedback.hidden = false;
-            feedback.className = 'alert mb-4 alert-' + tipo;
-            feedback.textContent = mensagem;
-        }
-
-        function definirStatus(mensagem) {
-            if (statusEl) {
-                statusEl.textContent = mensagem ?? '';
-            }
-        }
-
-        function aplicarAvatar(url) {
-            document.querySelectorAll('.user-avatar').forEach((img) => {
-                img.src = url;
-            });
-
-            document.querySelectorAll('.user-avatar-fallback').forEach((svg) => {
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = '';
-                img.className = 'user-avatar';
-                img.width = Number(svg.getAttribute('width')) || 28;
-                img.height = Number(svg.getAttribute('height')) || 28;
-                svg.replaceWith(img);
-            });
-        }
-
-        function destruirCropper() {
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
-            image.removeAttribute('src');
-        }
-
-        function fecharModal() {
-            destruirCropper();
-            if (input) {
-                input.value = '';
-            }
-            definirStatus('');
-            if (saveBtn) {
-                saveBtn.disabled = false;
-            }
-            modal.hidden = true;
-        }
-
-        function abrirModal(arquivo) {
-            destruirCropper();
-            objectUrl = URL.createObjectURL(arquivo);
-            definirStatus('');
-            modal.hidden = false;
-            saveBtn.disabled = false;
-
-            const iniciar = function () {
-                cropper = new Cropper(image, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    dragMode: 'move',
-                    autoCropArea: 1,
-                    responsive: true,
-                    background: false,
-                });
-            };
-
-            image.addEventListener('load', iniciar, { once: true });
-            image.src = objectUrl;
-        }
-
-        input?.addEventListener('change', function () {
-            const arquivo = this.files?.[0];
-            if (!arquivo) {
-                return;
-            }
-            if (!arquivo.type.startsWith('image/')) {
-                mostrarFeedback('Selecione um arquivo de imagem.', 'danger');
-                this.value = '';
-                return;
-            }
-            abrirModal(arquivo);
-        });
-
-        modal.querySelectorAll('[data-crop-cancel]').forEach((botao) => {
-            botao.addEventListener('click', fecharModal);
-        });
-
-        modal.addEventListener('click', function (evento) {
-            if (evento.target === modal) {
-                fecharModal();
-            }
-        });
-
-        document.addEventListener('keydown', function (evento) {
-            if (evento.key === 'Escape' && !modal.hidden) {
-                fecharModal();
-            }
-        });
-
-        saveBtn?.addEventListener('click', function () {
-            if (!cropper) {
-                return;
-            }
-
-            const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-            if (!canvas) {
-                definirStatus('Não foi possível recortar a imagem.');
-                return;
-            }
-
-            saveBtn.disabled = true;
-            definirStatus('Salvando foto…');
-
-            canvas.toBlob(function (blob) {
-                if (!blob) {
-                    saveBtn.disabled = false;
-                    definirStatus('Não foi possível gerar o recorte.');
-                    return;
-                }
-
-                const dados = new FormData();
-                dados.append('avatar', blob, 'avatar.png');
-
-                fetch(uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: dados,
-                })
-                    .then(async (resposta) => {
-                        const corpo = await resposta.json().catch(() => ({}));
-                        if (!resposta.ok) {
-                            const erro = corpo.message
-                                || corpo.errors?.avatar?.[0]
-                                || 'Não foi possível salvar a foto.';
-                            throw new Error(erro);
-                        }
-                        return corpo;
-                    })
-                    .then((corpo) => {
-                        aplicarAvatar(corpo.avatar_url);
-                        mostrarFeedback(corpo.message || 'Foto de perfil atualizada.', 'success');
-                        fecharModal();
-                    })
-                    .catch((erro) => {
-                        saveBtn.disabled = false;
-                        definirStatus(erro.message || 'Não foi possível salvar a foto.');
-                    });
-            }, 'image/png');
-        });
-    })();
-</script>
+@push('vite')
+    @vite(['resources/js/profile-crop.js'])
 @endpush

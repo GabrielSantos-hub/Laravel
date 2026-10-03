@@ -13,6 +13,12 @@
     <div class="alert alert-success small p-2 mb-3" role="status">{{ session('status') }}</div>
     @endif
 
+    @if (session('temporary_password'))
+    <div class="alert alert-warning small p-2 mb-3" role="status">
+        Senha temporária (exibida uma única vez): <code>{{ session('temporary_password') }}</code>
+    </div>
+    @endif
+
     @if ($errors->any())
     <div class="alert alert-danger small p-2 mb-3" role="alert">
         <ul class="mb-0 ps-3">
@@ -78,37 +84,12 @@
             </button>
         </div>
         <p class="text-muted small">
-            Defina uma senha provisória para <strong data-reset-user-name></strong>.
+            Uma senha temporária aleatória será gerada para <strong data-reset-user-name></strong>
+            e exibida uma única vez. A pessoa precisará trocá-la no próximo login.
         </p>
         <form id="reset-password-form" method="POST">
             @csrf
             @method('PUT')
-            <div class="mb-3">
-                <label for="admin-reset-password" class="form-label text-muted small">Nova senha provisória</label>
-                <input
-                    type="password"
-                    name="password"
-                    id="admin-reset-password"
-                    class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    required
-                    minlength="6"
-                    placeholder="Mínimo 6 caracteres"
-                    autocomplete="new-password"
-                >
-            </div>
-            <div class="mb-3">
-                <label for="admin-reset-password-confirmation" class="form-label text-muted small">Confirmar senha</label>
-                <input
-                    type="password"
-                    name="password_confirmation"
-                    id="admin-reset-password-confirmation"
-                    class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    required
-                    minlength="6"
-                    placeholder="Repita a senha"
-                    autocomplete="new-password"
-                >
-            </div>
             <div class="d-flex justify-content-end gap-2">
                 <button
                     type="button"
@@ -118,7 +99,7 @@
                     Cancelar
                 </button>
                 <button type="submit" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    Salvar senha
+                    Gerar senha temporária
                 </button>
             </div>
         </form>

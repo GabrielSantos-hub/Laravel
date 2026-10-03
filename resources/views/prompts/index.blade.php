@@ -90,6 +90,7 @@
                 <textarea name="intencao" id="intencao" class="form-control bg-light h-full min-h-[280px] placeholder:text-slate-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none @error('intencao') is-invalid @enderror" rows="12" required
                     minlength="{{ App\Services\AI\IntentAnalyzer::MIN_INPUT_LENGTH }}"
                     maxlength="{{ App\Services\AI\IntentAnalyzer::MAX_INPUT_LENGTH }}"
+                    @error('intencao') autofocus aria-invalid="true" @enderror
                     placeholder="Descreva o que você precisa gerar ou construir…">{{ old('intencao', old('user_input')) }}</textarea>
                 @error('intencao')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -113,13 +114,31 @@
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
+            <div class="form-check d-inline-flex align-items-center gap-2 mb-3">
+                <input class="form-check-input focus:ring-2 focus:ring-indigo-500 focus:outline-none" type="checkbox"
+                    name="nao_salvar_historico" id="nao_salvar_historico" value="1"
+                    @checked(old('nao_salvar_historico'))>
+                <label class="form-check-label text-muted small" for="nao_salvar_historico">
+                    Não salvar este prompt no meu histórico
+                </label>
+            </div>
+            <div>
+                <button type="submit" id="btn-gerar-prompt" class="btn text-white px-5 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" style="background-color: #5b4ce6; border-radius: 8px;">Gerar prompt</button>
+            </div>
         </div>
     </form>
 </div>
 
-<script>
+<script @if (! empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
     (function() {
+        const form = document.querySelector('form[action*="prompts/generate"]');
+        const gerar = document.getElementById('btn-gerar-prompt');
+        if (form && gerar) {
+            form.addEventListener('submit', function () {
+                gerar.disabled = true;
+            });
+        }
+
         const out = document.getElementById('output_text');
         const btn = document.getElementById('btn-copy-output');
         if (btn && out) {

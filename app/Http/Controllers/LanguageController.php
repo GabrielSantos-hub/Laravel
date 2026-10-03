@@ -3,23 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Language;
+use App\Services\Security\AdminAuditor;
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class LanguageController extends Controller implements HasMiddleware
+class LanguageController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth', except: ['index', 'show']),
-            new Middleware('can:admin', except: ['index', 'show']),
-        ];
-    }
-
     public function index()
     {
         $languages = Language::all(); 
@@ -34,12 +26,13 @@ class LanguageController extends Controller implements HasMiddleware
     public function store(Request $request)
 {
     $validated = $request->validate([
-        'nome' => 'required|max:100|unique:languages,nome',
-        'slug' => 'required|max:100|unique:languages,slug'
+        'nome' => 'required|string|max:100|unique:languages,nome',
+        'slug' => 'required|string|max:100|alpha_dash|unique:languages,slug',
     ]);
 
     try {
-        Language::create($validated); 
+        $language = Language::create($validated);
+        app(AdminAuditor::class)->record('admin_language_created', $language, ['nome' => $language->nome]); 
         return redirect()->route('languages.index')->with('sucesso', 'Linguagem salva com sucesso!');
     } catch (Exception $e) {
         Log::error('Erro ao inserir linguagem: ' . $e->getMessage());
@@ -63,12 +56,13 @@ class LanguageController extends Controller implements HasMiddleware
         $language = Language::findOrFail($id);
 
         $validated = $request->validate([
-            'nome' => 'required|max:100',
-            'slug' => 'required|max:100|unique:languages,slug,' . $language->id
+            'nome' => 'required|string|max:100',
+            'slug' => 'required|string|max:100|alpha_dash|unique:languages,slug,'.$language->id,
         ]);
 
         try {
             $language->update($validated);
+            app(AdminAuditor::class)->record('admin_language_updated', $language, ['nome' => $language->nome]);
             return redirect()->route('languages.index')->with('sucesso', 'Linguagem atualizada!');
         } catch (Exception $e) {
             Log::error('Erro ao alterar linguagem: ' . $e->getMessage());
@@ -78,13 +72,26 @@ class LanguageController extends Controller implements HasMiddleware
 
     public function destroy($id)
     {
-        try {
-            $language = Language::findOrFail($id);
-            $language->delete();
-            return redirect()->route('languages.index')->with('sucesso', 'Linguagem removida!');
-        } catch (Exception $e) {
-            Log::error('Erro ao excluir linguagem: ' . $e->getMessage());
+        $language = Language::findOrFail($id);
+
+        if ($language->frameworks()->exists()) {
             return back()->withErrors('Não é possível excluir uma linguagem vinculada a um framework.');
         }
+
+        if ($language->templates()->exists()) {
+            return back()->withErrors('Não é possível excluir uma linguagem vinculada a um template.');
+        }
+
+        try {
+            $id = $language->id;
+            $language->delete();
+            app(AdminAuditor::class)->record('admin_language_deleted', null, ['target_id' => $id]);
+        } catch (QueryException $e) {
+            Log::error('Erro ao excluir linguagem: '.$e->getMessage());
+
+            return back()->withErrors('Não foi possível excluir a linguagem.');
+        }
+
+        return redirect()->route('languages.index')->with('sucesso', 'Linguagem removida!');
     }
 }

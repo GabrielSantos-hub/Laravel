@@ -74,16 +74,18 @@ it('rejeita payloads com tentativa de sql injection', function (string $payload)
 ]);
 
 it('retorna 429 quando a geracao excede o rate limit', function () {
-    $intencao = ['intencao' => 'Criar uma API REST em Laravel com PHP.'];
-
     for ($tentativa = 1; $tentativa <= 10; $tentativa++) {
         $this->actingAs($this->usuario)
-            ->postJson(route('prompts.generate'), $intencao)
+            ->postJson(route('prompts.generate'), [
+                'intencao' => "Criar uma API REST em Laravel com PHP. Recurso numero {$tentativa}.",
+            ])
             ->assertCreated();
     }
 
     $this->actingAs($this->usuario)
-        ->postJson(route('prompts.generate'), $intencao)
+        ->postJson(route('prompts.generate'), [
+            'intencao' => 'Criar uma API REST em Laravel com PHP. Recurso numero 11.',
+        ])
         ->assertStatus(429)
         ->assertHeader('Retry-After');
 

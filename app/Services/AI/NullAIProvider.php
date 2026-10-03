@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
+use App\Services\Guardrails\PromptInjectionDetector;
 use App\Services\PromptGeneratorService;
 
 /**
@@ -23,18 +24,47 @@ class NullAIProvider implements AIProviderInterface
         'PHP' => ['php'],
         'Laravel' => ['laravel'],
         'Livewire' => ['livewire'],
+        'CodeIgniter' => ['codeigniter'],
         'JavaScript' => ['javascript', 'js'],
         'TypeScript' => ['typescript'],
         'Vue.js' => ['vue', 'vuejs'],
         'React' => ['react'],
         'Node.js' => ['node', 'nodejs'],
+        'Express' => ['express'],
+        'Svelte' => ['svelte'],
+        'Nuxt' => ['nuxt'],
+        'Next.js' => ['next.js', 'nextjs'],
+        'Express com TypeScript' => ['express com typescript', 'express-typescript'],
         'Python' => ['python'],
         'Django' => ['django'],
+        'FastAPI' => ['fastapi'],
+        'Flask' => ['flask'],
         'Java' => ['java'],
         'Spring' => ['spring'],
+        'Quarkus' => ['quarkus'],
         'C#' => ['c#', 'csharp'],
         '.NET' => ['.net', 'dotnet'],
+        'Blazor' => ['blazor'],
         'Go' => ['golang'],
+        'Gin' => ['gin'],
+        'Fiber' => ['gofiber', 'go fiber'],
+        'Kotlin' => ['kotlin'],
+        'Ktor' => ['ktor'],
+        'Jetpack Compose' => ['jetpack compose', 'jetpack'],
+        'Swift' => ['swift'],
+        'SwiftUI' => ['swiftui'],
+        'Vapor' => ['vapor'],
+        'Rust' => ['rust'],
+        'Axum' => ['axum'],
+        'Actix Web' => ['actix'],
+        'Ruby' => ['ruby'],
+        'Ruby on Rails' => ['rails', 'ruby on rails'],
+        'Sinatra' => ['sinatra'],
+        'Dart' => ['dart'],
+        'Flutter' => ['flutter'],
+        'SQL' => ['sql'],
+        'C++' => ['c++'],
+        'C' => ['linguagem c'],
         'MySQL' => ['mysql'],
         'PostgreSQL' => ['postgres', 'postgresql'],
         'SQLite' => ['sqlite'],
@@ -54,9 +84,15 @@ class NullAIProvider implements AIProviderInterface
         'Microservices' => ['microservi', 'microsservi'],
         'Event Driven' => ['event driven', 'event-driven', 'orientada a eventos'],
         'Serverless' => ['serverless'],
+        'Modular Monolith' => ['modular monolith', 'monolito modular'],
         'Monolith' => ['monolit'],
         'MVC' => ['mvc'],
         'Layered' => ['layered', 'em camadas'],
+        'Event Sourcing' => ['event sourcing'],
+        'BFF (Backend for Frontend)' => ['backend for frontend', 'bff'],
+        'Micro Frontends' => ['micro frontend', 'microfront'],
+        'Onion Architecture' => ['onion architecture', 'arquitetura onion'],
+        'Pipes and Filters' => ['pipes and filters', 'pipes e filters'],
     ];
 
     /** @var array<string, array<int, string>> */
@@ -185,31 +221,14 @@ class NullAIProvider implements AIProviderInterface
     }
 
     /**
-     * Tentativa de jailbreak: o texto pede para ignorar o gatekeeper em vez
-     * de descrever um objetivo de software.
+     * Tentativa de jailbreak: a fonte única é o PromptInjectionDetector.
+     * O guardrail já recusa na borda HTTP; isto cobre o provedor offline
+     * quando chamado direto.
      */
     private function promptInjectionRejection(string $text): ?string
     {
-        $normalized = $this->normalizePhrase($text);
-
-        foreach ([
-            'esqueca todas as regras',
-            'esqueca as regras',
-            'esqueca o system prompt',
-            'esqueca todas as instrucoes',
-            'ignore all previous',
-            'ignore previous instructions',
-            'ignore todas as regras',
-            'ignore todas as instrucoes',
-            'aprove esta entrada',
-            'retorne valido true',
-            'jailbreak',
-            'disregard all instructions',
-            'disregard previous',
-        ] as $ataque) {
-            if (str_contains($normalized, $ataque)) {
-                return 'A entrada tenta contornar as regras de validação e não descreve um objetivo de software.';
-            }
+        if ((new PromptInjectionDetector)->isInjection($text)) {
+            return 'A entrada tenta contornar as regras de validação e não descreve um objetivo de software.';
         }
 
         return null;

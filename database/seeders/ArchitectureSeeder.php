@@ -22,9 +22,15 @@ class ArchitectureSeeder extends Seeder
             'Event Driven' => 'Componentes desacoplados que se comunicam pela publicação e consumo de eventos.',
             'Microservices' => 'Serviços pequenos e independentes, com deploy e banco próprios.',
             'Serverless' => 'Funções sob demanda, sem gerenciamento de servidor pela aplicação.',
+            'Modular Monolith' => 'Monólito organizado em módulos com limites explícitos, deploy único.',
             'Monolith' => 'Aplicação única, com todos os módulos no mesmo processo e no mesmo deploy.',
             'MVC' => 'Model-View-Controller: separação entre dados, apresentação e coordenação da requisição.',
             'Layered' => 'Camadas horizontais empilhadas: apresentação, aplicação, domínio e infraestrutura.',
+            'Event Sourcing' => 'O estado é a sequência de eventos persistidos, não só o registro atual.',
+            'BFF (Backend for Frontend)' => 'API intermediária feita sob medida para cada interface (web, mobile).',
+            'Micro Frontends' => 'A interface é decomposta em pedaços independentes, com deploy próprio.',
+            'Onion Architecture' => 'Camadas em anel: o domínio no centro, infraestrutura na borda.',
+            'Pipes and Filters' => 'Processamento em etapas encadeadas: cada filtro transforma e passa adiante.',
         ];
 
         foreach ($arquiteturas as $nome => $descricao) {

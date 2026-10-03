@@ -63,9 +63,10 @@ class ProfileAvatarTest extends TestCase
         $resposta->assertSee('id="avatar-input"', false);
         $resposta->assertSee('id="crop-modal"', false);
         $resposta->assertSee('Salvar Foto', false);
-        $resposta->assertSee('cropper.min.js', false);
-        $resposta->assertSee('aspectRatio: 1', false);
-        $resposta->assertSee(route('profile.avatar'), false);
+        $resposta->assertSee('id="profile-crop"', false);
+        $resposta->assertSee('data-upload-url="'.route('profile.avatar').'"', false);
+        $this->assertFileExists(resource_path('js/profile-crop.js'));
+        $this->assertStringContainsString('aspectRatio: 1', (string) file_get_contents(resource_path('js/profile-crop.js')));
     }
 
     public function test_avatar_cortado_e_salvo_via_ajax(): void

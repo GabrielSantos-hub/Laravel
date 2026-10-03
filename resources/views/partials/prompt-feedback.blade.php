@@ -25,7 +25,7 @@
 </div>
 
 @once
-<script>
+<script @if (! empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
     document.addEventListener('click', function (evento) {
         const botao = evento.target.closest('[data-prompt-feedback] [data-feedback]');
         if (!botao) {
