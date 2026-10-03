@@ -39,5 +39,3 @@ class ArchitectureSeeder extends Seeder
     }
 }
 
-// para rodar o seeder: php artisan db:seed --class=ArchitectureSeeder
-// popular banco como um atalho do INSERT INTO

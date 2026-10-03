@@ -40,6 +40,10 @@ class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
+        if ($request->user()) {
+            $response->headers->set('Cache-Control', 'no-store, private');
+        }
+
         return $response;
     }
 }

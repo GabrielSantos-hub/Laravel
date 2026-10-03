@@ -1,0 +1,15 @@
+Options -Indexes
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "(?i)^(\.env(\..+)?|\.git.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml(\.dist)?|vite\.config\.js)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^\.git(/|$) - [F,L]
+    RewriteRule ^(storage|vendor|database|tests|docs|app|bootstrap|config|routes|resources|node_modules)(/|$) - [F,L]
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

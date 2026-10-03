@@ -17,6 +17,10 @@ class EnsurePasswordIsChanged
             'password.forced.update',
             'logout'
         )) {
+            if ($request->expectsJson()) {
+                abort(403, 'É necessário alterar a senha temporária.');
+            }
+
             return redirect()->route('password.forced.edit');
         }
 

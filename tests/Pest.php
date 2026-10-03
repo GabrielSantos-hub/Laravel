@@ -1,14 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| Closures de testes Pest no diretório Feature herdam o TestCase da
-| aplicação (Vite desligado, bootstrap Laravel). Classes PHPUnit
-| existentes continuam independentes.
-|
-*/
+// Closures Feature herdam o TestCase (Vite desligado). Classes PHPUnit seguem independentes.
 
 uses(Tests\TestCase::class)->in('Feature');

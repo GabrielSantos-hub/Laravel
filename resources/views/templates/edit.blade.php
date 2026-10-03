@@ -23,8 +23,6 @@
                 @csrf
                 @method('PUT')
 
-                <!-- Arquitetura removida: templates agora são universais -->
-
                 <div class="mb-3">
                     <label class="form-label text-muted">Nome do template</label>
                     <input type="text" name="nome" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required maxlength="150"

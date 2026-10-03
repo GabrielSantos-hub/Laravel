@@ -28,7 +28,6 @@ class AdminUserController extends Controller
             'must_change_password' => true,
         ])->save();
 
-        // auditoria: admin_password_reset
         app(AdminAuditor::class)->record('admin_password_reset', $user, [
             'target_user_id' => $user->id,
         ]);

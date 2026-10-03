@@ -33,6 +33,12 @@ class ForcedPasswordChangeTest extends TestCase
         $this->actingAs($user)
             ->post('/logout')
             ->assertRedirect('/login');
+
+        $this->actingAs($user)
+            ->postJson(route('prompts.generate'), [
+                'intencao' => 'Criar uma API REST em Laravel com PHP.',
+            ])
+            ->assertForbidden();
     }
 
     public function test_troca_obrigatoria_recusa_senha_fraca(): void

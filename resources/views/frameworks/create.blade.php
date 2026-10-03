@@ -10,7 +10,6 @@
     <div class="card shadow-sm border-0" style="border-radius: 8px;">
         <div class="card-body p-4">
             
-            {{-- Tratamento de erro - caixa vermelha se faltar algo --}}
             @if ($errors->any())
                 <div class="alert alert-danger mb-4">
                     <ul class="mb-0">
@@ -29,7 +28,6 @@
                     <input type="text" name="nome" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required placeholder="Ex: Laravel, React, Django">
                 </div>
 
-                {{-- NOVO CAMPO: Slug (Obrigatório no Banco de Dados) --}}
                 <div class="mb-3">
                     <label class="form-label text-muted" style="font-weight: 500;">Slug (Identificador sem espaços)</label>
                     <input type="text" name="slug" class="form-control focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-light" required placeholder="Ex: django">

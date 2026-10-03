@@ -27,7 +27,9 @@ class SecurityHeadersTest extends TestCase
         $usuario = User::factory()->create();
         $admin = User::factory()->create(['role' => 'ADM']);
 
-        $this->assertCabecalhos($this->actingAs($usuario)->get(route('home')));
+        $home = $this->actingAs($usuario)->get(route('home'));
+        $this->assertCabecalhos($home);
+        $this->assertStringContainsString('no-store', (string) $home->headers->get('Cache-Control'));
         $this->assertCabecalhos($this->actingAs($usuario)->get(route('profile.edit')));
         $this->assertCabecalhos($this->actingAs($usuario)->get(route('languages.index')));
         $this->assertCabecalhos($this->actingAs($usuario)->get(route('templates.index')));

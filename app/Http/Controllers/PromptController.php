@@ -41,8 +41,7 @@ class PromptController extends Controller
             'architectures' => Architecture::query()->orderBy('nome')->get(),
             'languages' => Language::query()->orderBy('nome')->get(),
             'frameworks' => Framework::query()->with('language')->orderBy('nome')->get(),
-            // O template usado na última geração. A escolha é sempre do
-            // pipeline, então aqui ele só é exibido como retorno visual.
+            // Só retorno visual: o pipeline escolhe o template, não o formulário.
             'activeTemplate' => $this->template(session('selected_template_id')),
             'lastPromptId' => session('last_prompt_id'),
         ]);
@@ -58,11 +57,7 @@ class PromptController extends Controller
     }
 
     /**
-     * Roda o pipeline completo e grava o resultado no histórico.
-     *
-     * As falhas de domínio viram ValidationException, que o Laravel já converte
-     * no formato certo dos dois lados: redirect com erros para o formulário e
-     * 422 com o corpo de erros para clientes que esperam JSON.
+     * Falhas de domínio viram ValidationException (redirect ou 422 JSON).
      */
     public function generate(GeneratePromptRequest $request): RedirectResponse|JsonResponse
     {
@@ -233,10 +228,7 @@ class PromptController extends Controller
     }
 
     /**
-     * Sanitiza os marcadores dinâmicos vindos do formulário: só passam chaves
-     * com formato de identificador (as mesmas que o extrator reconhece) e
-     * valores preenchidos — variável em branco deixa o placeholder ser tratado
-     * como ausente, o que também apaga os blocos {% if %} que dependem dela.
+     * Só identificadores válidos e valores preenchidos; vazio some do {% if %}.
      *
      * @param  array<mixed, mixed>  $variables
      * @return array<string, string>
@@ -272,12 +264,34 @@ class PromptController extends Controller
     }
 
     /**
-     * O histórico é pessoal e o id do prompt vem na URL, então sem esta
-     * verificação qualquer usuário autenticado leria ou apagaria o prompt de
-     * outro só trocando o número.
-     *
-     * O cast protege drivers que devolvem a chave estrangeira como string e
-     * cobre `user_id` nulo (prompt órfão), que nunca casa com um id de sessão.
+     * Apaga somente os prompts do usuário autenticado. IDs no corpo
+     * da requisição são ignorados de propósito.
+     */
+    public function clearHistory(Request $request): RedirectResponse|JsonResponse
+    {
+        $query = Prompt::query()->where('user_id', Auth::id());
+        $removed = (int) $query->count();
+        $query->delete();
+
+        $this->security->log('history_cleared', [
+            'removed' => $removed,
+        ]);
+
+        $message = $removed === 1 ? '1 prompt removido' : "{$removed} prompts removidos";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'removed' => $removed,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()->route('home')->with('sucesso', $message);
+    }
+
+    /**
+     * ID na URL não autoriza ler/apagar prompt de outro usuário.
+     * Cast cobre user_id string (SQLite) e nulo (órfão).
      */
     private function autorizarDono(Prompt $prompt, string $acao): void
     {

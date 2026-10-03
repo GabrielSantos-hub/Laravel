@@ -36,7 +36,7 @@ class GeneratePromptRequest extends FormRequest
             'architecture_id' => ['nullable', 'integer', 'exists:architectures,id'],
             'language_id' => ['nullable', 'integer', 'exists:languages,id'],
             'framework_id' => ['nullable', 'integer', 'exists:frameworks,id'],
-            'variables' => ['nullable', 'array'],
+            'variables' => ['nullable', 'array', 'max:20'],
             'variables.*' => ['nullable', 'string', 'max:2000'],
             'nao_salvar_historico' => ['sometimes', 'boolean'],
         ];

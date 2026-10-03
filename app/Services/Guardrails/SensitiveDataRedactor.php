@@ -45,7 +45,14 @@ class SensitiveDataRedactor
                 },
                 $text
             );
-            $text = is_string($replaced) ? $replaced : $text;
+            if (! is_string($replaced)) {
+                return [
+                    'text' => '[REDACTED:pcre_failure]',
+                    'types' => ['pcre_failure'],
+                    'counts' => ['pcre_failure' => 1],
+                ];
+            }
+            $text = $replaced;
         }
 
         $text = $this->redactValidated($text, 'cpf', $counts, self::cpfCandidates(...), self::isValidCpf(...));

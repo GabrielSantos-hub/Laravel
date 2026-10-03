@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nome', 100);
             $table->string('slug', 100)->unique(); 
-            $table->timestamps();//
+            $table->timestamps();
         });
     }
 
@@ -27,5 +27,3 @@ return new class extends Migration
         Schema::dropIfExists('languages');
     }
 };
-// Versionamento do BD pelo Laravel
-//rodar o comando: php artisan migrate

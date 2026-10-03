@@ -143,8 +143,22 @@
             </div>
 
             <div class="sidebar-section chats-section">
-                <div class="chats-list" aria-labelledby="historico-titulo">
-                    <p class="chats-title" id="historico-titulo">Histórico</p>
+                <div class="chats-list" aria-labelledby="historico-titulo" data-history-list>
+                    <div class="chats-header">
+                        <p class="chats-title" id="historico-titulo">Histórico</p>
+                        @auth
+                        <button
+                            type="button"
+                            class="sidebar-history-clear focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            data-modal-open="clear-history-modal"
+                            aria-controls="clear-history-modal"
+                            aria-haspopup="dialog"
+                            @if (($recentPrompts ?? collect())->isEmpty()) hidden @endif
+                        >
+                            Limpar meu histórico
+                        </button>
+                        @endauth
+                    </div>
                     @forelse ($recentPrompts ?? [] as $item)
                     <a href="{{ route('prompts.show', $item) }}"
                        class="chat-link text-truncate d-block focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -246,6 +260,50 @@
             </div>
         </div>
     </div>
+
+    @auth
+    <div
+        id="clear-history-modal"
+        class="app-modal fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clear-history-title"
+    >
+        <div class="app-modal-backdrop" data-modal-close></div>
+        <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
+            <div class="app-modal-header">
+                <h2 id="clear-history-title" class="h5 mb-0">Limpar meu histórico</h2>
+                <button
+                    type="button"
+                    class="icon-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    data-modal-close
+                    aria-label="Fechar"
+                >
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p class="mb-3">Isto apagará todos os seus prompts e não pode ser desfeito.</p>
+            <form
+                method="POST"
+                action="{{ route('prompts.history.clear') }}"
+                data-confirm-fetch
+                data-history-clear-form
+            >
+                @csrf
+                @method('DELETE')
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-catalog btn-catalog-delete focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        Limpar histórico
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endauth
 
     @stack('scripts')
 </body>

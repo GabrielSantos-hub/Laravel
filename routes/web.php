@@ -52,6 +52,9 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::post('/prompts/generate', [PromptController::class, 'generate'])
         ->middleware('throttle:10,1')
         ->name('prompts.generate');
+    Route::delete('/prompts/historico', [PromptController::class, 'clearHistory'])
+        ->middleware('throttle:5,1')
+        ->name('prompts.history.clear');
     Route::get('/prompts/{prompt}', [PromptController::class, 'show'])->name('prompts.show');
     Route::post('/prompts/{prompt}/feedback', [PromptController::class, 'feedback'])
         ->middleware('throttle:20,1')
@@ -70,6 +73,12 @@ Route::middleware(['auth', 'password.changed', 'can:admin'])->group(function () 
         return redirect()->route('admin.dashboard');
     });
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::post('/admin/metricas/corte', [AdminDashboardController::class, 'resetMetrics'])
+        ->middleware('throttle:10,1')
+        ->name('admin.metrics.reset');
+    Route::delete('/admin/metricas/corte', [AdminDashboardController::class, 'clearMetricsReset'])
+        ->middleware('throttle:10,1')
+        ->name('admin.metrics.reset.clear');
     Route::get('/admin/auditoria', [AdminAuditLogController::class, 'index'])->name('admin.audit.index');
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::put('/admin/users/{user}/password', [AdminUserController::class, 'resetPassword'])

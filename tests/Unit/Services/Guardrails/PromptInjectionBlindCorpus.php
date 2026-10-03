@@ -3,8 +3,7 @@
 namespace Tests\Unit\Services\Guardrails;
 
 /**
- * Corpus CEGO da Fase 4. Nenhum enunciado é cópia dos corpora
- * PromptInjectionCorpusTest ou PromptInjectionIndependentCorpus.
+ * Corpus cego: nenhum enunciado copia os outros corpora de injection.
  *
  * @phpstan-type Caso array{0: string}
  */

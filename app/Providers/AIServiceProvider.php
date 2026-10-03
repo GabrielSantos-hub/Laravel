@@ -30,9 +30,7 @@ class AIServiceProvider extends ServiceProvider
             maxPayloadBytes: (int) config('services.gemini.max_payload_bytes', 65536),
         ));
 
-        // A escolha de template é local (tags/categorias). O provedor de IA só
-        // entra quando alguém instancia o seletor com ele — e nesse caso o
-        // prompt leva o catálogo de IDs e nomes.
+        // Seletor é local (tags). O provedor só entra se alguém o injetar.
         $this->app->bind(TemplateSelector::class, fn ($app): TemplateSelector => new TemplateSelector(
             logger: $app->make(LoggerInterface::class),
         ));
