@@ -7,6 +7,31 @@
         <div>
             <h3 class="mb-1">Painel de métricas</h3>
             <p class="text-muted small mb-0">Consolidado de tudo o que já foi gerado e avaliado no GUEASS.</p>
+            @if ($metricas['metrics_since_label'])
+                <p class="text-muted small mb-0 mt-1">Métricas consideradas desde {{ $metricas['metrics_since_label'] }}</p>
+            @endif
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button
+                type="button"
+                class="btn-catalog btn-catalog-delete focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                data-modal-open="reset-metrics-modal"
+                aria-controls="reset-metrics-modal"
+                aria-haspopup="dialog"
+            >
+                Zerar métricas
+            </button>
+            @if ($metricas['metrics_reset_at'])
+                <button
+                    type="button"
+                    class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    data-modal-open="clear-metrics-reset-modal"
+                    aria-controls="clear-metrics-reset-modal"
+                    aria-haspopup="dialog"
+                >
+                    Considerar todo o histórico
+                </button>
+            @endif
         </div>
     </div>
 
@@ -113,6 +138,62 @@
 </div>
 
 <script type="application/json" id="admin-metricas">@json($metricas)</script>
+
+<div
+    id="reset-metrics-modal"
+    class="app-modal fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reset-metrics-title"
+>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
+        <div class="app-modal-header">
+            <h2 id="reset-metrics-title" class="h5 mb-0">Zerar métricas</h2>
+            <button type="button" class="icon-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close aria-label="Fechar">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <p class="mb-3">Os prompts permanecem no banco. O painel passa a contar só o que for gerado a partir de agora.</p>
+        <form method="POST" action="{{ route('admin.metrics.reset') }}">
+            @csrf
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn-catalog btn-catalog-delete focus:ring-2 focus:ring-indigo-500 focus:outline-none">Zerar métricas</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div
+    id="clear-metrics-reset-modal"
+    class="app-modal fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="clear-metrics-reset-title"
+>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <div class="app-modal-panel w-[90%] sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto" tabindex="-1">
+        <div class="app-modal-header">
+            <h2 id="clear-metrics-reset-title" class="h5 mb-0">Considerar todo o histórico</h2>
+            <button type="button" class="icon-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close aria-label="Fechar">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <p class="mb-3">O corte de data será removido e o painel voltará a somar todos os prompts salvos.</p>
+        <form method="POST" action="{{ route('admin.metrics.reset.clear') }}">
+            @csrf
+            @method('DELETE')
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn-catalog btn-catalog-secondary focus:ring-2 focus:ring-indigo-500 focus:outline-none" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn-catalog btn-catalog-primary focus:ring-2 focus:ring-indigo-500 focus:outline-none">Considerar todo o histórico</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('vite')
     @vite(['resources/js/admin-dashboard.js'])
 @endpush

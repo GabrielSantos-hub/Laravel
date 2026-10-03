@@ -249,16 +249,27 @@ function initSidebar() {
     syncViewport();
 }
 
+function focusableIn(modal) {
+    return [...modal.querySelectorAll('a[href], button:not([disabled]), textarea, input:not([type="hidden"]):not([disabled]), select, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => !el.hasAttribute('hidden') && el.offsetParent !== null);
+}
+
 function initModals() {
-    const openModal = (modal) => {
+    const openers = new WeakMap();
+
+    const openModal = (modal, opener) => {
         if (!modal) {
             return;
         }
 
         modal.hidden = false;
         document.body.classList.add('drawer-locked');
+        if (opener) {
+            openers.set(modal, opener);
+        }
 
         const preferred = modal.querySelector('input:not([type="hidden"]), textarea, select')
+            ?? modal.querySelector('[type="submit"]')
             ?? modal.querySelector('.app-modal-panel');
         preferred?.focus();
     };
@@ -271,6 +282,11 @@ function initModals() {
         modal.hidden = true;
         if (!document.querySelector('.app-modal:not([hidden])')) {
             document.body.classList.remove('drawer-locked');
+        }
+
+        const opener = openers.get(modal);
+        if (opener && typeof opener.focus === 'function') {
+            opener.focus();
         }
     };
 
@@ -296,13 +312,35 @@ function initModals() {
                 }
             }
 
-            openModal(modal);
+            openModal(modal, trigger);
         });
     });
 
     document.querySelectorAll('.app-modal').forEach((modal) => {
         modal.querySelectorAll('[data-modal-close]').forEach((closer) => {
             closer.addEventListener('click', () => closeModal(modal));
+        });
+
+        modal.addEventListener('keydown', (event) => {
+            if (event.key !== 'Tab' || modal.hidden) {
+                return;
+            }
+
+            const items = focusableIn(modal);
+            if (items.length === 0) {
+                return;
+            }
+
+            const first = items[0];
+            const last = items[items.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
         });
     });
 
@@ -312,6 +350,73 @@ function initModals() {
         }
 
         document.querySelectorAll('.app-modal:not([hidden])').forEach((modal) => closeModal(modal));
+    });
+}
+
+function initHistoryClear() {
+    document.querySelectorAll('[data-history-clear-form]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+            const submit = form.querySelector('[type="submit"]');
+            if (submit) {
+                submit.disabled = true;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new FormData(form),
+            })
+                .then((resposta) => {
+                    if (!resposta.ok) {
+                        throw new Error(`HTTP ${resposta.status}`);
+                    }
+
+                    return resposta.json();
+                })
+                .then((dados) => {
+                    const lista = document.querySelector('[data-history-list]');
+                    if (lista) {
+                        lista.querySelectorAll('.chat-link').forEach((link) => link.remove());
+                        if (!lista.querySelector('.sidebar-empty-history')) {
+                            const vazio = document.createElement('p');
+                            vazio.className = 'text-muted small px-2 mb-0 text-center sidebar-empty-history';
+                            vazio.textContent = 'Nenhum prompt salvo ainda.';
+                            lista.appendChild(vazio);
+                        }
+                    }
+
+                    document.querySelectorAll('.sidebar-history-clear').forEach((botao) => {
+                        botao.hidden = true;
+                    });
+
+                    const modal = form.closest('.app-modal');
+                    if (modal) {
+                        modal.hidden = true;
+                        document.body.classList.remove('drawer-locked');
+                    }
+
+                    const aviso = document.createElement('div');
+                    aviso.className = 'alert alert-success';
+                    aviso.setAttribute('role', 'status');
+                    aviso.textContent = dados.message ?? 'Histórico limpo.';
+                    document.getElementById('conteudo-principal')?.prepend(aviso);
+                })
+                .catch(() => {
+                    form.submit();
+                })
+                .finally(() => {
+                    if (submit) {
+                        submit.disabled = false;
+                    }
+                });
+        });
     });
 }
 
@@ -356,4 +461,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     initUserMenu();
     initModals();
+    initHistoryClear();
 });

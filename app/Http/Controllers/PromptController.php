@@ -272,6 +272,32 @@ class PromptController extends Controller
     }
 
     /**
+     * Apaga somente os prompts do usuário autenticado. IDs no corpo
+     * da requisição são ignorados de propósito.
+     */
+    public function clearHistory(Request $request): RedirectResponse|JsonResponse
+    {
+        $query = Prompt::query()->where('user_id', Auth::id());
+        $removed = (int) $query->count();
+        $query->delete();
+
+        $this->security->log('history_cleared', [
+            'removed' => $removed,
+        ]);
+
+        $message = $removed === 1 ? '1 prompt removido' : "{$removed} prompts removidos";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'removed' => $removed,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()->route('home')->with('sucesso', $message);
+    }
+
+    /**
      * O histórico é pessoal e o id do prompt vem na URL, então sem esta
      * verificação qualquer usuário autenticado leria ou apagaria o prompt de
      * outro só trocando o número.
