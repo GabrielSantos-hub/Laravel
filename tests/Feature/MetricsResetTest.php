@@ -33,16 +33,6 @@ function templateDasMetricas(string $nome = 'CRUD'): Template
     ]);
 }
 
-function promptDasMetricas(array $attrs = []): Prompt
-{
-    return Prompt::query()->create(array_merge([
-        'user_id' => User::factory()->create()->id,
-        'template_id' => templateDasMetricas()->id,
-        'input_text' => 'Criar cadastro',
-        'output_text' => 'Prompt gerado.',
-    ], $attrs));
-}
-
 it('o corte filtra totais satisfacao templates e stacks sem apagar prompts', function () {
     $php = Language::query()->create(['nome' => 'PHP', 'slug' => 'php']);
     $laravel = Framework::query()->create(['nome' => 'Laravel', 'slug' => 'laravel', 'language_id' => $php->id]);
