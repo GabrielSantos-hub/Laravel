@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') — GUEASS</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css'])
-    @endif
     <style>
         :root {
             --gueass-bg: #ffffff;
@@ -26,9 +23,13 @@
             --gueass-border: #2d3340;
         }
         * { box-sizing: border-box; }
-        body {
+        html, body {
+            width: 100%;
             margin: 0;
+        }
+        body {
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -37,8 +38,15 @@
             color: var(--gueass-text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        .error-page-center {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         .error-card {
             width: min(32rem, 100%);
+            margin-inline: auto;
             background: var(--gueass-surface);
             border: 1px solid var(--gueass-border);
             border-radius: 1.25rem;
@@ -47,22 +55,19 @@
             box-shadow: 0 18px 40px rgba(15, 17, 23, 0.08);
         }
         .error-brand {
-            font-family: Orbitron, sans-serif;
             font-weight: 700;
             letter-spacing: 1px;
             color: var(--gueass-accent);
             margin: 0 0 1.25rem;
         }
         .error-code {
-            font-family: Orbitron, sans-serif;
             font-size: clamp(2.5rem, 8vw, 4rem);
-            font-weight: 900;
+            font-weight: 800;
             letter-spacing: 2px;
             color: var(--gueass-accent);
             margin: 0 0 0.75rem;
         }
         h1 {
-            font-family: Orbitron, sans-serif;
             font-size: 1.35rem;
             margin: 0 0 0.75rem;
         }
@@ -92,6 +97,10 @@
             color: var(--gueass-accent);
             border: 1px solid var(--gueass-accent);
         }
+        @media (max-width: 639px) {
+            body { padding: 1rem; }
+            .error-card { padding: 1.75rem 1.25rem; }
+        }
     </style>
     <script @if (! empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
         (function () {
@@ -106,23 +115,24 @@
     </script>
 </head>
 <body>
-    <main class="error-card" role="alert">
-        <p class="error-brand">GUEASS</p>
-        <p class="error-code">@yield('code')</p>
-        <h1>@yield('title')</h1>
-        <p>@yield('message')</p>
-        @php
-            $ref = $requestId
-                ?? request()->attributes->get('request_id')
-                ?? request()->headers->get('X-Request-Id');
-        @endphp
-        @if (! empty($ref))
-            <p>código de referência: <code>{{ $ref }}</code></p>
-        @endif
-        <div class="error-actions">
-            <a class="primary" href="{{ url('/') }}">Voltar ao início</a>
-            <a class="ghost" href="{{ url('/login') }}">Ir para o login</a>
-        </div>
-    </main>
+    <div class="error-page-center">
+        <main class="error-card" role="alert">
+            <p class="error-brand">GUEASS</p>
+            <p class="error-code">@yield('code')</p>
+            <h1>@yield('title')</h1>
+            <p>@yield('message')</p>
+            @php
+                $ref = $requestId
+                    ?? request()->attributes->get('request_id');
+            @endphp
+            @if (! empty($ref))
+                <p>código de referência: <code>{{ $ref }}</code></p>
+            @endif
+            <div class="error-actions">
+                <a class="primary" href="{{ url('/') }}">Voltar ao início</a>
+                <a class="ghost" href="{{ url('/login') }}">Ir para o login</a>
+            </div>
+        </main>
+    </div>
 </body>
 </html>

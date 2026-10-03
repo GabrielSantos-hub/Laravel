@@ -19,6 +19,10 @@ class ErrorPagesTest extends TestCase
             ->assertSee('Página não encontrada', false)
             ->assertSee('código de referência:', false)
             ->assertSee('GUEASS', false)
+            ->assertSee('error-page-center', false)
+            ->assertSee('error-card', false)
+            ->assertDontSee('/build/', false)
+            ->assertDontSee('app-sidebar', false)
             ->assertDontSee('Stack trace', false)
             ->assertDontSee('Whoops', false);
     }
@@ -57,6 +61,17 @@ class ErrorPagesTest extends TestCase
         $this->assertStringContainsString('req-429-teste', $pagina429);
         $this->assertStringNotContainsString('Stack trace', $pagina419);
         $this->assertStringNotContainsString('Stack trace', $pagina429);
+    }
+
+    public function test_404_de_rota_admin_inexistente_usa_o_layout_centralizado(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'ADM']))
+            ->get('/admin/auditoria/xyz')
+            ->assertNotFound()
+            ->assertSee('error-page-center', false)
+            ->assertSee('margin-inline: auto', false)
+            ->assertDontSee('app-sidebar', false)
+            ->assertDontSee('/build/', false);
     }
 
     public function test_500_http_do_handler_tem_request_id_sem_vazar_detalhe(): void
