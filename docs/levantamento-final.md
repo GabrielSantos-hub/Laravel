@@ -396,10 +396,12 @@ tratada com debug ligado ainda pode mostrar a página de depuração.
 A avaliação Útil/Não útil (`partials/prompt-feedback.blade.php`) usa
 `<script>` com o nonce da requisição; sem `onclick` inline.
 
-«Limpar meu histórico» no painel da sidebar (e no gerador): diálogo
-acessível (foco preso, Esc fecha) e `fetch` JSON em `resources/js/ui.js`.
-Painel admin: «Métricas consideradas desde dd/mm/aaaa HH:MM», «Zerar
-métricas» e «Considerar todo o histórico».
+O gatilho de limpar o histórico no painel da sidebar (e no gerador) é um
+ícone de setas circulares (`fa-arrows-rotate`) com `aria-label` / `title`
+«Limpar meu histórico»; o diálogo acessível (foco preso, Esc fecha) e o
+`fetch` JSON em `resources/js/ui.js` permanecem. Painel admin: «Métricas
+consideradas desde dd/mm/aaaa HH:MM», gatilho em ícone com `aria-label` /
+`title` «Zerar métricas», e «Considerar todo o histórico» em texto.
 
 Política de privacidade (`/privacidade`): texto curto em português,
 alinhado ao código, sem prometer exportação; retenção lida de

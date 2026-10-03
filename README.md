@@ -149,12 +149,14 @@ Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
 - Segredos reconhecíveis viram `[REDACTED:tipo]` antes do histórico e de
   qualquer provedor externo.
 - Na tela do gerador há a opção de não salvar o prompt. No histórico da
-  barra lateral (e no gerador): «Limpar meu histórico» apaga só os
-  prompts do usuário logado, com confirmação. No perfil: excluir a conta
-  com confirmação de senha.
-- No painel admin, «Zerar métricas» não apaga prompts: corta a leitura
-  a partir de `metrics_reset_at`. «Considerar todo o histórico» remove
-  o corte.
+  barra lateral (e no gerador): o botão com ícone de setas circulares
+  (`aria-label` / `title` «Limpar meu histórico») apaga só os prompts
+  do usuário logado, com confirmação. No perfil: excluir a conta com
+  confirmação de senha.
+- No painel admin, o botão com o mesmo ícone (`aria-label` / `title`
+  «Zerar métricas») não apaga prompts: corta a leitura a partir de
+  `metrics_reset_at`. «Considerar todo o histórico» (texto) remove o
+  corte.
 - Cabeçalhos: CSP (`script-src` com nonce; `style-src` ainda inclui
   `'unsafe-inline'` — ver limitações), `X-Content-Type-Options`,
   `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`. HSTS
