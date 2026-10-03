@@ -131,17 +131,17 @@ A suíte usa SQLite em memória (`phpunit.xml`). Não altera o MySQL local.
 php artisan test
 ```
 
-Linha de base e auditorias de dependências: `docs/baseline-testes.md`.
-Regras de negócio: `docs/regras-negocio.md`. Levantamento técnico:
-`docs/levantamento-final.md`. Bateria de segurança:
-`docs/testes-de-seguranca.md`. O código desta árvore está **congelado**.
+A documentação técnica (levantamento, segurança, regras de negócio e
+bateria de testes) fica fora do repositório. A cópia local está em
+`Documents/GUEASS-docs` (pasta Documentos do utilizador). O código
+desta árvore está **congelado**.
 
 Os assets (Bootstrap, Font Awesome, Orbitron, Cropper.js e Chart.js) vêm
 do Vite, sem CDN. A CSP usa nonce nos scripts inline do tema.
 
 ## Segurança
 
-Controles e limitações: `docs/seguranca-owasp.md`. Em resumo:
+A documentação técnica fica fora do repositório. Em resumo:
 
 - O gerador recusa prompt injection (jailbreak, revelação de system
   prompt, troca de papel) na intenção e nas variáveis, sempre, mesmo com
