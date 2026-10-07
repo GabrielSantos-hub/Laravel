@@ -44,6 +44,9 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::post('/perfil/avatar', [ProfileController::class, 'updateAvatar'])
         ->middleware('throttle:10,1')
         ->name('profile.avatar');
+    Route::delete('/perfil/avatar', [ProfileController::class, 'destroyAvatar'])
+        ->middleware('throttle:10,1')
+        ->name('profile.avatar.destroy');
     Route::delete('/perfil', [ProfileController::class, 'destroy'])
         ->middleware('throttle:5,1')
         ->name('profile.destroy');
@@ -80,10 +83,16 @@ Route::middleware(['auth', 'password.changed', 'can:admin'])->group(function () 
         ->middleware('throttle:10,1')
         ->name('admin.metrics.reset.clear');
     Route::get('/admin/auditoria', [AdminAuditLogController::class, 'index'])->name('admin.audit.index');
+    Route::delete('/admin/auditoria', [AdminAuditLogController::class, 'clear'])
+        ->middleware('throttle:10,1')
+        ->name('admin.audit.clear');
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::put('/admin/users/{user}/password', [AdminUserController::class, 'resetPassword'])
         ->middleware('throttle:10,1')
         ->name('admin.users.password');
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])
+        ->middleware('throttle:10,1')
+        ->name('admin.users.destroy');
 
     Route::resource('languages', LanguageController::class)->except(['index'])->middleware('throttle:20,1');
     Route::resource('frameworks', FrameworkController::class)->except(['index', 'show'])->middleware('throttle:20,1');

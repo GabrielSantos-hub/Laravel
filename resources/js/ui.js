@@ -312,6 +312,18 @@ function initModals() {
                 }
             }
 
+            if (trigger.dataset.deleteAction) {
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.action = trigger.dataset.deleteAction;
+                }
+
+                const nameEl = modal.querySelector('[data-delete-user-name]');
+                if (nameEl) {
+                    nameEl.textContent = trigger.dataset.deleteName ?? '';
+                }
+            }
+
             openModal(modal, trigger);
         });
     });

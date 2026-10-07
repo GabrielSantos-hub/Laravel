@@ -33,8 +33,19 @@
                 @method('PUT')
 
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <div id="profile-avatar">
+                    <div id="profile-avatar" class="profile-avatar-wrap">
                         @include('partials.user-avatar', ['user' => $user, 'size' => 72])
+                        @if ($user->avatarUrl())
+                            <button
+                                type="submit"
+                                form="avatar-remove-form"
+                                class="profile-avatar-remove-btn focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                aria-label="Remover foto de perfil"
+                                title="Remover foto"
+                            >
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                        @endif
                     </div>
                     <div>
                         <p class="fw-semibold mb-1">{{ $user->name }}</p>
@@ -98,6 +109,13 @@
         </div>
     </div>
 </div>
+
+@if ($user->avatarUrl())
+<form id="avatar-remove-form" action="{{ route('profile.avatar.destroy') }}" method="POST">
+    @csrf
+    @method('DELETE')
+</form>
+@endif
 
 <div id="crop-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center" hidden>
     <div class="crop-modal-panel" role="dialog" aria-modal="true" aria-labelledby="crop-modal-title">

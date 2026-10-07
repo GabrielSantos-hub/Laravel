@@ -28,7 +28,9 @@ class ForcedPasswordChangeTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('password.forced.edit'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('forced-password-screen', false)
+            ->assertSee('forced-password-panel', false);
 
         $this->actingAs($user)
             ->post('/logout')

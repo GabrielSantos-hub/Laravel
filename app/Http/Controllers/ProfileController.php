@@ -94,6 +94,25 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Remove a foto na hora, sem confirmação: apaga o arquivo público
+     * (se ainda existir) e zera a coluna para o avatar padrão aparecer.
+     */
+    public function destroyAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (filled($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->update(['avatar' => null]);
+
+        return redirect()
+            ->route('profile.edit')
+            ->with('sucesso', 'Foto de perfil removida.');
+    }
+
     private function storeAvatar(User $user, UploadedFile $arquivo): string
     {
         try {

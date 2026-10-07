@@ -9,6 +9,9 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^\.git(/|$) - [F,L]
+    # O vhost aponta para a raiz do projeto. /storage/* precisa cair em
+    # public/storage (atalho do storage:link); se não, a regra abaixo responde 403.
+    RewriteRule ^storage/(.*)$ public/storage/$1 [L]
     RewriteRule ^(storage|vendor|database|tests|docs|app|bootstrap|config|routes|resources|node_modules)(/|$) - [F,L]
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]

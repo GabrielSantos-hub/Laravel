@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Services\Security\AdminAuditor;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminAuditLogController extends Controller
 {
+    public function __construct(
+        private readonly AdminAuditor $auditor,
+    ) {}
+
     public function index(Request $request): View
     {
         $validated = $request->validate([
@@ -37,5 +44,24 @@ class AdminAuditLogController extends Controller
             ->pluck('action');
 
         return view('admin.audit.index', compact('logs', 'acoes', 'action', 'from', 'to'));
+    }
+
+    public function clear(): RedirectResponse
+    {
+        DB::transaction(function (): void {
+            $removed = DB::table('audit_logs')->count();
+
+            // O modelo impede delete() de um registro. A limpeza administrativa
+            // usa o query builder para esvaziar a tabela de uma vez.
+            DB::table('audit_logs')->delete();
+
+            $this->auditor->record('admin_audit_cleared', null, [
+                'removed' => $removed,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.audit.index')
+            ->with('status', 'Registros de auditoria foram limpos.');
     }
 }

@@ -284,6 +284,28 @@ html.high-contrast .skip-link {
     padding: 1rem;
 }
 
+.app-content:has(> .forced-password-screen) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.forced-password-screen {
+    display: flex;
+    width: 100%;
+    min-height: calc(100dvh - 9rem);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-inline: auto;
+    padding: 3rem 0;
+}
+
+.forced-password-panel {
+    width: 100%;
+    max-width: 28rem;
+}
+
 .app-footer {
     padding: 0.75rem 1rem;
     text-align: center;
@@ -978,6 +1000,40 @@ html.dark .btn-catalog-icon.btn-catalog-delete:hover {
     border-radius: 9999px;
     object-fit: cover;
     display: block;
+}
+
+.profile-avatar-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+.profile-avatar-remove-btn {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.3rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    padding: 0;
+    border: 1px solid var(--gueass-border);
+    border-radius: 9999px;
+    background: var(--gueass-surface);
+    color: var(--gueass-danger);
+    font-size: 0.7rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.profile-avatar-remove-btn:hover {
+    background: var(--gueass-danger);
+    border-color: transparent;
+    color: #fff;
 }
 
 #crop-modal[hidden] {

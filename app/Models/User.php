@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -83,7 +84,11 @@ class User extends Authenticatable
             return null;
         }
 
-        return url('storage/'.$this->avatar);
+        if (! Storage::disk('public')->exists($this->avatar)) {
+            return null;
+        }
+
+        return asset('storage/'.$this->avatar);
     }
 
     public function prompts(): HasMany

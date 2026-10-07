@@ -20,6 +20,8 @@ class SecurityLogger
         'logout',
         'password_changed',
         'admin_password_reset',
+        'admin_user_deleted',
+        'admin_audit_cleared',
         'forced_password_change',
         'authorization_denied',
         'guardrail_rejected',

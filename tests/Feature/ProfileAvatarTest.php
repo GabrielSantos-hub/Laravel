@@ -87,7 +87,69 @@ class ProfileAvatarTest extends TestCase
         $this->assertStringStartsWith('avatars/'.$user->id.'-', $user->avatar);
         $this->assertStringEndsWith('.png', $user->avatar);
         Storage::disk('public')->assertExists($user->avatar);
-        $this->assertSame(url('storage/'.$user->avatar), $resposta->json('avatar_url'));
+        $this->assertSame(asset('storage/'.$user->avatar), $resposta->json('avatar_url'));
+    }
+
+    public function test_avatar_ausente_no_disco_mostra_icone_padrao(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'avatar' => 'avatars/arquivo-ausente.png',
+        ]);
+
+        $this->assertNull($user->avatarUrl());
+
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('user-avatar-fallback', false)
+            ->assertDontSee('arquivo-ausente.png', false)
+            ->assertDontSee('Remover foto de perfil', false);
+    }
+
+    public function test_remover_avatar_apaga_arquivo_e_zera_o_campo(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson(route('profile.avatar'), [
+            'avatar' => $this->avatarPng(),
+        ])->assertOk();
+
+        $path = $user->fresh()->avatar;
+        $this->assertNotNull($path);
+
+        $pagina = $this->actingAs($user)->get(route('profile.edit'));
+        $pagina->assertOk();
+        $pagina->assertSee('id="avatar-remove-form"', false);
+        $pagina->assertSee('aria-label="Remover foto de perfil"', false);
+        $pagina->assertSee('action="'.route('profile.avatar.destroy').'"', false);
+        $this->assertStringNotContainsString(
+            'avatar-remove-form" action="'.route('profile.avatar.destroy').'" method="POST" onsubmit',
+            $pagina->getContent()
+        );
+
+        $this->actingAs($user)
+            ->delete(route('profile.avatar.destroy'))
+            ->assertRedirect(route('profile.edit'));
+
+        $user->refresh();
+        $this->assertNull($user->avatar);
+        Storage::disk('public')->assertMissing($path);
+
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('user-avatar-fallback', false)
+            ->assertDontSee('Remover foto de perfil', false);
+    }
+
+    public function test_visitante_nao_remove_avatar(): void
+    {
+        $this->delete(route('profile.avatar.destroy'))
+            ->assertRedirect(route('login'));
     }
 
     public function test_novo_avatar_substitui_o_arquivo_anterior(): void
