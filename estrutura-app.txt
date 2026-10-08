@@ -1,0 +1,104 @@
+﻿Listagem de caminhos de pasta
+O n·mero de sÚrie do volume Ú 1435-28C9
+C:\LARAGON\WWW\LARAVEL\APP
++---Console
+|   \---Commands
+|           CreateAdminCommand.php
+|           PrunePromptsCommand.php
+|           
++---Contracts
+|       AIProviderInterface.php
+|       
++---Exceptions
+|       AIProviderException.php
+|       AvatarRejectedException.php
+|       CannotRemoveLastAdminException.php
+|       FriendlyHttpRenderer.php
+|       InputUnprocessableException.php
+|       InvalidIntentException.php
+|       NoCompatibleTemplateException.php
+|       PromptAssemblyException.php
+|       
++---Http
+|   +---Controllers
+|   |       AdminAuditLogController.php
+|   |       AdminDashboardController.php
+|   |       AdminUserController.php
+|   |       ArchitectureController.php
+|   |       AuthController.php
+|   |       Controller.php
+|   |       FrameworkController.php
+|   |       LanguageController.php
+|   |       ProfileController.php
+|   |       PromptController.php
+|   |       TemplateController.php
+|   |       
+|   +---Middleware
+|   |       AssignRequestId.php
+|   |       EnsurePasswordIsChanged.php
+|   |       SecurityHeaders.php
+|   |       
+|   \---Requests
+|           DeleteAccountRequest.php
+|           GeneratePromptRequest.php
+|           StoreTemplateRequest.php
+|           UpdateAvatarRequest.php
+|           UpdateProfileRequest.php
+|           UpdateTemplateRequest.php
+|           
++---Logging
+|       RedactingProcessor.php
+|       
++---Models
+|       AppSetting.php
+|       Architecture.php
+|       AuditLog.php
+|       Framework.php
+|       Language.php
+|       Prompt.php
+|       Template.php
+|       User.php
+|       
++---Notifications
++---Providers
+|       AIServiceProvider.php
+|       AppServiceProvider.php
+|       
++---Services
+|   |   AvatarSanitizer.php
+|   |   CatalogHintResolver.php
+|   |   PromptBuildContext.php
+|   |   PromptBuilderService.php
+|   |   PromptGeneratorService.php
+|   |   PromptMetricsService.php
+|   |   PromptOutputPolicy.php
+|   |   PromptPipelineResult.php
+|   |   PromptPipelineService.php
+|   |   
+|   +---AI
+|   |   |   IntentAnalyzer.php
+|   |   |   IntentSynthesizer.php
+|   |   |   NullAIProvider.php
+|   |   |   PromptComposer.php
+|   |   |   TemplateInterpolator.php
+|   |   |   TemplateSelector.php
+|   |   |   
+|   |   \---Providers
+|   |           GeminiAIProvider.php
+|   |           
+|   +---Guardrails
+|   |       InputSanityGuardrail.php
+|   |       InputSanityVerdict.php
+|   |       PromptInjectionDetector.php
+|   |       PromptInjectionPatterns.php
+|   |       SensitiveDataRedactor.php
+|   |       UserIntentFrame.php
+|   |       
+|   \---Security
+|           AdminAuditor.php
+|           SecurityLogger.php
+|           
+\---Support
+        PasswordRules.php
+        TextNormalizer.php
+        
