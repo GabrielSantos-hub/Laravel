@@ -46,19 +46,13 @@ EOT,
                 'is_generic' => false,
                 'body' => <<<'EOT'
 CONTEXTO:
-Estou desenvolvendo um sistema corporativo{% if language %} utilizando {language}{% endif %}{% if framework %} com o framework {framework}{% endif %}{% if architecture %}, adotando o padrão {architecture}{% endif %}.
-O foco do negócio é: {user_input}
+{% if technologies %}Stack informada: {technologies}.{% endif %}{% if architecture %} Padrão arquitetural: {architecture}.{% endif %}
+
+{user_input}
 
 INSTRUÇÃO:
-1. Identifique e liste os principais casos de uso, regras de validação e entidades necessárias para cobrir este escopo de forma escalável.
-2. Escreva o código completo e estruturado para implementar essa infraestrutura de negócio.
-
-RESTRIÇÕES:
-- Respeite a separação de conceitos e responsabilidades.
-- Utilize recursos nativos da stack (validadores, ORM, middlewares de segurança e tratamento de exceções).
-
-FORMATO DE SAÍDA:
-Apresente a lista de componentes identificados para o problema, seguida apenas pelos blocos de código correspondentes e um guia de onde salvar cada arquivo.
+1. Atenda ao escopo descrito no pedido, acrescentando apenas as necessidades implícitas e boas práticas que o próprio objetivo justifica.
+2. Diferencie o que foi solicitado, o que é necessidade implícita e o que é sugestão a confirmar com o usuário.
 EOT,
             ],
             [

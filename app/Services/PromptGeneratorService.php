@@ -67,7 +67,14 @@ class PromptGeneratorService
           "prompt_gerado": "Texto fluido e sintetizado do prompt final..."
         }
 
-        Ao redigir `prompt_gerado`: preserve o objetivo e o escopo do pedido (uma tela em HTML/CSS continua sendo interface, sem virar sistema com banco, API ou sessões); enriqueça com necessidades implícitas tecnicamente justificáveis; separe requisitos solicitados, necessidades implícitas e sugestões a confirmar; nunca apresente suposições como regras de negócio definidas nem acrescente funcionalidades só porque são comuns em outros sistemas.
+        #### COMO REDIGIR `prompt_gerado`
+        - Preserve a intenção original: objetivo e escopo do pedido (uma tela em HTML/CSS continua sendo interface, sem virar sistema com banco, API ou sessões).
+        - Identifique necessidades implícitas tecnicamente justificáveis e acrescente boas práticas e requisitos pertinentes ao objetivo.
+        - Diferencie explicitamente: requisitos solicitados; necessidades implícitas; sugestões que dependem de confirmação do usuário.
+        - Nunca apresente suposições como regras de negócio confirmadas nem acrescente funcionalidades só porque são comuns em outros sistemas.
+        - Use o CORPO DO TEMPLATE apenas como referência estrutural: não reproduza instruções genéricas incompatíveis com o pedido nem imponha tecnologias, arquiteturas ou funcionalidades que ele não justifica.
+        - A variável `user_input` traz um briefing heurístico gerado localmente: use-o como ponto de partida, não como requisitos confirmados.
+        - Não inclua papel, restrições negativas nem formato de saída: o envelope final já os acrescenta.
 
         Não escreva nada fora do objeto JSON. Não invente analogias nem sistemas fictícios para ruído, comida ou objetos aleatórios da vida real.
 

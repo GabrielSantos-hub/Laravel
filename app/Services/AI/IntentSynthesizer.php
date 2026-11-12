@@ -115,7 +115,7 @@ class IntentSynthesizer
             'login' => ['login', 'autentic', 'senha', 'logon'],
             'tema' => ['modo escuro', 'dark mode', 'modo claro', 'light mode', 'tema claro', 'tema escuro', 'dark theme', 'light theme'],
             'api' => ['api', 'rest', 'endpoint'],
-            'crud' => ['crud', 'cadastro'],
+            'crud' => ['crud'],
             'teste' => ['teste', 'testes', 'phpunit'],
             'validacao' => ['validac', 'valida'],
             'pagamento' => ['cobranc', 'checkout', 'fatura', 'billing'],
@@ -123,6 +123,18 @@ class IntentSynthesizer
             foreach ($needles as $needle) {
                 if ($this->themeMatches($haystack, $needle)) {
                     $found[] = $tema;
+                    break;
+                }
+            }
+        }
+
+        // "Cadastro" sozinho não é CRUD (ex.: sistema hospitalar com cadastro
+        // de pacientes, consultas e relatórios). Só vira CRUD quando o pedido
+        // também cita edição ou exclusão dos registros.
+        if (! in_array('crud', $found, true) && $this->themeMatches($haystack, 'cadastr')) {
+            foreach (['edita', 'edição', 'edicao', 'exclu', 'remov'] as $needle) {
+                if ($this->themeMatches($haystack, $needle)) {
+                    $found[] = 'crud';
                     break;
                 }
             }
@@ -308,8 +320,12 @@ class IntentSynthesizer
             $itens[] = 'Operações de listagem, criação, edição e exclusão com feedback ao usuário.';
         }
 
-        if (in_array('validacao', $temas, true) || in_array('teste', $temas, true)) {
+        // Suíte de testes só quando o pedido cita testes; validação sozinha
+        // pede regras explícitas e retorno claro, não cobertura de testes.
+        if (in_array('teste', $temas, true)) {
             $itens[] = 'Cobertura de casos felizes e de falha, incluindo validação de campos obrigatórios.';
+        } elseif (in_array('validacao', $temas, true)) {
+            $itens[] = 'Regras de validação explícitas, com retorno claro para entradas válidas e inválidas.';
         }
 
         if (in_array('pagamento', $temas, true)) {
