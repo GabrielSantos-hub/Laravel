@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services;
 
 use App\Contracts\AIProviderInterface;
+use App\Exceptions\InputUnprocessableException;
 use App\Exceptions\InvalidIntentException;
 use App\Exceptions\NoCompatibleTemplateException;
 use App\Exceptions\PromptAssemblyException;
@@ -324,8 +325,9 @@ class PromptPipelineServiceTest extends TestCase
     {
         $this->templateClassificado();
 
-        $this->expectException(InvalidIntentException::class);
-        $this->expectExceptionMessage('objetivo claro de software');
+        // Lista solta de palavras: recusada já no guardrail, antes de chegar à IA.
+        $this->expectException(InputUnprocessableException::class);
+        $this->expectExceptionMessage(InputUnprocessableException::MESSAGE);
 
         $this->pipelineCom($this->provedorQueRejeita())->generate('rato motorista analogico sistema mysql');
     }

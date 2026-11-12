@@ -59,6 +59,52 @@ it('rejeita payloads de xss e sql injection mesmo com escopo de software', funct
     'Criar API Laravel UNION SELECT password FROM users',
 ]);
 
+it('rejeita lista solta de palavras mesmo com termos de informatica', function (string $frase) {
+    expect((new InputSanityGuardrail)->assess($frase)->accepted)->toBeFalse();
+})->with([
+    'asdf qwer zxcv 12345 teste blablabla computador azul correr janela.',
+    'teste computador azul correr janela sistema',
+    'computador sistema tecnologia banco dados código programa.',
+    'Quero aprender a preparar uma receita de bolo de chocolate.',
+    'Hoje está um dia bonito e quero viajar para Santa Catarina.',
+    'Quero comer tapioca bem rápido hoje',
+]);
+
+it('aceita pedidos legitimos em linguagem natural', function (string $pedido) {
+    expect((new InputSanityGuardrail)->assess($pedido)->accepted)->toBeTrue();
+})->with([
+    'Quero criar um sistema de cadastro de clientes com nome, e-mail e telefone.',
+    'Minha aplicação está apresentando erro 500 quando tento fazer login. Preciso investigar e corrigir o problema.',
+    'Preciso integrar meu sistema com uma API externa para consultar CEP e preencher automaticamente os endereços.',
+    'Quero que apenas administradores possam excluir usuários, enquanto os funcionários podem somente visualizar e cadastrar informações.',
+    'Preciso documentar os endpoints da API REST do meu projeto.',
+    'Quero melhorar o visual da página inicial do meu site para funcionar corretamente em celulares.',
+    'Implementar autenticação JWT Laravel Sanctum',
+    'erro 500 login laravel sanctum token',
+    'Configure CI pipeline for my FastAPI service',
+    'Crear una API REST en Laravel con autenticación Sanctum',
+]);
+
+it('nao aceita verbo construir sem contexto de software', function (string $frase) {
+    expect((new InputSanityGuardrail)->assess($frase)->accepted)->toBeFalse();
+})->with([
+    'Quero construir uma casa.',
+    'Quero construir uma garagem.',
+    'Preciso construir uma mesa de madeira.',
+    'Quero aprender a construir uma churrasqueira.',
+]);
+
+it('aceita verbo construir com contexto de software', function (string $pedido) {
+    expect((new InputSanityGuardrail)->assess($pedido)->accepted)->toBeTrue();
+})->with([
+    'Quero construir um sistema de cadastro de clientes.',
+    'Preciso construir uma aplicação web para controle financeiro.',
+    'Quero construir uma API REST em Laravel.',
+    'Preciso criar um sistema para gerenciar uma biblioteca.',
+    'Quero desenvolver um site responsivo para minha empresa.',
+    'Minha aplicação apresenta erro 500 quando tento fazer login. Preciso corrigir.',
+]);
+
 it('aceita pedidos legitimos sobre xss e sql injection', function (string $pedido) {
     expect((new InputSanityGuardrail)->assess($pedido)->accepted)->toBeTrue()
         ->and((new InputSanityGuardrail)->isMalicious($pedido))->toBeFalse();

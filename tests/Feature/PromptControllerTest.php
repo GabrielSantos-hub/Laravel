@@ -198,9 +198,10 @@ class PromptControllerTest extends TestCase
                 'intencao' => 'rato motorista analogico sistema mysql',
             ]);
 
+        // Lista solta de palavras: recusada já no guardrail, antes de chegar à IA.
         $resposta->assertUnprocessable();
         $resposta->assertJsonValidationErrors([
-            'intencao' => 'Não conseguimos identificar uma instrução ou objetivo claro de software no seu texto. Por favor, descreva de forma mais detalhada o que você deseja construir.',
+            'intencao' => InputUnprocessableException::MESSAGE,
         ]);
         $this->assertDatabaseCount('prompts', 0);
     }

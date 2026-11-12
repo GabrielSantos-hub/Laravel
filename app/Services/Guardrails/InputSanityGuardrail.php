@@ -35,7 +35,10 @@ class InputSanityGuardrail
         'escrev', 'review', 'document', 'analisa', 'analise', 'audit',
         'corrig', 'migrar', 'desenha', 'mapear', 'especific', 'firmware',
         'api', 'crud', 'login', 'logon', 'modulo', 'sistema', 'software',
-        'tela', 'cadastro', 'autentic', 'endpoint', 'banco', 'prontuario',
+        'tela', 'cadastr', 'autentic', 'endpoint', 'banco', 'prontuario',
+        'usuario', 'administrador', 'permiss', 'site', 'responsiv',
+        'aplicacao', 'formulario', 'dashboard', 'pentest', 'fastapi',
+        'openapi', 'webapi', 'restapi',
         'arquitet', 'microserv', 'microsserv', 'upload', 'controller',
         'controlador', 'middleware', 'jwt', 'owasp', 'codigo', 'servico',
         'aplicativ', 'plataforma', 'backend', 'frontend', 'laravel', 'php',
@@ -44,6 +47,65 @@ class InputSanityGuardrail
         'rabbitmq', 'kafka', 'sanctum', 'xss', 'injection', 'erro',
         'exception', 'bug', 'timeout', 'crash', '500', '404', '422',
         'debug', 'stack trace', 'falha', 'defeito',
+    ];
+
+    /**
+     * Marcadores curtos que aparecem dentro de palavras comuns ("rápido" → api,
+     * "terror" → erro, "cautela" → tela, "protesto" → test, "visite" → site):
+     * só valem no início de palavra.
+     *
+     * @var list<string>
+     */
+    private const WORD_START_MARKERS = ['api', 'erro', 'tela', 'test', 'site'];
+
+    /**
+     * Verbo genérico ("construir uma casa"): sozinho não indica software.
+     * Só vale junto de algum marcador de domínio (sistema, api, site...).
+     * Outros verbos genéricos (cria, desenvolv, escrev...) ficam de fora de
+     * propósito: rebaixá-los recusava pedidos legítimos dos corpora de teste.
+     *
+     * @var list<string>
+     */
+    private const GENERIC_VERB_MARKERS = ['constru'];
+
+    /**
+     * Palavras gramaticais. Um pedido real com 5+ palavras quase sempre traz
+     * ao menos uma; uma lista solta de substantivos não.
+     *
+     * @var list<string>
+     */
+    private const FUNCTION_WORDS = [
+        'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do',
+        'das', 'dos', 'em', 'no', 'na', 'nos', 'nas', 'com', 'para', 'pra',
+        'por', 'pelo', 'pela', 'que', 'e', 'ou', 'se', 'ao', 'aos', 'meu',
+        'minha', 'meus', 'minhas', 'seu', 'sua', 'eu', 'nao', 'mas', 'como',
+        'quando', 'sem', 'sobre', 'ate', 'entre',
+        'the', 'an', 'to', 'of', 'for', 'with', 'in', 'on', 'and', 'or',
+        'from', 'by', 'into', 'my', 'is', 'that', 'at',
+        // es / fr / it: pedidos em outro idioma não podem cair como lista solta.
+        'el', 'la', 'los', 'las', 'un', 'en', 'con', 'del', 'y', 'mi', 'al',
+        'le', 'les', 'des', 'du', 'et', 'pour', 'avec', 'il', 'di', 'per',
+    ];
+
+    /**
+     * Verbos de ação no infinitivo/imperativo: permitem pedido telegráfico
+     * ("Implementar autenticação JWT Laravel Sanctum") sem palavra gramatical.
+     *
+     * @var list<string>
+     */
+    private const ACTION_VERBS = [
+        'criar', 'crie', 'implementar', 'implemente', 'desenvolver', 'desenvolva',
+        'construir', 'construa', 'corrigir', 'corrija', 'refatorar', 'refatore',
+        'documentar', 'documente', 'testar', 'escrever', 'escreva', 'analisar',
+        'auditar', 'audite', 'revisar', 'revise', 'migrar', 'migre', 'integrar',
+        'integre', 'configurar', 'configure', 'otimizar', 'otimize', 'adicionar',
+        'adicione', 'gerar', 'gere', 'validar', 'valide', 'fazer', 'faca',
+        'montar', 'monte', 'modelar', 'desenhar', 'especificar', 'mapear',
+        'investigar', 'investigue', 'depurar', 'debugar', 'ajustar', 'ajuste',
+        'remover', 'remova', 'atualizar', 'atualize', 'proteger', 'proteja',
+        'implement', 'create', 'build', 'fix', 'add', 'write', 'refactor',
+        'test', 'generate', 'design', 'debug', 'migrate', 'integrate',
+        'configure', 'deploy', 'optimize', 'review', 'audit',
     ];
 
     /** @var list<string> */
@@ -114,6 +176,10 @@ class InputSanityGuardrail
         }
 
         if ($this->isWordSalad($normalized, $tokens)) {
+            return InputSanityVerdict::reject();
+        }
+
+        if ($this->isLooseWordList($normalized, $tokens)) {
             return InputSanityVerdict::reject();
         }
 
@@ -222,7 +288,25 @@ class InputSanityGuardrail
 
     private function tokenLooksLikeGibberish(string $token): bool
     {
-        if (is_numeric($token) || mb_strlen($token) < 5) {
+        if (is_numeric($token)) {
+            return false;
+        }
+
+        // Sílaba repetida 3+ vezes: "blablabla", "kkkkkk", "lalala".
+        if (preg_match('/(\p{L}{2,4})\1\1/u', $token) === 1) {
+            return true;
+        }
+
+        // Trecho de 4 teclas vizinhas como palavra inteira: "asdf", "qwer", "zxcv".
+        if (mb_strlen($token) === 4) {
+            foreach (self::KEYBOARD_ROWS as $row) {
+                if (str_contains($row, $token)) {
+                    return true;
+                }
+            }
+        }
+
+        if (mb_strlen($token) < 5) {
             return false;
         }
 
@@ -305,12 +389,53 @@ class InputSanityGuardrail
     private function hasSoftwareScope(string $normalized): bool
     {
         foreach (self::SOFTWARE_MARKERS as $marker) {
+            if (in_array($marker, self::GENERIC_VERB_MARKERS, true)) {
+                continue;
+            }
+
+            if (in_array($marker, self::WORD_START_MARKERS, true)) {
+                if (preg_match('/(?<![\p{L}\p{N}])'.preg_quote($marker, '/').'/u', $normalized) === 1) {
+                    return true;
+                }
+
+                continue;
+            }
+
             if (str_contains($normalized, $marker)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Lista solta de palavras ("computador sistema tecnologia banco dados
+     * código programa"): 5+ termos sem nenhuma palavra gramatical, sem verbo
+     * de ação e sem relato de erro. Um termo técnico isolado não basta para
+     * caracterizar um pedido.
+     *
+     * @param  list<string>  $tokens
+     */
+    private function isLooseWordList(string $normalized, array $tokens): bool
+    {
+        if (count($tokens) < 5) {
+            return false;
+        }
+
+        foreach ($tokens as $token) {
+            if (in_array($token, self::FUNCTION_WORDS, true) || in_array($token, self::ACTION_VERBS, true)) {
+                return false;
+            }
+        }
+
+        foreach (['erro', 'erros', 'bug', 'bugs', 'exception', 'crash', 'timeout', '500', '404', '422'] as $diagnostic) {
+            if (in_array($diagnostic, $tokens, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

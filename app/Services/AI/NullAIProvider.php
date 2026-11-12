@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
+use App\Services\Guardrails\InputSanityGuardrail;
 use App\Services\Guardrails\PromptInjectionDetector;
 use App\Services\PromptGeneratorService;
 
@@ -295,33 +296,13 @@ class NullAIProvider implements AIProviderInterface
     }
 
     /**
-     * Critério 2: precisa haver escopo de software, sistema ou regra de negócio.
-     * Frase cotidiana gramaticalmente correta não basta.
+     * Critério 2: precisa haver escopo de software, sistema ou regra de negócio,
+     * com estrutura mínima de pedido. Fonte única: o InputSanityGuardrail, para
+     * o provedor offline não aceitar o que a borda HTTP recusa (nem o inverso).
      */
     private function hasSoftwareIntent(string $text): bool
     {
-        $normalized = $this->normalizePhrase($text);
-
-        foreach ([
-            'cria', 'implement', 'desenvolv', 'constru', 'test', 'refator',
-            'escrev', 'review',
-            'document', 'analisa', 'analise', 'audit', 'corrig', 'migrar',
-            'desenha', 'mapear', 'especific', 'firmware', 'api', 'crud',
-            'login', 'modulo', 'sistema', 'software', 'tela', 'cadastro',
-            'autentic', 'endpoint', 'banco', 'prontuario', 'arquitet',
-            'microserv', 'microsserv', 'upload', 'controller', 'controlador',
-            'middleware', 'jwt', 'owasp', 'codigo', 'servico', 'aplicativ',
-            'plataforma', 'backend', 'frontend', 'laravel', 'php', 'sql',
-            'prompt', 'embarcad', 'modbus', 'canopen', 'can bus', 'inversor',
-            'protocolo', 'linguagem c', 'clp', ' plc', 'saga', 'rabbitmq',
-            'kafka', 'sanctum', 'xss', 'injection',
-        ] as $marker) {
-            if (str_contains($normalized, $marker)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (new InputSanityGuardrail)->assess($text)->accepted;
     }
 
     private function tokenLooksLikeKeysmash(string $token): bool
