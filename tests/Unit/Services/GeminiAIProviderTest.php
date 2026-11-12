@@ -16,7 +16,7 @@ class GeminiAIProviderTest extends TestCase
 {
     private const CHAVE = 'chave-secreta-de-teste';
 
-    private const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    private const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
     protected function setUp(): void
     {
@@ -349,7 +349,7 @@ class GeminiAIProviderTest extends TestCase
     {
         return new GeminiAIProvider(
             apiKey: $apiKey,
-            model: 'gemini-2.0-flash',
+            model: 'gemini-2.5-flash',
             baseUrl: GeminiAIProvider::DEFAULT_BASE_URL,
             timeout: 5,
             tries: $tries,

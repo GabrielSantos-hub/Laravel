@@ -34,7 +34,7 @@ class GeminiIntegrationTest extends TestCase
         config([
             'ai.provider' => 'gemini',
             'services.gemini.key' => 'chave-de-teste',
-            'services.gemini.model' => 'gemini-2.0-flash',
+            'services.gemini.model' => 'gemini-2.5-flash',
             // Sem retry: o teste não precisa esperar o backoff.
             'services.gemini.tries' => 1,
         ]);

@@ -33,7 +33,7 @@ class GeminiAIProvider implements AIProviderInterface
 {
     public const DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-    public const DEFAULT_MODEL = 'gemini-2.0-flash';
+    public const DEFAULT_MODEL = 'gemini-2.5-flash';
 
     /** Status que valem nova tentativa: cota momentânea e indisponibilidade. */
     private const RETRYABLE_STATUSES = [429, 500, 502, 503, 504];
