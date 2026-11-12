@@ -22,7 +22,7 @@ class PromptBuilderServiceTest extends TestCase
         $this->assertStringContainsString(PromptBuilderService::SECTION_TASK, $prompt);
         $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $prompt);
         $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $prompt);
-        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
         $this->assertStringContainsString('Corpo composto do template.', $prompt);
     }
 
@@ -112,18 +112,19 @@ class PromptBuilderServiceTest extends TestCase
         $bugfix = $this->builder()->assemble('Corpo.', ['type' => 'bugfix']);
         $architecture = $this->builder()->assemble('Corpo.', ['type' => 'architecture']);
 
-        $this->assertStringContainsString('Implementação completa, pronta para produção', $feature);
-        $this->assertStringContainsString('Diagnóstico objetivo da causa', $bugfix);
+        $this->assertStringContainsString('Código completo, sem placeholders', $feature);
+        $this->assertStringContainsString('Causa do defeito.', $bugfix);
         $this->assertStringContainsString('Camadas ou componentes', $architecture);
     }
 
-    public function test_a_auto_validacao_exige_checagem_antes_da_entrega(): void
+    public function test_o_envelope_nao_inclui_auto_validacao(): void
     {
         $prompt = $this->builder()->assemble('Corpo.', $this->intent());
 
-        $this->assertStringContainsString('Antes de entregar a resposta, execute esta checagem internamente', $prompt);
-        $this->assertStringContainsString('Nenhuma restrição negativa foi violada', $prompt);
-        $this->assertStringContainsString('Só entregue o resultado final depois que todos os itens passarem', $prompt);
+        $this->assertStringNotContainsString('Antes de entregar a resposta, execute esta checagem internamente', $prompt);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
+        $this->assertStringNotContainsString('pronta para produção', $prompt);
+        $this->assertStringNotContainsString('prosa contínua', $prompt);
     }
 
     public function test_a_montagem_e_idempotente(): void
@@ -156,7 +157,7 @@ class PromptBuilderServiceTest extends TestCase
         $this->assertStringContainsString('Corpo mínimo.', $prompt);
         $this->assertStringContainsString('Engenheiro de Software Sênior', $prompt);
         $this->assertStringContainsString('especialista em PHP', $prompt);
-        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
     }
 
     public function test_a_tarefa_destaca_o_pedido_especifico_sem_apagar_detalhes(): void
@@ -200,7 +201,7 @@ class PromptBuilderServiceTest extends TestCase
         $this->assertStringContainsString('Especificação técnica', $prompt);
         $this->assertStringContainsString(PromptBuilderService::NO_CODE_CONSTRAINT, $prompt);
         $this->assertStringContainsString('sem código-fonte', $prompt);
-        $this->assertStringContainsString('prosa técnica', $prompt);
+        $this->assertStringContainsString('sem código-fonte', $prompt);
         $this->assertStringNotContainsString('Escreva o código completo', $prompt);
         $this->assertStringNotContainsString('blocos de código correspondentes', $prompt);
         $this->assertStringNotContainsString('Implementação completa, pronta para produção', $prompt);
@@ -297,14 +298,13 @@ class PromptBuilderServiceTest extends TestCase
         $task = strpos($prompt, PromptBuilderService::SECTION_TASK);
         $constraints = strpos($prompt, PromptBuilderService::SECTION_CONSTRAINTS);
         $schema = strpos($prompt, PromptBuilderService::SECTION_SCHEMA);
-        $validation = strpos($prompt, PromptBuilderService::SECTION_VALIDATION);
 
         $this->assertIsInt($role);
         $this->assertIsInt($task);
         $this->assertIsInt($constraints);
         $this->assertIsInt($schema);
-        $this->assertIsInt($validation);
-        $this->assertTrue($role < $task && $task < $constraints && $constraints < $schema && $schema < $validation);
+        $this->assertTrue($role < $task && $task < $constraints && $constraints < $schema);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
     }
 
     public function test_envelope_lean_nunca_passa_de_vinte_e_cinco_linhas(): void

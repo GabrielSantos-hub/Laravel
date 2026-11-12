@@ -33,7 +33,8 @@ class PromptComposer
         - Resolva os blocos condicionais {% if chave %}...{% endif %}, mantendo o conteúdo apenas quando a variável tiver valor e removendo o bloco inteiro caso contrário.
         - {user_input} traz o pedido específico e o briefing: preserve todos os detalhes concretos (serviços, endpoints, parâmetros, tecnologias). O template só estrutura; nunca apague nem generalize esses detalhes.
         - Produza um documento coeso e bem redigido, sem partes que pareçam inserções brutas de formulário.
-        - Não invente requisitos, tecnologias ou restrições que não estejam na intenção ou no briefing.
+        - Preserve o objetivo e o escopo do pedido; enriqueça só com necessidades implícitas tecnicamente justificáveis, sem acrescentar funcionalidades apenas porque são comuns em outros sistemas.
+        - Não invente tecnologias. Suposições sobre regras de negócio aparecem como sugestões a confirmar, nunca como regras definidas.
         - Se o pedido proibir código ou pedir só documentação, não solicite implementação em código.
         - Responda apenas com o prompt final, sem comentários, explicações ou cercas de código.
         TXT;
@@ -81,9 +82,7 @@ class PromptComposer
             // Rede de segurança: um LLM pode deixar placeholders para trás.
             $composed = $this->interpolator->resolvePlaceholders($composed, $variables);
 
-            return $proseOnly
-                ? $this->policy->rewriteProseFraming($composed)
-                : $composed;
+            return $this->finishComposition($composed, $proseOnly);
         } catch (Throwable $e) {
             $this->logger?->error($e->getMessage(), [
                 'template_id' => $template->getKey(),
@@ -92,10 +91,19 @@ class PromptComposer
 
             $fallback = $this->interpolator->render($body, $variables);
 
-            return $proseOnly
-                ? $this->policy->rewriteProseFraming($fallback)
-                : $fallback;
+            return $this->finishComposition($fallback, $proseOnly);
         }
+    }
+
+    private function finishComposition(string $composed, bool $proseOnly): string
+    {
+        $composed = $this->policy->stripCompetingOutputSchemas($composed);
+        $composed = $this->policy->omitEmptyOptionalSections($composed);
+        $composed = $this->policy->stripInflatedPhrases($composed);
+
+        return $proseOnly
+            ? $this->policy->rewriteProseFraming($composed)
+            : $composed;
     }
 
     /**
@@ -113,6 +121,7 @@ class PromptComposer
         $objective = $this->text($intent['objective'] ?? null);
         $intencao = trim((string) $rawIntent) !== '' ? trim((string) $rawIntent) : $objective;
         $briefing = $this->synthesizer->frame($intencao, $intent);
+        [$language, $framework] = $this->policy->languageAndFramework($technologies);
 
         return [
             'intencao' => $intencao,
@@ -121,10 +130,8 @@ class PromptComposer
             'type' => $this->text($intent['type'] ?? null),
             'architecture' => $this->text($intent['architecture'] ?? null),
             'technologies' => implode(', ', $technologies),
-            // Lista plana: o 1º item vira {language} e o 2º {framework}.
-            // Templates que precisam de precisão devem usar {technologies}.
-            'language' => $technologies[0] ?? '',
-            'framework' => $technologies[1] ?? '',
+            'language' => $language,
+            'framework' => $framework,
             'constraints' => implode("\n", array_map(
                 static fn (string $constraint): string => "- {$constraint}",
                 $constraints

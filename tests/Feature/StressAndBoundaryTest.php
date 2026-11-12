@@ -122,7 +122,7 @@ it('gera envelope profissional completo para o caso complexo', function () {
         ->and($prompt)->toContain(PromptBuilderService::SECTION_TASK)
         ->and($prompt)->toContain(PromptBuilderService::SECTION_CONSTRAINTS)
         ->and($prompt)->toContain(PromptBuilderService::SECTION_SCHEMA)
-        ->and($prompt)->toContain(PromptBuilderService::SECTION_VALIDATION)
+        ->and($prompt)->not->toContain(PromptBuilderService::SECTION_VALIDATION)
         ->and($prompt)->toContain('Regra de negócio')
         ->and(count($linhas))->toBeGreaterThan(InputSanityGuardrail::LEAN_MAX_LINES);
 });

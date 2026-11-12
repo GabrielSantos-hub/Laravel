@@ -75,7 +75,7 @@ class GeminiIntegrationTest extends TestCase
         $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $prompt);
         $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $prompt);
         $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $prompt);
-        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $prompt);
 
         Http::assertSentCount(1);
 

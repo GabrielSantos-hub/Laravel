@@ -67,6 +67,8 @@ class PromptGeneratorService
           "prompt_gerado": "Texto fluido e sintetizado do prompt final..."
         }
 
+        Ao redigir `prompt_gerado`: preserve o objetivo e o escopo do pedido (uma tela em HTML/CSS continua sendo interface, sem virar sistema com banco, API ou sessões); enriqueça com necessidades implícitas tecnicamente justificáveis; separe requisitos solicitados, necessidades implícitas e sugestões a confirmar; nunca apresente suposições como regras de negócio definidas nem acrescente funcionalidades só porque são comuns em outros sistemas.
+
         Não escreva nada fora do objeto JSON. Não invente analogias nem sistemas fictícios para ruído, comida ou objetos aleatórios da vida real.
 
         #### DADO DO USUÁRIO
@@ -344,6 +346,7 @@ class PromptGeneratorService
         }
 
         $briefing = (new IntentSynthesizer(new NullAIProvider))->frame($intencao, $intent);
+        [$language, $framework] = (new PromptOutputPolicy)->languageAndFramework($technologies);
 
         $map = [
             'intencao' => $intencao,
@@ -352,8 +355,8 @@ class PromptGeneratorService
             'type' => is_string($intent['type'] ?? null) ? $intent['type'] : '',
             'architecture' => is_string($intent['architecture'] ?? null) ? $intent['architecture'] : '',
             'technologies' => implode(', ', $technologies),
-            'language' => $technologies[0] ?? '',
-            'framework' => $technologies[1] ?? '',
+            'language' => $language,
+            'framework' => $framework,
         ];
 
         foreach ($customVariables as $key => $value) {

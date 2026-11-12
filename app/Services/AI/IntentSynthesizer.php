@@ -23,7 +23,10 @@ class IntentSynthesizer
         Regras:
         - Não copie a frase original entre aspas nem a cole como um bloco cru.
         - Responda em português, em prosa profissional e contínua.
-        - Inclua explicitamente: regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário.
+        - Preserve o objetivo e o escopo do pedido: uma tela em HTML/CSS continua sendo interface, sem virar sistema com banco, API ou sessões.
+        - Enriqueça com o que o objetivo justifica, separando: requisitos solicitados; necessidades implícitas tecnicamente justificáveis; sugestões que dependem de confirmação do usuário.
+        - Inclua a regra de negócio principal, 2 a 3 requisitos implícitos e o fluxo do usuário. Se o pedido não definir uma regra, apresente-a como sugestão a confirmar, nunca como regra já definida.
+        - Não acrescente funcionalidades só porque são comuns em outros sistemas.
         - Use a stack informada nas variáveis quando ela existir; não invente tecnologias.
         - Responda apenas com a especificação reescrita, sem cercas de código e sem comentários.
         TXT;
@@ -93,7 +96,7 @@ class IntentSynthesizer
 
         return implode("\n\n", array_filter([
             $this->specificationLead($temas, $intent, $intencao),
-            'Regra de negócio principal: '.$this->businessRule($temas),
+            'Regra de negócio principal (inferida; confirmar se não estiver explícita no pedido): '.$this->businessRule($temas),
             "Requisitos implícitos:\n".$this->requirements($temas, $intent),
             'Fluxo do usuário: '.$this->userFlow($temas),
         ]));
@@ -115,11 +118,22 @@ class IntentSynthesizer
             'crud' => ['crud', 'cadastro'],
             'teste' => ['teste', 'testes', 'phpunit'],
             'validacao' => ['validac', 'valida'],
-            'pagamento' => ['pagament', 'cobranc', 'checkout', 'fatura', 'billing'],
+            'pagamento' => ['cobranc', 'checkout', 'fatura', 'billing'],
         ] as $tema => $needles) {
             foreach ($needles as $needle) {
                 if ($this->themeMatches($haystack, $needle)) {
                     $found[] = $tema;
+                    break;
+                }
+            }
+        }
+
+        // Tela de login sem backend citado é pedido de interface: não vira
+        // sistema de autenticação com banco, API e sessões.
+        if (in_array('login', $found, true) && ! $this->hasBackendStack($intent)) {
+            foreach (['tela', 'html', 'css', 'interface', 'pagina', 'página', 'formulario', 'formulário', 'layout', 'front'] as $needle) {
+                if ($this->themeMatches($haystack, $needle)) {
+                    $found[] = 'interface';
                     break;
                 }
             }
@@ -134,8 +148,14 @@ class IntentSynthesizer
      */
     private function specificationLead(array $temas, array $intent, string $intencao = ''): string
     {
+        $type = is_string($intent['type'] ?? null) ? mb_strtolower(trim($intent['type'])) : '';
+        $focoAmplo = in_array($type, ['architecture', 'documentation'], true);
+
         $foco = match (true) {
-            in_array('login', $temas, true) && in_array('tema', $temas, true) => 'uma experiência de autenticação com preferência visual persistente',
+            $focoAmplo => 'a funcionalidade descrita, com comportamento previsível de ponta a ponta',
+            in_array('interface', $temas, true) && in_array('tema', $temas, true) => 'uma tela de login com preferência de tema persistente, focada na interface (a autenticação no servidor depende de confirmação)',
+            in_array('interface', $temas, true) => 'uma tela de login focada na interface (a autenticação no servidor depende de confirmação)',
+            in_array('login', $temas, true) && in_array('tema', $temas, true) =>'uma experiência de autenticação com preferência visual persistente',
             in_array('login', $temas, true) => 'um fluxo de autenticação de usuários',
             in_array('api', $temas, true) => 'uma API com contratos HTTP explícitos',
             in_array('crud', $temas, true) => 'um módulo de cadastro e manutenção de registros',
@@ -161,7 +181,13 @@ class IntentSynthesizer
             ? ''
             : ' '.implode(', ', $qualificadores);
 
-        $lead = 'Especifique '.$foco.$complemento.', descrevendo a arquitetura, o fluxo de dados e os requisitos em prosa contínua.';
+        // O verbo acompanha a tarefa: especificar não pede código, corrigir
+        // não vira especificação e implementar não vira só descrição.
+        $lead = match (true) {
+            $focoAmplo || $this->policy->isProseOnly($intencao, $intent) => 'Especifique '.$foco.$complemento.', descrevendo a arquitetura, o fluxo de dados e os requisitos.',
+            $type === 'bugfix' => 'Diagnostique e corrija o defeito descrito'.$complemento.', identificando a causa, a correção e como testá-la.',
+            default => 'Implemente '.$foco.$complemento.', considerando a arquitetura, o fluxo de dados e os requisitos.',
+        };
         $citados = $this->citedDetails($intencao);
 
         if ($citados !== []) {
@@ -238,6 +264,7 @@ class IntentSynthesizer
     private function businessRule(array $temas): string
     {
         return match (true) {
+            in_array('interface', $temas, true) => 'não definida no pedido; a tela coleta as credenciais e exibe o retorno, e a regra de autenticação deve ser confirmada pelo usuário.',
             in_array('login', $temas, true) && in_array('tema', $temas, true) => 'o acesso à aplicação depende de autenticação válida, e a interface deve respeitar a preferência visual do usuário.',
             in_array('login', $temas, true) => 'somente credenciais válidas liberam o acesso aos recursos protegidos.',
             in_array('api', $temas, true) => 'os clientes consomem recursos HTTP bem definidos, com contratos claros de entrada, saída e erro.',
@@ -257,11 +284,19 @@ class IntentSynthesizer
 
         if (in_array('login', $temas, true)) {
             $itens[] = 'Campos de credencial com validação e mensagens de erro compreensíveis.';
-            $itens[] = 'Persistência da sessão após autenticação bem-sucedida.';
+
+            if ($this->hasBackendStack($intent)) {
+                $itens[] = 'Persistência da sessão após autenticação bem-sucedida.';
+            }
         }
 
         if (in_array('tema', $temas, true)) {
             $itens[] = 'Alternância e persistência do tema claro/escuro na interface.';
+        }
+
+        if (in_array('interface', $temas, true)) {
+            $itens[] = 'Layout responsivo e acessível (rótulos associados, foco visível, contraste e navegação por teclado).';
+            $itens[] = 'Estados visuais de erro, foco e carregamento nos campos e no botão.';
         }
 
         if (in_array('api', $temas, true)) {
@@ -326,10 +361,37 @@ class IntentSynthesizer
             ];
         }
 
+        if (! $this->hasBackendStack($intent)) {
+            return [
+                'Tratamento de erros e respostas explícitas de sucesso ou falha.',
+                'Escopo restrito ao que o pedido descreve, sem infraestrutura que ele não citou.',
+            ];
+        }
+
         return [
             'Tratamento de erros e respostas explícitas de sucesso ou falha.',
             'Separação entre regra de negócio e persistência o suficiente para evoluir o recurso.',
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $intent
+     */
+    private function hasBackendStack(array $intent): bool
+    {
+        $haystack = mb_strtolower($this->join($intent['technologies'] ?? []));
+
+        if ($haystack === '') {
+            return false;
+        }
+
+        foreach (['laravel', 'php', 'mysql', 'postgres', 'sqlite', 'mongodb', 'node', 'django', 'spring', 'sql'] as $marker) {
+            if (str_contains($haystack, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -354,6 +416,8 @@ class IntentSynthesizer
     private function userFlow(array $temas): string
     {
         return match (true) {
+            in_array('interface', $temas, true) && in_array('tema', $temas, true) => 'o visitante preenche as credenciais, recebe validação visual imediata e usa a tela já com o tema escolhido.',
+            in_array('interface', $temas, true) => 'o visitante preenche as credenciais, recebe validação visual imediata e aciona as ações disponíveis na tela.',
             in_array('login', $temas, true) && in_array('tema', $temas, true) => 'o visitante informa as credenciais, autentica-se e segue a navegação já com o tema escolhido.',
             in_array('login', $temas, true) => 'o visitante informa as credenciais, recebe o resultado da autenticação e, se for bem-sucedido, acessa a área autenticada.',
             in_array('crud', $temas, true) => 'o usuário localiza o registro, executa a operação desejada e confere o resultado na listagem ou no detalhe.',

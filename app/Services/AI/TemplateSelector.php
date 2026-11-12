@@ -53,6 +53,25 @@ class TemplateSelector
 
     public const STYLE_PENALTY = 6;
 
+    /**
+     * Templates especializados só pontuam sem penalidade quando a intenção
+     * cita o assunto deles. Evita CI/CD ou stack trace em pedidos genéricos.
+     *
+     * @var array<string, list<string>>
+     */
+    private const SPECIALIZED_REQUIREMENTS = [
+        'pipeline-ci-cd' => ['pipeline', 'cicd', 'ci/cd', 'devops'],
+        'depuracao-stack-trace' => ['stack', 'trace', 'depur', 'exception', 'excecao', 'erro', 'bug', 'corrig', 'nan'],
+        'migracao-versao-framework' => ['migrar', 'migracao', 'upgrade', 'atualiz'],
+        'otimizacao-performance' => ['performance', 'lento', 'otimiz', 'gargalo'],
+        'revisao-seguranca-owasp' => ['owasp', 'xss', 'csrf', 'seguranca'],
+        'c4-model-system-design' => ['c4', 'systemdesign', 'microservi', 'microsservi', 'arquitet'],
+        'api-first-openapi-generator' => ['openapi', 'swagger', 'api'],
+        'user-stories-bdd-gherkin' => ['gherkin', 'userstor', 'bdd', 'aceit'],
+        'mensagens-commit-changelog' => ['commit', 'changelog'],
+        'geracao-testes-aaa-tdd' => ['teste', 'tdd', 'aaa', 'phpunit'],
+    ];
+
     public const WEIGHT_TEXT_HINT = 1;
 
     public const MAX_TEXT_SCORE = 3;
@@ -284,7 +303,8 @@ class TemplateSelector
             + $this->tagScore($template, $context)
             + $this->typeScore($template, $context['type'])
             + $stackScore
-            + $this->stylePenalty($template, $context);
+            + $this->stylePenalty($template, $context)
+            + $this->specializedPenalty($template, $context);
     }
 
     /**
@@ -433,6 +453,31 @@ class TemplateSelector
 
         foreach (self::ROLEPLAY_HINTS as $hint) {
             if ($hint !== '' && str_contains($intentHaystack, $this->normalize($hint))) {
+                return 0;
+            }
+        }
+
+        return -self::STYLE_PENALTY;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function specializedPenalty(Template $template, array $context): int
+    {
+        $slug = (string) ($template->slug ?? '');
+        $needles = self::SPECIALIZED_REQUIREMENTS[$slug] ?? null;
+
+        if ($needles === null) {
+            return 0;
+        }
+
+        $haystack = (string) ($context['haystack'] ?? '');
+
+        foreach ($needles as $needle) {
+            $normalized = $this->normalize($needle);
+
+            if ($normalized !== '' && str_contains($haystack, $normalized)) {
                 return 0;
             }
         }

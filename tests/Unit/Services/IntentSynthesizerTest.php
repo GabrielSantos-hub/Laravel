@@ -105,6 +105,23 @@ class IntentSynthesizerTest extends TestCase
         $this->assertStringNotContainsString('interface deve respeitar', $briefing);
     }
 
+    public function test_tela_de_login_em_html_e_css_continua_focada_na_interface(): void
+    {
+        $pedido = 'Criar uma tela de login responsiva utilizando HTML e CSS, com campos de e-mail e senha, botão de entrar e opção de recuperar senha.';
+        $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize(
+            $pedido,
+            ['type' => 'feature', 'technologies' => ['HTML', 'CSS']]
+        );
+
+        $this->assertStringContainsString('focada na interface', $briefing);
+        $this->assertStringContainsString('acessível', $briefing);
+        $this->assertStringContainsString('Estados visuais', $briefing);
+        $this->assertStringContainsString('confirmar', $briefing);
+        $this->assertStringNotContainsString('Persistência da sessão', $briefing);
+        $this->assertStringNotContainsString('área autenticada', $briefing);
+        $this->assertStringNotContainsString('somente credenciais válidas liberam', $briefing);
+    }
+
     public function test_login_sem_modo_escuro_nao_inventa_requisito_de_tema(): void
     {
         $briefing = (new IntentSynthesizer(new NullAIProvider))->synthesize(

@@ -28,7 +28,8 @@ class PromptBuilderService
 
     /** @var list<string> */
     private const DEFAULT_CONSTRAINTS = [
-        'Não invente requisitos, tecnologias, bibliotecas ou limitações que não estejam no briefing da tarefa.',
+        'Não invente requisitos, tecnologias, bibliotecas ou limitações sem relação justificável com o pedido, nem amplie o escopo além do objetivo solicitado.',
+        'Não apresente suposições como regras de negócio confirmadas: separe o que foi pedido, as necessidades implícitas justificadas e as sugestões que dependem de confirmação.',
         'Não produza placeholders, TODOs ou trechos incompletos do tipo "implementar depois".',
         'Não exponha segredos, credenciais, chaves de API ou dados sensíveis.',
         'Não ignore falhas de validação, autenticação ou autorização.',
@@ -92,7 +93,6 @@ class PromptBuilderService
             $this->buildTask($framing, $rawIntent, $context->proseOnly),
             $this->buildNegativeConstraints($context->proseOnly),
             $this->buildOutputSchema($context),
-            $this->buildSelfValidation($context->proseOnly),
         ]));
     }
 
@@ -102,7 +102,6 @@ class PromptBuilderService
             self::SECTION_ROLE,
             self::SECTION_CONSTRAINTS,
             self::SECTION_SCHEMA,
-            self::SECTION_VALIDATION,
         ] as $section) {
             if (! str_contains($prompt, $section)) {
                 return false;
@@ -160,9 +159,6 @@ class PromptBuilderService
             '1. Diagnóstico objetivo do que a frase descreve.',
             '2. Hipóteses e verificação alinhadas ao pedido.',
             '3. Correção ou próximo passo — sem escopo extra.',
-            '',
-            self::SECTION_VALIDATION,
-            '- A resposta permanece fiel ao pedido curto e não inventa requisitos.',
         ]);
 
         $linhas = substr_count($envelope, "\n") + 1;
@@ -193,6 +189,10 @@ class PromptBuilderService
         }
 
         $framing = $this->policy->stripRepeatedRequest($framing, $rawIntent);
+        $framing = $this->policy->stripGuestIntentBlocks($framing);
+        $framing = $this->policy->stripCompetingOutputSchemas($framing);
+        $framing = $this->policy->omitEmptyOptionalSections($framing);
+        $framing = $this->policy->stripInflatedPhrases($framing);
 
         $partes = [self::SECTION_TASK];
 
@@ -200,7 +200,7 @@ class PromptBuilderService
             $partes[] = "Pedido específico:\n".UserIntentFrame::wrap($rawIntent);
         }
 
-        if ($this->isUsefulFraming($framing, $rawIntent)) {
+        if ($this->isUsefulFraming($framing, $rawIntent) && ! $this->policy->isMismatchedFraming($framing, $rawIntent)) {
             $partes[] = "Enquadramento:\n{$framing}";
         }
 
@@ -227,15 +227,15 @@ class PromptBuilderService
     {
         $passos = $context->proseOnly
             ? [
-                'Visão e objetivo da especificação, cobrindo todos os detalhes citados no pedido.',
-                'Regras de negócio, contratos, fluxos e parâmetros em prosa técnica.',
-                'Riscos, premissas e próximos passos — sem código-fonte.',
+                'Visão do sistema e componentes, cobrindo os detalhes citados no pedido.',
+                'Fluxos, contratos e responsabilidades — sem código-fonte.',
+                'Trade-offs das decisões e premissas.',
             ]
             : match ($context->type) {
                 'bugfix' => [
-                    'Diagnóstico objetivo da causa (sintoma, hipótese e evidência).',
-                    'Correção completa, localizada e pronta para produção.',
-                    'Como verificar o conserto (cenário feliz e o de regressão).',
+                    'Causa do defeito.',
+                    'Correção.',
+                    'Como testar.',
                 ],
                 'test' => [
                     'Estratégia de cobertura (feliz, falha e borda).',
@@ -263,10 +263,9 @@ class PromptBuilderService
                     'Riscos da mudança e como validá-los.',
                 ],
                 default => [
-                    'Análise objetiva do problema, incluindo requisitos implícitos e riscos.',
-                    'Estrutura de arquivos ou componentes a criar ou alterar.',
-                    'Implementação completa, pronta para produção, sem placeholders.',
-                    'Notas mínimas de integração — somente se forem necessárias para executar o resultado.',
+                    'Arquivos ou componentes a criar ou alterar.',
+                    'Código completo, sem placeholders.',
+                    'Como executar o resultado.',
                 ],
             };
 

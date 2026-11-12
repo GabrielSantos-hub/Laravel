@@ -55,7 +55,7 @@ class PromptControllerTest extends TestCase
         $this->assertStringContainsString(PromptBuilderService::SECTION_ROLE, $saida);
         $this->assertStringContainsString(PromptBuilderService::SECTION_CONSTRAINTS, $saida);
         $this->assertStringContainsString(PromptBuilderService::SECTION_SCHEMA, $saida);
-        $this->assertStringContainsString(PromptBuilderService::SECTION_VALIDATION, $saida);
+        $this->assertStringNotContainsString(PromptBuilderService::SECTION_VALIDATION, $saida);
         $this->assertStringNotContainsString('Template Laravel', $saida);
         $this->assertStringNotContainsString('Alternância', $saida);
         $this->assertStringNotContainsString('tema claro/escuro', $saida);

@@ -21,7 +21,7 @@ class PromptOutputPolicy
     {
         $type = is_string($intent['type'] ?? null) ? mb_strtolower(trim($intent['type'])) : '';
 
-        if ($type === 'documentation') {
+        if (in_array($type, ['documentation'], true)) {
             return true;
         }
 
@@ -48,6 +48,12 @@ class PromptOutputPolicy
             'sem implementacao',
             'nao implemente',
             'sem blocos de codigo',
+            'especificacao tecnica',
+            'especifique a',
+            'especifique um',
+            'especifique o',
+            'elaborar a especificacao',
+            'elabore a especificacao',
         ] as $needle) {
             if (str_contains($haystack, $needle)) {
                 return true;
@@ -109,6 +115,130 @@ class PromptOutputPolicy
      * Remove o pedido cru do enquadramento e limpa pontuação residual
      * (ex.: ",.") deixada pela interpolação.
      */
+    /**
+     * @param  list<string>|array<int, mixed>  $technologies
+     * @return array{0: string, 1: string} [language, framework]
+     */
+    public function languageAndFramework(array $technologies): array
+    {
+        $language = '';
+        $framework = '';
+
+        foreach ($technologies as $item) {
+            if (! is_string($item)) {
+                continue;
+            }
+
+            $item = trim($item);
+
+            if ($item === '') {
+                continue;
+            }
+
+            $kind = $this->technologyKind($item);
+
+            if ($kind === 'database') {
+                continue;
+            }
+
+            if ($kind === 'language' && $language === '') {
+                $language = $item;
+
+                continue;
+            }
+
+            if ($kind === 'framework' && $framework === '') {
+                $framework = $item;
+            }
+        }
+
+        return [$language, $framework];
+    }
+
+    public function stripGuestIntentBlocks(string $text): string
+    {
+        $stripped = preg_replace('/<<<GUEASS_USER_INTENT>>>.*?<<<END_GUEASS_USER_INTENT>>>/su', '', $text, -1, $count);
+
+        return $this->cleanedIfChanged($text, $stripped, $count);
+    }
+
+    public function stripCompetingOutputSchemas(string $text): string
+    {
+        $stripped = preg_replace(
+            '/\n*FORMATO DE SAÍDA:.*?(?=\n(?:RESTRIÇÕES NEGATIVAS|ESQUEMA DE SAÍDA|AUTO-VALIDAÇÃO)|\z)/isu',
+            '',
+            str_replace(["\r\n", "\r"], "\n", $text),
+            -1,
+            $count
+        );
+
+        return $this->cleanedIfChanged($text, $stripped, $count);
+    }
+
+    public function omitEmptyOptionalSections(string $text): string
+    {
+        $stripped = preg_replace(
+            '/^(Erro ou stack trace|Gargalo descrito|Pedido de migração|O foco do negócio é):[ \t]*$/miu',
+            '',
+            str_replace(["\r\n", "\r"], "\n", $text),
+            -1,
+            $count
+        );
+
+        return $this->cleanedIfChanged($text, $stripped, $count);
+    }
+
+    public function stripInflatedPhrases(string $text): string
+    {
+        $stripped = preg_replace(
+            ['/\s*em prosa contínua/iu', '/,?\s*pronta para produção/iu'],
+            '',
+            $text,
+            -1,
+            $count
+        );
+
+        return $this->cleanedIfChanged($text, $stripped, $count);
+    }
+
+    /**
+     * Só normaliza pontuação/espaços quando algo foi removido: texto do LLM
+     * sem marcas a limpar mantém a indentação original.
+     */
+    private function cleanedIfChanged(string $original, ?string $stripped, int $count): string
+    {
+        return $stripped === null || $count === 0 ? $original : $this->cleanFramingPunctuation($stripped);
+    }
+
+    public function isMismatchedFraming(string $framing, string $rawIntent): bool
+    {
+        $intent = $this->normalize($rawIntent);
+        $frame = $this->normalize($framing);
+
+        if ($frame === '' || $intent === '') {
+            return false;
+        }
+
+        foreach ([
+            'pipelinedecicd' => ['pipeline', 'cicd', 'devops'],
+            'errooustacktrace' => ['stack', 'trace', 'depur', 'exception', 'erro', 'bug', 'corrig'],
+        ] as $marker => $needles) {
+            if (! str_contains($frame, $marker)) {
+                continue;
+            }
+
+            foreach ($needles as $needle) {
+                if (str_contains($intent, $this->normalize($needle))) {
+                    continue 2;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function stripRepeatedRequest(string $framing, string $rawIntent): string
     {
         $framing = trim($framing);
@@ -163,6 +293,29 @@ class PromptOutputPolicy
         }
 
         return [trim(substr($prompt, 0, $pos)), ltrim(substr($prompt, $pos))];
+    }
+
+    private function technologyKind(string $name): string
+    {
+        $normalized = $this->normalize($name);
+
+        foreach (['mysql', 'postgresql', 'postgres', 'sqlite', 'mongodb', 'mongo', 'redis'] as $database) {
+            if ($normalized === $database) {
+                return 'database';
+            }
+        }
+
+        foreach ([
+            'php', 'javascript', 'js', 'typescript', 'python', 'java', 'c#', 'csharp',
+            'go', 'golang', 'kotlin', 'swift', 'rust', 'ruby', 'dart', 'c++', 'c',
+            'html', 'css', 'sql',
+        ] as $language) {
+            if ($normalized === $this->normalize($language)) {
+                return 'language';
+            }
+        }
+
+        return 'framework';
     }
 
     private function isCodeInstruction(string $line): bool

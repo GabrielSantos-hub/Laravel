@@ -71,6 +71,8 @@ class NullAIProvider implements AIProviderInterface
         'MongoDB' => ['mongodb', 'mongo'],
         'Redis' => ['redis'],
         'Docker' => ['docker'],
+        'HTML' => ['html'],
+        'CSS' => ['css'],
         'Tailwind CSS' => ['tailwind'],
         'Bootstrap' => ['bootstrap'],
     ];
