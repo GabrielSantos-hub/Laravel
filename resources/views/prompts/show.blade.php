@@ -71,10 +71,25 @@
     </div>
 </div>
 
-<script>
+<script @if (! empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 document.getElementById('copy-all')?.addEventListener('click', function () {
     const t = document.getElementById('output-block').innerText;
-    navigator.clipboard.writeText(t);
+
+    // A Clipboard API só existe em contexto seguro (HTTPS/localhost).
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(t);
+        return;
+    }
+
+    const area = document.createElement('textarea');
+    area.value = t;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
 });
 </script>
 @endsection

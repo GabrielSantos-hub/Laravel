@@ -46,7 +46,7 @@
                         @csrf
                         <div class="mb-3">
                             <label for="register-name" class="form-label text-muted small">Nome Completo</label>
-                            <input type="text" name="name" id="register-name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Seu nome" autocomplete="name" value="{{ old('name') }}">
+                            <input type="text" name="name" id="register-name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required maxlength="30" placeholder="Seu nome" autocomplete="name" value="{{ old('name') }}">
                         </div>
                         <div class="mb-3">
                             <label for="register-email" class="form-label text-muted small">E-mail</label>

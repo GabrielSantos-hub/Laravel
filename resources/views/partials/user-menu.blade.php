@@ -9,7 +9,7 @@
         aria-controls="user-menu"
     >
         @auth
-        <span class="d-none d-md-inline fw-semibold">{{ Auth::user()->name }}</span>
+        <span class="d-none d-md-inline-block fw-semibold text-truncate align-middle" style="max-width: 12rem;" title="{{ Auth::user()->name }}">{{ Auth::user()->name }}</span>
         @include('partials.user-avatar', ['user' => Auth::user(), 'size' => 28])
         @else
         <span class="d-none d-md-inline fw-semibold">Preferências</span>
@@ -24,7 +24,7 @@
         <div class="user-menu-header">
             @include('partials.user-avatar', ['user' => Auth::user(), 'size' => 36])
             <div class="flex-grow-1 min-w-0">
-                <span class="fw-semibold d-block text-truncate">{{ Auth::user()->name }}</span>
+                <span class="fw-semibold d-block text-truncate" title="{{ Auth::user()->name }}">{{ Auth::user()->name }}</span>
                 <span class="badge bg-dark-subtle text-dark fw-bold">{{ Auth::user()->role }}</span>
             </div>
         </div>

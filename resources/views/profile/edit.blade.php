@@ -47,15 +47,15 @@
                             </button>
                         @endif
                     </div>
-                    <div>
-                        <p class="fw-semibold mb-1">{{ $user->name }}</p>
+                    <div style="min-width: 0;">
+                        <p class="fw-semibold mb-1 text-truncate" title="{{ $user->name }}">{{ $user->name }}</p>
                         <p class="small text-muted mb-0">{{ $user->email }}</p>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="name" class="form-label text-muted">Nome</label>
-                    <input type="text" name="name" id="name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required maxlength="255" value="{{ old('name', $user->name) }}">
+                    <input type="text" name="name" id="name" class="form-control bg-light focus:ring-2 focus:ring-indigo-500 focus:outline-none" required maxlength="30" value="{{ old('name', $user->name) }}">
                 </div>
 
                 <div class="mb-3">

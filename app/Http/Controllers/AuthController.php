@@ -46,9 +46,11 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:30'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => PasswordRules::required(),
+        ], [
+            'name.max' => 'O nome pode ter no máximo :max caracteres.',
         ]);
 
         $validated['name'] = trim($validated['name']);

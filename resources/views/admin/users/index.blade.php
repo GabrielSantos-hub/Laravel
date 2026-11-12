@@ -43,7 +43,7 @@
                 <tbody>
                     @forelse ($users as $user)
                     <tr>
-                        <td>{{ $user->name }}</td>
+                        <td><span class="d-inline-block text-truncate align-middle" style="max-width: 14rem;" title="{{ $user->name }}">{{ $user->name }}</span></td>
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->created_at?->format('d/m/Y H:i') }}</td>
                         <td class="text-end">

@@ -70,7 +70,7 @@
                         <td><code>{{ $log->action }}</code></td>
                         <td>
                             @if ($log->user)
-                                {{ $log->user->name }}
+                                <span class="d-inline-block text-truncate align-middle" style="max-width: 12rem;" title="{{ $log->user->name }}">{{ $log->user->name }}</span>
                                 <span class="text-muted small">({{ \App\Services\Security\SecurityLogger::maskEmail($log->user->email) }})</span>
                                 <span class="text-muted small">#{{ $log->user_id }}</span>
                             @else
