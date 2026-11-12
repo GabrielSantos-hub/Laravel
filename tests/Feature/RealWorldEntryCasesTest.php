@@ -158,6 +158,86 @@ it('caso 2: gera o prompt com a chave AWS mascarada em todos os pontos', functio
         ->and((string) $capturado['intencao'])->toContain('[REDACTED:aws_access_key]');
 });
 
+it('caso 3: cpf formatado e chaves fora do padrao sao mascarados no provedor historico e cache', function () {
+    // Valores sintéticos: CPF com dígito inválido e chaves fictícias.
+    $cpf = '123.456.789-00';
+    $google = 'AIza'.str_repeat('Tq7_', 8).'x';
+    $openai = 'sk-'.'proj-'.str_repeat('Zz_8', 6);
+    $rotulo = 'valor_ficticio_42';
+    $email = 'pessoa.ficticia@exemplo.test';
+    $originais = [$cpf, $google, $openai, $rotulo, $email];
+
+    $pedido = "Desenvolver um sistema de cadastro de clientes em Laravel. Para testar, considere o CPF {$cpf}, "
+        ."a chave `{$google}`, a chave {$openai}, API_KEY: \"{$rotulo}\" e o e-mail {$email}.";
+
+    $capturado = null;
+    $provedor = new class(new NullAIProvider, $capturado) implements AIProviderInterface
+    {
+        public function __construct(
+            private readonly NullAIProvider $inner,
+            public mixed &$captured,
+        ) {}
+
+        public function analyzeIntent(string $userInput): array
+        {
+            return $this->inner->analyzeIntent($userInput);
+        }
+
+        public function composePrompt(string $instruction, string $templateBody, array $variables): string
+        {
+            return $this->inner->composePrompt($instruction, $templateBody, $variables);
+        }
+
+        public function generateStructuredPrompt(string $intencao, string $templateBody, array $variables): array
+        {
+            $this->captured = ['intencao' => $intencao, 'variables' => $variables];
+
+            return $this->inner->generateStructuredPrompt($intencao, $templateBody, $variables);
+        }
+
+        public function name(): string
+        {
+            return $this->inner->name();
+        }
+    };
+    $this->app->instance(AIProviderInterface::class, $provedor);
+
+    $json = $this->actingAs($this->usuario)->postJson(route('prompts.generate'), ['intencao' => $pedido]);
+
+    $json->assertCreated();
+    $corpo = (string) $json->getContent();
+
+    foreach (['cpf', 'google_api_key', 'openai_key', 'password_pair', 'email'] as $tipo) {
+        expect((string) $json->json('prompt'))->toContain('[REDACTED:'.$tipo.']');
+    }
+
+    $prompt = Prompt::query()->sole();
+    $chaveCache = sprintf(
+        'generate-idempotency:%d:%s',
+        $this->usuario->id,
+        hash('sha256', $prompt->input_text.'|0')
+    );
+    $cache = Cache::get($chaveCache);
+
+    expect($capturado)->toBeArray()
+        ->and($cache)->toBeArray();
+
+    foreach ($originais as $valor) {
+        expect($corpo)->not->toContain($valor)
+            ->and(json_encode($capturado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->not->toContain($valor)
+            ->and($prompt->input_text)->not->toContain($valor)
+            ->and($prompt->output_text)->not->toContain($valor)
+            ->and(json_encode($cache, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->not->toContain($valor);
+    }
+
+    $this->actingAs($this->usuario)
+        ->get(route('prompts.show', $prompt))
+        ->assertOk()
+        ->assertSee('[REDACTED:cpf]', false)
+        ->assertDontSee($cpf, false)
+        ->assertDontSee($google, false);
+});
+
 it('pedido legitimo misturado com override coloquial e bloqueado', function () {
     $eventos = [];
     $spy = Mockery::mock(Psr\Log\LoggerInterface::class);

@@ -19,13 +19,21 @@ class SensitiveDataRedactor
         'private_key' => '/-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----/s',
         'aws_access_key' => '/\bAKIA[0-9A-Z]{16}\b/',
         'github_token' => '/\b(?:ghp_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{22,})\b/',
-        'google_api_key' => '/\bAIza[0-9A-Za-z\-_]{35}\b/',
+        // Comprimento variável; as bordas impedem capturar pontuação vizinha.
+        'google_api_key' => '/(?<![0-9A-Za-z_-])AIza[0-9A-Za-z_-]{20,}(?![0-9A-Za-z_-])/',
         'slack_token' => '/\bxox[baprs]-[A-Za-z0-9-]{10,}\b/',
-        'openai_key' => '/\bsk-[A-Za-z0-9]{20,}\b/',
+        // sk- e sk-proj-, com "_" e "-" no corpo da chave.
+        'openai_key' => '/(?<![0-9A-Za-z_-])sk-(?:proj-)?[A-Za-z0-9_-]{20,}(?![0-9A-Za-z_-])/',
         'jwt' => '/\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/',
         'bearer' => '/Authorization\s*:\s*Bearer\s+\S+/i',
         'connection_string' => '/(?:mysql|postgres(?:ql)?|mongodb|redis|amqp):\/\/[^\s:]+:[^\s@]+@[^\s]+/i',
-        'password_pair' => '/\b(?:password|passwd|secret|token|api[_-]?key)\s*=\s*\S+/i',
+        // "=" mantém o comportamento original. ":" aceita valor entre aspas ou
+        // crases, ou valor solto com 8+ caracteres e ao menos um dígito, para
+        // não mascarar prosa como "token: o sistema valida...".
+        'password_pair' => '/\b(?:password|passwd|secret|token|api[_-]?key)(?:\s*=\s*\S+|\s*:\s*(?:"[^"\n]+"|\'[^\'\n]+\'|`[^`\n]+`|(?=[^\s]*\d)[A-Za-z0-9_\-.\/+]{8,}))/i',
+        // CPF formatado é mascarado mesmo com dígito inválido; 11 dígitos
+        // sem pontuação seguem exigindo dígito válido (redactValidated).
+        'cpf' => '/(?<![\d.])\d{3}\.\d{3}\.\d{3}-\d{2}(?![\d-])/',
     ];
 
     /**

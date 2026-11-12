@@ -95,12 +95,75 @@ it('substitui string de conexao com senha', function () use ($redactor) {
         ->and($saida)->not->toContain('s3nh4');
 });
 
-it('substitui cpf com digitos validos e ignora invalido', function () use ($redactor) {
-    $saida = $redactor->redact('Paciente 529.982.247-25 e falso 111.111.111-11 no cadastro Laravel.');
+it('substitui cpf formatado com digito valido e com digito invalido', function () use ($redactor) {
+    $saida = $redactor->redact('Paciente 529.982.247-25 e fictício 123.456.789-00 no cadastro Laravel.');
+
+    expect(substr_count($saida, '[REDACTED:cpf]'))->toBe(2)
+        ->and($saida)->not->toContain('529.982.247-25')
+        ->and($saida)->not->toContain('123.456.789-00');
+});
+
+it('cpf sem pontuacao exige digito valido para evitar falso positivo', function () use ($redactor) {
+    $saida = $redactor->redact('Pedido 52998224725, protocolo 12345678900 e lote 11111111111.');
 
     expect($saida)->toContain('[REDACTED:cpf]')
-        ->and($saida)->not->toContain('529.982.247-25')
-        ->and($saida)->toContain('111.111.111-11');
+        ->and($saida)->not->toContain('52998224725')
+        ->and($saida)->toContain('12345678900')
+        ->and($saida)->toContain('11111111111');
+});
+
+it('cnpj formatado nao e confundido com cpf', function () use ($redactor) {
+    $saida = $redactor->redact('Empresa 11.222.333/0001-81.');
+
+    expect($saida)->toContain('[REDACTED:cnpj]')
+        ->and($saida)->not->toContain('[REDACTED:cpf]');
+});
+
+it('substitui google api key de comprimentos variados sem engolir pontuacao', function () use ($redactor) {
+    $curta = 'AIza'.str_repeat('Xy9_', 6);
+    $padrao = SecretFixtures::googleApiKey();
+    $longa = 'AIza'.str_repeat('Ab3-', 11);
+    $saida = $redactor->redact("Chaves: `{$curta}`, ({$padrao}) e {$longa}.");
+
+    expect(substr_count($saida, '[REDACTED:google_api_key]'))->toBe(3)
+        ->and($saida)->not->toContain($curta)
+        ->and($saida)->not->toContain($padrao)
+        ->and($saida)->not->toContain($longa)
+        ->and($saida)->toContain('`[REDACTED:google_api_key]`, ([REDACTED:google_api_key]) e [REDACTED:google_api_key].');
+});
+
+it('substitui api_key com dois pontos e com igual, aspas e crases', function () use ($redactor) {
+    $casos = [
+        'API_KEY: valorFicticio123',
+        'API_KEY="valor_ficticio"',
+        'API_KEY: "valor_ficticio"',
+        "secret: 'valor ficticio'",
+        'token: `valor_ficticio`',
+    ];
+
+    foreach ($casos as $caso) {
+        $saida = $redactor->redact("Config {$caso} fim");
+
+        expect($saida)->toContain('[REDACTED:password_pair]')
+            ->and($saida)->not->toContain('valor')
+            ->and($saida)->not->toContain('Ficticio123');
+    }
+});
+
+it('rotulo com dois pontos seguido de prosa nao e mascarado', function () use ($redactor) {
+    $texto = 'Autenticação por token: o sistema valida a sessão.';
+
+    expect($redactor->redact($texto))->toBe($texto);
+});
+
+it('substitui chaves openai sk e sk-proj com underscore', function () use ($redactor) {
+    $classica = SecretFixtures::openaiKey();
+    $proj = 'sk-'.'proj-'.str_repeat('Ab_9', 8);
+    $saida = $redactor->redact("Use {$classica} ou {$proj}.");
+
+    expect(substr_count($saida, '[REDACTED:openai_key]'))->toBe(2)
+        ->and($saida)->not->toContain($classica)
+        ->and($saida)->not->toContain($proj);
 });
 
 it('substitui cnpj com digitos validos e ignora invalido', function () use ($redactor) {
